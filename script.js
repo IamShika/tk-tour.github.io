@@ -39,6 +39,67 @@ const FLOORS = [
   }
 ];
 
+// =================== SEARCH CONFIG ===================
+const SEARCH_MAX_RESULTS = 4; // Adjustable: How many search results to show
+
+// Locations from JSON file
+let locationsFromFile = [];
+
+// Load locations.json
+fetch('locations.json')
+  .then(r => r.json())
+  .then(data => {
+    locationsFromFile = data.locations || [];
+    console.log('✅ Loaded', locationsFromFile.length, 'locations from file');
+  })
+  .catch(err => console.warn('⚠️ locations.json not found, using pins only'));
+
+// =================== SOUND EFFECTS SYSTEM ===================
+let soundEffectsEnabled = localStorage.getItem('soundEffects') !== 'false';
+let soundFiles = [];
+let currentSound = null;
+
+// Load sound files from sounds/ folder
+async function loadSoundFiles() {
+  // List of potential sound files (you can add more)
+  const soundFileNames = [
+    'sound1.ogg', 'sound2.ogg', 'sound3.ogg',
+    'sound4.ogg', 'sound5.ogg', 'sound6.ogg',
+    'sound7.ogg', 'sound8.ogg', 'sound9.ogg',
+    'sound10.ogg', 'sound11.ogg', 'sound12.ogg',
+    'sound14.ogg', 'sound15.ogg', 'sound16.ogg'
+  ];
+  
+  soundFiles = soundFileNames.map(name => `sounds/${name}`);
+}
+
+function playRandomSound() {
+  if (!soundEffectsEnabled || currentLanguage !== 't-th') return;
+  if (soundFiles.length === 0) return;
+  
+  try {
+    // Stop current sound if playing
+    if (currentSound) {
+      currentSound.pause();
+      currentSound.currentTime = 0;
+    }
+    
+    // Pick random sound
+    const randomIndex = Math.floor(Math.random() * soundFiles.length);
+    currentSound = new Audio(soundFiles[randomIndex]);
+    currentSound.volume = 0.3; // 30% volume
+    currentSound.play().catch(err => {
+      // Silently fail if sound doesn't exist or can't play
+      console.debug('Sound play failed:', err);
+    });
+  } catch (err) {
+    console.debug('Sound error:', err);
+  }
+}
+
+// Initialize sounds
+loadSoundFiles();
+
 // =================== SETTINGS & TRANSLATIONS ===================
 let currentLanguage = localStorage.getItem('language') || 'th';
 let currentTheme = localStorage.getItem('theme') || 'light';
@@ -60,25 +121,37 @@ function t(key) {
 
 function applyTranslations() {
   // Update all translatable elements
-  const searchInput = document.getElementById('searchInput');
-  if (searchInput) searchInput.placeholder = t('searchPlaceholder');
+  const searchInputEl = document.getElementById('searchInput');
+  if (searchInputEl) searchInputEl.placeholder = t('searchPlaceholder');
+  
+  // Update sidebar titles
+  const mainSidebarTitle = document.querySelector('#mainSidebar .sidebar-title');
+  if (mainSidebarTitle) mainSidebarTitle.textContent = t('menu').toUpperCase();
+  
+  const devSidebarTitle = document.querySelector('#devSidebar .sidebar-title');
+  if (devSidebarTitle) devSidebarTitle.textContent = t('devTools');
+  
+  // Update close button titles
+  document.querySelectorAll('.close-btn').forEach(btn => {
+    btn.title = t('close');
+  });
   
   // Update menu items
   document.querySelectorAll('.menu-item').forEach(item => {
     const modalId = item.getAttribute('data-modal');
+    const action = item.getAttribute('data-action');
+    
     if (modalId === 'about') item.textContent = t('about');
     if (modalId === 'howto') item.textContent = t('howto');
     if (modalId === 'settings') item.textContent = t('settings');
+    if (modalId === 'donate') item.textContent = t('donate');
+    if (action === 'feedback') item.textContent = t('feedback');
   });
   
-  // Update dev sidebar
-  const devTitle = document.querySelector('#devSidebar .sidebar-title');
-  if (devTitle) devTitle.textContent = t('devTools');
-  
-  // Update route creator
-  const routeHeaders = [
-    { selector: '.path-section h4', keys: ['routeCreator', 'add360Pin'] },
-  ];
+  // Update route creator sections
+  const pathSectionHeaders = document.querySelectorAll('.path-section h4');
+  if (pathSectionHeaders[0]) pathSectionHeaders[0].textContent = t('routeCreator');
+  if (pathSectionHeaders[1]) pathSectionHeaders[1].textContent = t('add360Pin');
   
   document.querySelectorAll('.step-title').forEach((el, i) => {
     const titles = [t('nameYourRoute'), t('drawYourRoute'), t('saveYourRoute'), 
@@ -112,9 +185,17 @@ function applyTranslations() {
   if (savedRoutesHeaders[0]) savedRoutesHeaders[0].textContent = t('savedRoutes');
   if (savedRoutesHeaders[1]) savedRoutesHeaders[1].textContent = t('savedPins');
   
-  // Update floor dropdown
-  const floorTitle = document.querySelector('.floor-dropdown-title');
-  if (floorTitle) floorTitle.textContent = t('floor');
+  // Update floor dropdown header
+  const floorDropdownTitle = document.querySelector('.floor-dropdown-title');
+  if (floorDropdownTitle) floorDropdownTitle.textContent = t('selectFloor');
+  
+  // Update floor items in dropdown
+  initFloorSelector();
+  
+  // Update current floor text
+  if (currentFloorText) {
+    currentFloorText.textContent = `${t('floor')} ${currentFloor + 1}`;
+  }
   
   // Update placeholders
   const pathName = document.getElementById('pathName');
@@ -122,12 +203,26 @@ function applyTranslations() {
   
   const pinName = document.getElementById('pinName');
   if (pinName) pinName.placeholder = t('locationNamePlaceholder');
+  
+  // Update path status
+  const pathStatus = document.getElementById('pathStatus');
+  if (pathStatus && !drawingMode) pathStatus.textContent = t('readyToDraw');
+  
+  const pinPlacingStatus = document.getElementById('pinPlacingStatus');
+  if (pinPlacingStatus && !placingPinMode) pinPlacingStatus.textContent = t('readyToPlace');
 }
 
 function changeLanguage(lang) {
   return new Promise((resolve) => {
     const overlay = document.getElementById('languageLoadingOverlay');
     const loadingText = document.getElementById('languageLoadingText');
+    
+    // Stop all currently playing sounds
+    if (currentSound) {
+      currentSound.pause();
+      currentSound.currentTime = 0;
+      currentSound = null;
+    }
     
     if (loadingText) loadingText.textContent = t('changingLanguage');
     if (overlay) overlay.classList.add('active');
@@ -137,8 +232,17 @@ function changeLanguage(lang) {
       localStorage.setItem('language', lang);
       applyTranslations();
       
+      // Dispatch language change event
+      window.dispatchEvent(new Event('languagechange'));
+      
       setTimeout(() => {
         if (overlay) overlay.classList.remove('active');
+        
+        // Play completion sound only when switching TO t-th
+        if (lang === 't-th' && soundEffectsEnabled) {
+          playRandomSound();
+        }
+        
         resolve();
       }, 1500);
     }, 100);
@@ -243,9 +347,14 @@ function hideToast(el) {
 // =================== MAP INIT ===================
 console.log('Initializing map...');
 
+// Set map boundaries (school area only)
+const SCHOOL_BOUNDS = [[14.083915, 100.606071], [14.086142, 100.610199]]; //set bounds bruh
+
 const map = L.map('map', {
   zoomControl: true,
-  attributionControl: true
+  attributionControl: true,
+  maxBounds: SCHOOL_BOUNDS, // Lock to school area
+  maxBoundsViscosity: 1.0 // Completely prevent moving outside
 }).setView(CENTER, 19);
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -259,7 +368,7 @@ const floorOverlay = L.imageOverlay(FLOORS[currentFloor].img, FLOORS[currentFloo
 
 setTimeout(() => {
   map.invalidateSize();
-  console.log('Map initialized');
+  console.log('Map initialized with boundary lock');
 }, 200);
 
 window.addEventListener('resize', () => {
@@ -321,7 +430,25 @@ if (devBtn) {
 }
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeAllSidebars();
+  if (e.key === 'Escape') {
+    closeAllSidebars();
+    // Close modal if open
+    if (modalOverlay && modalOverlay.classList.contains('active')) {
+      closeModal();
+    }
+    // Close floor dropdown if open
+    const floorDropdown = document.getElementById('floorDropdown');
+    const floorSelectorBtn = document.getElementById('floorSelector');
+    if (floorDropdown && floorDropdown.classList.contains('active')) {
+      floorDropdown.classList.remove('active');
+      if (floorSelectorBtn) floorSelectorBtn.classList.remove('active');
+    }
+    // Close search recommendations if open
+    const searchRecs = document.getElementById('searchRecommendations');
+    if (searchRecs && searchRecs.classList.contains('active')) {
+      searchRecs.classList.remove('active');
+    }
+  }
 });
 
 document.addEventListener('click', (e) => {
@@ -342,6 +469,8 @@ const modalBody = document.getElementById('modalBody');
 const modalClose = document.getElementById('modalClose');
 
 function generateSettingsHTML() {
+  const showSoundToggle = currentLanguage === 't-th';
+  
   return `
     <div style="padding: 10px 0;">
       <!-- Language Setting -->
@@ -353,6 +482,22 @@ function generateSettingsHTML() {
           <option value="en" ${currentLanguage === 'en' ? 'selected' : ''}>English</option>
         </select>
       </div>
+
+      ${showSoundToggle ? `
+      <!-- Traditional Thai Sound Effects (only in t-th) -->
+      <div class="theme-toggle-container">
+        <span class="theme-toggle-label">
+          <span class="theme-icon">🔊</span>
+          ${t('traditionalThaiSounds')}
+          <span class="info-tooltip" title="${t('soundsTooltip')}" style="margin-left:8px;cursor:help;color:var(--accent);">❓นี่คืออะไร?</span>
+        </span>
+        <div class="theme-toggle ${soundEffectsEnabled ? 'active' : ''}" id="soundEffectsToggle">
+          <div class="theme-toggle-slider">
+            ${soundEffectsEnabled ? '🔊' : '🔇'}
+          </div>
+        </div>
+      </div>
+      ` : ''}
 
       <!-- Theme Setting -->
       <div class="theme-toggle-container">
@@ -383,49 +528,20 @@ function generateSettingsHTML() {
 
 const modalContent = {
   about: {
-    title: '📘 About / Credits',
-    body: `
-      <h3>Project Absolute TK Map</h3>
-      <p>An interactive school map with 360° street view functionality.</p>
-      <h4>Credits:</h4>
-      <ul>
-        <li>Map powered by Leaflet & OpenStreetMap</li>
-        <li>360° viewer by Photo Sphere Viewer</li>
-        <li>Created for school final project</li>
-        <li>You! Thank you for using this website!</li>
-      </ul>
-      <p style="margin-top:20px;color:#666;font-size:14px;">
-        Made with ❤️ by 5/16 ;) + Claude AI
-      </p>
-    `
+    get title() { return t('aboutTitle'); },
+    get body() { return t('aboutContent'); }
   },
   howto: {
-    title: '❔ How to Use',
-    body: `
-      <h3>Navigation:</h3>
-      <ul>
-        <li><strong>Search:</strong> Type room name or number in the search box</li>
-        <li><strong>Zoom:</strong> Use mouse wheel or +/- buttons</li>
-        <li><strong>Pan:</strong> Click and drag the map</li>
-        <li><strong>Floor:</strong> Use the floor selector button to switch between floors</li>
-      </ul>
-      <h3>360° Views:</h3>
-      <ul>
-        <li>Click on any pin marker to view location</li>
-        <li>Click the blue path to view nearest 360° location</li>
-        <li>Drag inside the 360° viewer to look around</li>
-      </ul>
-      <h3>Tips:</h3>
-      <ul>
-        <li>Press ESC to close any open panel</li>
-        <li>Use the search bar for quick navigation</li>
-        <li>Change theme in settings for comfortable viewing</li>
-      </ul>
-    `
+    get title() { return t('howtoTitle'); },
+    get body() { return t('howtoContent'); }
   },
   settings: {
-    title: '⚙️ Settings',
+    get title() { return t('settings'); },
     body: generateSettingsHTML()
+  },
+  donate: {
+    get title() { return t('donateTitle'); },
+    get body() { return t('donateContent'); }
   }
 };
 
@@ -468,6 +584,29 @@ function openModal(modalId) {
         });
       }
       
+      // Sound Effects Toggle (only in t-th mode) //Sound won't mute when toggled off, It just kept playing.
+      const soundEffectsToggle = document.getElementById('soundEffectsToggle');
+      if (soundEffectsToggle) {
+        soundEffectsToggle.addEventListener('click', () => {
+          soundEffectsEnabled = !soundEffectsEnabled;
+          localStorage.setItem('soundEffects', soundEffectsEnabled);
+          soundEffectsToggle.classList.toggle('active');
+          
+          // Update icon
+          const slider = soundEffectsToggle.querySelector('.theme-toggle-slider');
+          if (slider) {
+            slider.textContent = soundEffectsEnabled ? '🔊' : '🔇';
+          }
+          
+          // Play sound to confirm
+          if (soundEffectsEnabled) {
+            playRandomSound();
+          }
+          
+          showToast(soundEffectsEnabled ? t('soundOn') : t('soundOff'), 'info');
+        });
+      }
+      
       if (displayModeSelect) {
         displayModeSelect.addEventListener('change', (e) => {
           applyDisplayMode(e.target.value);
@@ -486,14 +625,30 @@ document.querySelectorAll('.menu-item').forEach(item => {
   item.addEventListener('click', (e) => {
     e.stopPropagation();
     const modalId = item.getAttribute('data-modal');
-    openModal(modalId);
+    const action = item.getAttribute('data-action');
+    
+    if (action === 'feedback') {
+      // Open feedback form in new tab
+      window.open('https://forms.gle/o3W4wVamF4PA1AFy9', '_blank');
+    } else if (modalId) {
+      openModal(modalId);
+    }
   });
 });
+
+function closeModal() {
+  if (modalOverlay) {
+    modalOverlay.classList.add('closing');
+    setTimeout(() => {
+      modalOverlay.classList.remove('active', 'closing');
+    }, 300); // Match animation duration
+  }
+}
 
 if (modalClose) {
   modalClose.addEventListener('click', (e) => {
     e.stopPropagation();
-    modalOverlay.classList.remove('active');
+    closeModal();
   });
 }
 
@@ -501,7 +656,7 @@ if (modalOverlay) {
   modalOverlay.addEventListener('click', (e) => {
     if (e.target === modalOverlay) {
       e.stopPropagation();
-      modalOverlay.classList.remove('active');
+      closeModal();
     }
   });
 }
@@ -889,30 +1044,6 @@ function loadSavedPaths() {
 }
 
 loadSavedPaths();
-
-// =================== SEARCH ===================
-const searchInput = document.getElementById('searchInput');
-
-if (searchInput) {
-  searchInput.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter') return;
-    const q = searchInput.value.trim().toLowerCase();
-    if (!q) return;
-
-    const found = allPins.find(p => p.name.toLowerCase().includes(q));
-    if (found) {
-      map.setView([found.lat, found.lng], 19, { animate: true });
-      const m = markers.find(mk => {
-        const ll = mk.getLatLng();
-        return Math.abs(ll.lat - found.lat) < 0.00001 && Math.abs(ll.lng - found.lng) < 0.00001;
-      });
-      if (m) m.openPopup();
-      showToast(`Found: ${found.name}`, 'success');
-    } else {
-      showToast('Not found', 'error');
-    }
-  });
-}
 
 // =================== VIEWER ===================
 const viewerOverlay = document.getElementById('viewerOverlay');
@@ -1319,6 +1450,9 @@ function renderSavedPinsList() {
 console.log('✅ School Map Loaded');
 console.log('Dev mode:', devMode);
 
+// =================== SOUND EFFECTS MANAGEMENT ===================
+const soundMuteBtn = document.getElementById('soundMuteBtn');
+
 // =================== FLOOR SELECTOR ===================
 const floorSelectorBtn = document.getElementById('floorSelector');
 const floorDropdown = document.getElementById('floorDropdown');
@@ -1406,3 +1540,156 @@ window.addEventListener('languagechange', () => {
     currentFloorText.textContent = `${t('floor')} ${currentFloor + 1}`;
   }
 });
+
+// =================== SEARCH FUNCTIONALITY ===================
+const searchInput = document.getElementById('searchInput');
+const searchRecommendations = document.getElementById('searchRecommendations');
+
+function searchLocations(query) {
+  if (!query || query.trim() === '') return [];
+  
+  query = query.toLowerCase().trim();
+  let results = [];
+  
+  // Search in locations.json file
+  const fileResults = locationsFromFile.filter(location => {
+    // Search in name
+    if (location.name.toLowerCase().includes(query)) return true;
+    // Search in keywords if available
+    if (location.keywords && Array.isArray(location.keywords)) {
+      return location.keywords.some(keyword => 
+        keyword.toLowerCase().includes(query)
+      );
+    }
+    return false;
+  });
+  
+  results = results.concat(fileResults);
+  
+  // Search in existing pins (allPins)
+  if (allPins && allPins.length > 0) {
+    const pinResults = allPins.filter(pin => {
+      return pin.name && pin.name.toLowerCase().includes(query);
+    }).map(pin => ({
+      name: pin.name,
+      floor: pin.floor || 1,
+      lat: pin.lat,
+      lng: pin.lng,
+      type: 'pin'
+    }));
+    
+    results = results.concat(pinResults);
+  }
+  
+  // Remove duplicates by name
+  const uniqueResults = [];
+  const seen = new Set();
+  for (const result of results) {
+    if (!seen.has(result.name)) {
+      seen.add(result.name);
+      uniqueResults.push(result);
+    }
+  }
+  
+  // Return only max results
+  return uniqueResults.slice(0, SEARCH_MAX_RESULTS);
+}
+
+function displaySearchResults(results) {
+  if (!searchRecommendations) return;
+  
+  searchRecommendations.innerHTML = '';
+  
+  if (results.length === 0) {
+    // Show "Not found" message
+    const notFoundDiv = document.createElement('div');
+    notFoundDiv.className = 'search-result-item not-found';
+    notFoundDiv.textContent = t('notFound');
+    searchRecommendations.appendChild(notFoundDiv);
+  } else {
+    // Show results
+    results.forEach(result => {
+      const resultDiv = document.createElement('div');
+      resultDiv.className = 'search-result-item';
+      resultDiv.innerHTML = `
+        <strong>${result.name}</strong>
+        <span style="color:var(--muted);font-size:12px;margin-left:8px;">${t('floor')} ${result.floor}</span>
+      `;
+      
+      resultDiv.addEventListener('click', () => {
+        playRandomSound(); // Play sound on click
+        
+        // Switch to the correct floor
+        if (result.floor && result.floor - 1 !== currentFloor) {
+          switchFloor(result.floor - 1);
+        }
+        
+        // Zoom to location
+        map.setView([result.lat, result.lng], 19, { animate: true });
+        
+        // Close search dropdown
+        searchRecommendations.classList.remove('active');
+        searchInput.value = '';
+        
+        showToast(`${t('searchResults')}: ${result.name}`, 'success');
+      });
+      
+      searchRecommendations.appendChild(resultDiv);
+    });
+  }
+  
+  searchRecommendations.classList.add('active');
+}
+
+if (searchInput) {
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value;
+    
+    if (query.trim() === '') {
+      searchRecommendations.classList.remove('active');
+      return;
+    }
+    
+    const results = searchLocations(query);
+    displaySearchResults(results);
+  });
+  
+  // Close search when clicking outside
+  document.addEventListener('click', (e) => {
+    if (searchRecommendations && searchInput) {
+      const clickedInSearch = searchInput.contains(e.target);
+      const clickedInResults = searchRecommendations.contains(e.target);
+      
+      if (!clickedInSearch && !clickedInResults) {
+        searchRecommendations.classList.remove('active');
+      }
+    }
+  });
+}
+
+// =================== GLOBAL CLICK SOUND HANDLER ===================
+// Add sound to all clicks when in t-th mode
+document.addEventListener('click', (e) => {
+  if (currentLanguage === 't-th' && soundEffectsEnabled) {
+    // Check if clicked element is interactive
+    const target = e.target;
+    const isInteractive = 
+      target.tagName === 'BUTTON' ||
+      target.tagName === 'A' ||
+      target.classList.contains('menu-item') ||
+      target.classList.contains('search-result-item') ||
+      target.classList.contains('floor-item') ||
+      target.classList.contains('path-item') ||
+      target.classList.contains('btn') ||
+      target.closest('button') ||
+      target.closest('.menu-item') ||
+      target.closest('.clickable');
+    
+    if (isInteractive) {
+      playRandomSound();
+    }
+  }
+}, true); // Use capture phase to catch all clicks
+
+console.log('✅ All features loaded!');
+console.log('🔊 Sound effects:', soundEffectsEnabled ? 'enabled' : 'disabled');

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Project Absolute TK Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photo-sphere-viewer@4.2.0/dist/photo-sphere-viewer.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Dev Mode Button -->
+  <button id="devModeBtn" class="floating-btn" title="Dev Tools">🛠</button>
+
+  <!-- Topbar -->
+  <div id="topbar">
+    <input id="searchInput" placeholder="หาชื่อห้องหรือเลขห้อง..." />
+    <button id="floorSelector" class="floor-selector-btn" title="Select Floor">
+      <span id="currentFloorText">Floor 1</span>
+      <span class="floor-arrow">▼</span>
+    </button>
+    <button id="menuToggle" title="Menu">☰</button>
+  </div>
+
+  <!-- Floor Selector Dropdown -->
+  <div id="floorDropdown" class="floor-dropdown">
+    <div class="floor-dropdown-header">
+      <span class="floor-dropdown-title">Select Floor</span>
+    </div>
+    <div class="floor-list" id="floorList">
+      <!-- Floors will be populated by JS -->
+    </div>
+  </div>
+
+  <!-- Language Change Loading Overlay -->
+  <div id="languageLoadingOverlay" class="language-loading-overlay">
+    <div class="language-loading-content">
+      <h1 class="language-loading-title" id="languageLoadingText">Changing Language...</h1>
+      <div class="language-loading-bar">
+        <div class="language-loading-progress"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN MENU SIDEBAR (right) -->
+  <aside id="mainSidebar" class="sidebar-panel right">
+    <div class="sidebar-header">
+      <span class="sidebar-title">MENU</span>
+      <button id="closeSidebarBtn" class="close-btn" title="Close">×</button>
+    </div>
+
+    <nav class="sidebar-body">
+      <ul class="sidebar-menu">
+        <li class="menu-item" data-modal="about">📘 About / Credits</li>
+        <li class="menu-item" data-modal="howto">❔ How to Use</li>
+        <li class="menu-item" data-modal="settings">⚙ Settings</li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- DEV TOOLS SIDEBAR (left) -->
+  <aside id="devSidebar" class="sidebar-panel left">
+    <div class="sidebar-header">
+      <span class="sidebar-title">🛠 DEV TOOLS</span>
+      <button id="closeDevBtn" class="close-btn" title="Close">×</button>
+    </div>
+
+    <div class="sidebar-body">
+      <!-- Path Drawing Section - Google Maps Style -->
+      <div class="path-section">
+        <h4>🗺️ Route Creator</h4>
+
+        <div class="path-controls">
+          <!-- Step 1: Name your route -->
+          <div class="route-step">
+            <div class="step-header">
+              <span class="step-number">1</span>
+              <span class="step-title">Name Your Route</span>
+            </div>
+            <div class="path-input-group">
+              <input id="pathName" type="text" placeholder="e.g. Main Entrance to Library">
+            </div>
+          </div>
+
+          <!-- Step 2: Draw on map -->
+          <div class="route-step">
+            <div class="step-header">
+              <span class="step-number">2</span>
+              <span class="step-title">Draw Your Route</span>
+            </div>
+            <div class="drawing-actions">
+              <button id="startPathBtn" class="btn-route">
+                <span class="btn-icon">✏️</span>
+                Start Drawing
+              </button>
+              <div id="drawingTools" class="drawing-tools" style="display:none;">
+                <button id="undoPointBtn" class="btn-tool">↶ Undo</button>
+                <button id="clearPathBtn" class="btn-tool">✕ Clear</button>
+                <button id="finishPathBtn" class="btn-tool-primary">✓ Finish</button>
+              </div>
+            </div>
+            <div id="pathStatus" class="path-status">
+              Ready to draw
+            </div>
+          </div>
+
+          <!-- Step 3: Save -->
+          <div class="route-step">
+            <div class="step-header">
+              <span class="step-number">3</span>
+              <span class="step-title">Save Your Route</span>
+            </div>
+            <button id="savePathBtn" class="btn-save-route">
+              <span class="btn-icon">💾</span>
+              Save Route
+            </button>
+          </div>
+        </div>
+
+        <!-- Saved Routes List -->
+        <div class="saved-routes-header">
+          <h4>📋 Saved Routes</h4>
+          <span id="routeCount" class="route-count">0</span>
+        </div>
+        <div id="pathsList" class="paths-list"></div>
+      </div>
+
+      <!-- 360 Pin Section -->
+      <div class="path-section">
+        <h4>📸 Add 360° Pin</h4>
+
+        <div class="path-controls">
+          <!-- Step 1: Place on map -->
+          <div class="route-step">
+            <div class="step-header">
+              <span class="step-number">1</span>
+              <span class="step-title">Place Pin on Map</span>
+            </div>
+            <div class="drawing-actions">
+              <button id="startPlacingPin" class="btn-route">
+                <span class="btn-icon">📍</span>
+                Place Pin on Map
+              </button>
+              <div id="pinPlacingTools" class="drawing-tools" style="display:none;">
+                <button id="confirmPinLocation" class="btn-tool-primary" style="grid-column: 1 / -1;">✓ Confirm Location</button>
+              </div>
+            </div>
+            <div id="pinPlacingStatus" class="path-status">
+              Ready to place pin
+            </div>
+          </div>
+
+          <!-- Step 2: Add details (hidden until pin placed) -->
+          <div id="pinDetailsStep" class="route-step" style="display:none;">
+            <div class="step-header">
+              <span class="step-number">2</span>
+              <span class="step-title">Add Pin Details</span>
+            </div>
+            <div class="path-input-group">
+              <label for="pinName">Location Name</label>
+              <input type="text" id="pinName" placeholder="e.g. Main Entrance" />
+            </div>
+            <div class="path-input-group">
+              <label for="upload360">360° Image</label>
+              <input type="file" id="upload360" accept="image/*" />
+            </div>
+          </div>
+
+          <!-- Step 3: Save -->
+          <div id="pinSaveStep" class="route-step" style="display:none;">
+            <div class="step-header">
+              <span class="step-number">3</span>
+              <span class="step-title">Save Pin</span>
+            </div>
+            <div class="path-buttons">
+              <button id="savePin" class="btn btn-success">💾 Save Pin</button>
+              <button id="cancelPin" class="btn btn-ghost">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Saved Pins List -->
+        <div class="saved-routes-header">
+          <h4>📍 Saved Pins</h4>
+          <span id="pinCount" class="route-count">0</span>
+        </div>
+        <div id="savedPinsList" class="paths-list"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Modals -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle"></h2>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Viewer Overlay -->
+  <div id="viewerOverlay">
+    <button id="viewerClose">×</button>
+    <div id="viewer" class="viewer-card"></div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.121.1/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/uevent@2/browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dot/doT.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/photo-sphere-viewer@4.2.0/dist/photo-sphere-viewer.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

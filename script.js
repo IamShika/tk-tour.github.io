@@ -489,7 +489,7 @@ function generateSettingsHTML() {
         <span class="theme-toggle-label">
           <span class="theme-icon">🔊</span>
           ${t('traditionalThaiSounds')}
-          <span class="info-tooltip" title="${t('soundsTooltip')}" style="margin-left:8px;cursor:help;color:var(--accent);">❓นี่คืออะไร?</span>
+          <span class="info-tooltip" title="${t('soundsTooltip')}" style="margin-left:8px;color:var(--accent);">❓</span>
         </span>
         <div class="theme-toggle ${soundEffectsEnabled ? 'active' : ''}" id="soundEffectsToggle">
           <div class="theme-toggle-slider">
@@ -1693,3 +1693,4 @@ document.addEventListener('click', (e) => {
 
 console.log('✅ All features loaded!');
 console.log('🔊 Sound effects:', soundEffectsEnabled ? 'enabled' : 'disabled');
+

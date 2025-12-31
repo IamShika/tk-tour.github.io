@@ -2,16 +2,16 @@
 This is the map of my school, as a final project with limited budget. We used Ai to create this website and adjust everything.
 [tktour.site](https://tktour.site)
 
-# $`\textcolor{pink}{\text{VERSION : BETA de1.1.0-h}}`$
+# $`\textcolor{pink}{\text{VERSION : BETA dec1.2.5-h}}`$
 
 
 # Functions :
 - Viewing 360 images
-- GPS navigation (adding soon btw)
-- Simple and easy to use UI (Still fixing phone UI!)
+- GPS navigation
+- Simple and easy to use UI
 - Info about that room/buliding (adding soon.)
 - Captions on 360 pins
-- Muti-floor switcher (still in cooking)
+- Muti-floor switcher
 - Searchbar with reccommendations
 - Easter egg
 - Indoor overlay alignment (adding soon!)

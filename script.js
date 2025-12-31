@@ -1,4 +1,6 @@
 // =================== CONFIG ===================
+const APP_VERSION = 'BETA dec1.2.0-h';
+// version identifer [release] {month Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec}{howmanyversionnow}{is "H"alf a month}
 const CENTER = [14.085933, 100.608844];
 const FLOORS = [
   {
@@ -185,16 +187,13 @@ function applyTranslations() {
   if (savedRoutesHeaders[0]) savedRoutesHeaders[0].textContent = t('savedRoutes');
   if (savedRoutesHeaders[1]) savedRoutesHeaders[1].textContent = t('savedPins');
   
-  // Update floor dropdown header
-  const floorDropdownTitle = document.querySelector('.floor-dropdown-title');
-  if (floorDropdownTitle) floorDropdownTitle.textContent = t('selectFloor');
-  
-  // Update floor items in dropdown
-  initFloorSelector();
-  
-  // Update current floor text
-  if (currentFloorText) {
-    currentFloorText.textContent = `${t('floor')} ${currentFloor + 1}`;
+  // Update floor pill
+  initFloorPill();
+
+  // Update current floor display
+  const currentFloorNum = document.getElementById('currentFloorNum');
+  if (currentFloorNum) {
+    currentFloorNum.textContent = currentFloor + 1;
   }
   
   // Update placeholders
@@ -238,9 +237,15 @@ function changeLanguage(lang) {
       setTimeout(() => {
         if (overlay) overlay.classList.remove('active');
         
-        // Play completion sound only when switching TO t-th
+        // Play sound8 when switching TO t-th
         if (lang === 't-th' && soundEffectsEnabled) {
-          playRandomSound();
+          if (currentSound) {
+            currentSound.pause();
+            currentSound.currentTime = 0;
+          }
+          currentSound = new Audio('sounds/sound8.ogg');
+          currentSound.volume = 0.3;
+          currentSound.play().catch(err => console.debug('Sound play failed:', err));
         }
         
         resolve();
@@ -436,12 +441,10 @@ document.addEventListener('keydown', (e) => {
     if (modalOverlay && modalOverlay.classList.contains('active')) {
       closeModal();
     }
-    // Close floor dropdown if open
-    const floorDropdown = document.getElementById('floorDropdown');
-    const floorSelectorBtn = document.getElementById('floorSelector');
-    if (floorDropdown && floorDropdown.classList.contains('active')) {
-      floorDropdown.classList.remove('active');
-      if (floorSelectorBtn) floorSelectorBtn.classList.remove('active');
+    // Close floor pill if open
+    const floorPillEl = document.getElementById('floorPill');
+    if (floorPillEl && floorPillEl.classList.contains('expanded')) {
+      floorPillEl.classList.remove('expanded');
     }
     // Close search recommendations if open
     const searchRecs = document.getElementById('searchRecommendations');
@@ -489,7 +492,7 @@ function generateSettingsHTML() {
         <span class="theme-toggle-label">
           <span class="theme-icon">🔊</span>
           ${t('traditionalThaiSounds')}
-          <span class="info-tooltip" title="${t('soundsTooltip')}" style="margin-left:8px;color:var(--accent);">❓</span>
+          <span class="info-tooltip" title="${t('soundsTooltip')}" style="margin-left:8px;cursor:help;color:var(--accent);">❓</span>
         </span>
         <div class="theme-toggle ${soundEffectsEnabled ? 'active' : ''}" id="soundEffectsToggle">
           <div class="theme-toggle-slider">
@@ -584,25 +587,32 @@ function openModal(modalId) {
         });
       }
       
-      // Sound Effects Toggle (only in t-th mode) //Sound won't mute when toggled off, It just kept playing.
+      // Sound Effects Toggle (only in t-th mode)
       const soundEffectsToggle = document.getElementById('soundEffectsToggle');
       if (soundEffectsToggle) {
         soundEffectsToggle.addEventListener('click', () => {
           soundEffectsEnabled = !soundEffectsEnabled;
           localStorage.setItem('soundEffects', soundEffectsEnabled);
           soundEffectsToggle.classList.toggle('active');
-          
+
           // Update icon
           const slider = soundEffectsToggle.querySelector('.theme-toggle-slider');
           if (slider) {
             slider.textContent = soundEffectsEnabled ? '🔊' : '🔇';
           }
-          
-          // Play sound to confirm
+
           if (soundEffectsEnabled) {
+            // Play sound to confirm it's on
             playRandomSound();
+          } else {
+            // Stop any currently playing sound
+            if (currentSound) {
+              currentSound.pause();
+              currentSound.currentTime = 0;
+              currentSound = null;
+            }
           }
-          
+
           showToast(soundEffectsEnabled ? t('soundOn') : t('soundOff'), 'info');
         });
       }
@@ -640,8 +650,16 @@ function closeModal() {
   if (modalOverlay) {
     modalOverlay.classList.add('closing');
     setTimeout(() => {
+      // Force hide before removing classes to prevent flash
+      modalOverlay.style.display = 'none';
+      modalOverlay.style.opacity = '0';
       modalOverlay.classList.remove('active', 'closing');
-    }, 300); // Match animation duration
+      // Clear inline styles so CSS takes over again
+      setTimeout(() => {
+        modalOverlay.style.display = '';
+        modalOverlay.style.opacity = '';
+      }, 10);
+    }, 250); // Match animation duration exactly
   }
 }
 
@@ -1453,91 +1471,161 @@ console.log('Dev mode:', devMode);
 // =================== SOUND EFFECTS MANAGEMENT ===================
 const soundMuteBtn = document.getElementById('soundMuteBtn');
 
-// =================== FLOOR SELECTOR ===================
-const floorSelectorBtn = document.getElementById('floorSelector');
-const floorDropdown = document.getElementById('floorDropdown');
-const floorList = document.getElementById('floorList');
-const currentFloorText = document.getElementById('currentFloorText');
+// =================== FLOOR PILL - Unified Component ===================
+const floorPill = document.getElementById('floorPill');
+const floorPillCurrent = document.getElementById('floorPillCurrent');
+const floorPillList = document.getElementById('floorPillList');
 
-// Initialize floor list
-function initFloorSelector() {
-  if (!floorList) return;
-  
-  floorList.innerHTML = '';
+// Initialize floor pill - populate ALL floors with sliding indicator
+function initFloorPill() {
+  if (!floorPillList) return;
+
+  floorPillList.innerHTML = '';
+
+  // Add floating indicator (the sliding blue circle)
+  const indicator = document.createElement('div');
+  indicator.className = 'floor-pill-indicator';
+  indicator.id = 'floorPillIndicator';
+  floorPillList.appendChild(indicator);
+
+  // Add ALL floors
   FLOORS.forEach((floor, index) => {
     const item = document.createElement('div');
-    item.className = 'floor-item' + (index === currentFloor ? ' active' : '');
-    item.textContent = `${t('floor')} ${index + 1}`;
-    item.onclick = () => switchFloor(index);
-    floorList.appendChild(item);
+    item.className = 'floor-pill-item';
+    item.setAttribute('data-floor', index);
+    item.innerHTML = `
+      <span class="floor-num">${index + 1}</span>
+      <span class="floor-label">F</span>
+    `;
+    item.onclick = (e) => {
+      e.stopPropagation();
+      switchFloor(index);
+    };
+    floorPillList.appendChild(item);
   });
+
+  // Position indicator at current floor after a short delay (to get correct heights)
+  requestAnimationFrame(() => {
+    updateIndicatorPosition(currentFloor, false);
+  });
+
+  // Update the current floor display in the button
+  const currentFloorNumEl = document.getElementById('currentFloorNum');
+  if (currentFloorNumEl) {
+    currentFloorNumEl.textContent = currentFloor + 1;
+  }
 }
 
-// Switch floor
+// Track current indicator Y position
+let currentIndicatorY = 0;
+
+// Update the sliding indicator position with spring animation
+function updateIndicatorPosition(floorIndex, animate = true) {
+  const indicator = document.getElementById('floorPillIndicator');
+  const items = document.querySelectorAll('.floor-pill-item');
+
+  if (!indicator || !items.length || !items[floorIndex]) return;
+
+  const targetItem = items[floorIndex];
+  const listRect = floorPillList.getBoundingClientRect();
+  const itemRect = targetItem.getBoundingClientRect();
+
+  // Calculate position relative to the list
+  const topOffset = itemRect.top - listRect.top;
+  const newY = topOffset + (itemRect.height / 2) - 16; // 16 = half of indicator height (32px)
+
+  if (animate && currentIndicatorY !== newY) {
+    // Determine direction
+    const movingDown = newY > currentIndicatorY;
+
+    // Set CSS custom properties for animation
+    indicator.style.setProperty('--from-y', `${currentIndicatorY}px`);
+    indicator.style.setProperty('--to-y', `${newY}px`);
+
+    // Remove any existing animation class
+    indicator.classList.remove('moving-up', 'moving-down');
+
+    // Force reflow to restart animation
+    void indicator.offsetWidth;
+
+    // Add appropriate animation class
+    indicator.classList.add(movingDown ? 'moving-down' : 'moving-up');
+
+    // Clean up after animation
+    setTimeout(() => {
+      indicator.classList.remove('moving-up', 'moving-down');
+      indicator.style.transform = `translateX(-50%) translateY(${newY}px) scaleY(1) scaleX(1)`;
+    }, 400);
+  } else {
+    // No animation, just set position
+    indicator.style.transform = `translateX(-50%) translateY(${newY}px) scaleY(1) scaleX(1)`;
+  }
+
+  currentIndicatorY = newY;
+}
+
+// Switch floor with sliding animation
 function switchFloor(floorIndex) {
   if (floorIndex === currentFloor) {
-    floorDropdown.classList.remove('active');
-    floorSelectorBtn.classList.remove('active');
+    // Same floor clicked, just close
+    if (floorPill) floorPill.classList.remove('expanded');
     return;
   }
-  
+
+  // Slide indicator to new position
+  updateIndicatorPosition(floorIndex, true);
+
   currentFloor = floorIndex;
-  
+
   // Update overlay
   floorOverlay.setUrl(FLOORS[floorIndex].img);
   floorOverlay.setBounds(FLOORS[floorIndex].bounds);
-  
-  // Update UI
-  if (currentFloorText) {
-    currentFloorText.textContent = `${t('floor')} ${floorIndex + 1}`;
+
+  // Update current floor display
+  const currentFloorNumEl = document.getElementById('currentFloorNum');
+  if (currentFloorNumEl) {
+    currentFloorNumEl.textContent = floorIndex + 1;
   }
-  
-  // Update active state in dropdown
-  document.querySelectorAll('.floor-item').forEach((item, i) => {
-    item.classList.toggle('active', i === floorIndex);
-  });
-  
-  // Close dropdown
-  floorDropdown.classList.remove('active');
-  floorSelectorBtn.classList.remove('active');
-  
+
+  // Don't auto-close - let user close by clicking outside
   showToast(`${t('floor')} ${floorIndex + 1}`, 'info');
-  
-  // TODO: Load floor-specific pins and paths here
-  // This is where you'd filter and show only pins/paths for this floor
 }
 
-// Floor selector button click
-if (floorSelectorBtn) {
-  floorSelectorBtn.addEventListener('click', (e) => {
+// Floor pill click - toggle expand/collapse
+if (floorPillCurrent) {
+  floorPillCurrent.addEventListener('click', (e) => {
     e.stopPropagation();
-    const isActive = floorDropdown.classList.contains('active');
-    floorDropdown.classList.toggle('active', !isActive);
-    floorSelectorBtn.classList.toggle('active', !isActive);
+    if (floorPill) {
+      floorPill.classList.toggle('expanded');
+      // Update indicator position when expanded (after animation starts)
+      if (floorPill.classList.contains('expanded')) {
+        setTimeout(() => {
+          updateIndicatorPosition(currentFloor, false);
+        }, 50);
+      }
+    }
   });
 }
 
-// Close dropdown when clicking outside
+// Close pill when clicking outside
 document.addEventListener('click', (e) => {
-  if (floorDropdown && floorSelectorBtn) {
-    const clickedInDropdown = floorDropdown.contains(e.target);
-    const clickedButton = floorSelectorBtn.contains(e.target);
-    
-    if (!clickedInDropdown && !clickedButton) {
-      floorDropdown.classList.remove('active');
-      floorSelectorBtn.classList.remove('active');
+  if (floorPill) {
+    const clickedInPill = floorPill.contains(e.target);
+    if (!clickedInPill) {
+      floorPill.classList.remove('expanded');
     }
   }
 });
 
-// Initialize floor selector
-initFloorSelector();
+// Initialize floor pill
+initFloorPill();
 
-// Update floor selector when language changes
+// Update floor pill when language changes
 window.addEventListener('languagechange', () => {
-  initFloorSelector();
-  if (currentFloorText) {
-    currentFloorText.textContent = `${t('floor')} ${currentFloor + 1}`;
+  initFloorPill();
+  const currentFloorNumEl = document.getElementById('currentFloorNum');
+  if (currentFloorNumEl) {
+    currentFloorNumEl.textContent = currentFloor + 1;
   }
 });
 
@@ -1642,24 +1730,135 @@ function displaySearchResults(results) {
 }
 
 if (searchInput) {
+  const searchClear = document.getElementById('searchClear');
+
+  // Update clear button visibility
+  const updateClearButton = () => {
+    if (searchClear) {
+      if (searchInput.value.length > 0) {
+        searchClear.classList.add('visible');
+      } else {
+        searchClear.classList.remove('visible');
+      }
+    }
+  };
+
   searchInput.addEventListener('input', (e) => {
     const query = e.target.value;
-    
+    updateClearButton();
+
     if (query.trim() === '') {
       searchRecommendations.classList.remove('active');
       return;
     }
-    
+
     const results = searchLocations(query);
     displaySearchResults(results);
   });
-  
+
+  // Digital glitch particle effect
+  const createSnapEffect = (text) => {
+    const container = searchInput.parentElement;
+    const inputStyle = getComputedStyle(searchInput);
+    const paddingLeft = parseFloat(inputStyle.paddingLeft);
+    const fontSize = parseFloat(inputStyle.fontSize);
+
+    // Calculate approximate text width (chars * ~0.6 of font size for average char width)
+    const avgCharWidth = fontSize * 0.55;
+    const textWidth = Math.min(text.length * avgCharWidth, searchInput.offsetWidth - paddingLeft - 40);
+
+    // Glitch colors array
+    const glitchColors = ['#0dff39', '#fffa5e', '#d7ff5e', '#5ea4ff', '#1c7eff', '#000000ff', '#fb00ff', '#ff006f'];
+
+    // Create particles based on text length (spawn where text is)
+    const particleCount = Math.min(text.length * 3, 45);
+
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement('span');
+      particle.className = 'search-particle';
+
+      // Random square size (2-8px)
+      const size = 2 + Math.random() * 6;
+      particle.style.setProperty('--size', `${size}px`);
+
+      // Random starting color (so not all green at once)
+      const startColor = glitchColors[Math.floor(Math.random() * glitchColors.length)];
+      particle.style.setProperty('--start-color', startColor);
+
+      // Position only within text area
+      const xPos = paddingLeft + Math.random() * textWidth;
+      particle.style.left = `${xPos}px`;
+      particle.style.top = `${10 + Math.random() * 20}px`; // Centered vertically
+
+      // Random animation values - scatter outward
+      const tx = (Math.random() - 0.5) * 100;
+      const ty = (Math.random() - 0.5) * 80;
+      const rot = Math.random() * 360;
+      const delay = Math.random() * 0.2; // Staggered start
+
+      particle.style.setProperty('--tx', `${tx}px`);
+      particle.style.setProperty('--ty', `${ty}px`);
+      particle.style.setProperty('--rot', `${rot}deg`);
+      particle.style.animationDelay = `${delay}s`;
+
+      container.appendChild(particle);
+
+      // Remove particle after animation (match 1.4s animation + delay)
+      setTimeout(() => particle.remove(), 1600);
+    }
+  };
+
+  // Clear button click handler
+  if (searchClear) {
+    searchClear.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Create snap effect before clearing
+      if (searchInput.value.length > 0) {
+        createSnapEffect(searchInput.value);
+      }
+
+      searchInput.value = '';
+      searchRecommendations.classList.remove('active');
+      updateClearButton();
+      searchInput.focus();
+    });
+  }
+
+  // Mobile/Phone mode: expand search bar on focus, collapse on blur
+  const topbar = document.getElementById('topbar');
+  if (topbar) {
+    searchInput.addEventListener('focus', () => {
+      // Check for phone display mode OR actual small screen width
+      const isPhoneMode = document.body.getAttribute('data-display') === 'phone';
+      const isSmallScreen = window.innerWidth <= 768;
+      if (isPhoneMode || isSmallScreen) {
+        topbar.classList.add('search-focused');
+        // Also expand search recommendations
+        if (searchRecommendations) {
+          searchRecommendations.classList.add('expanded');
+        }
+      }
+    });
+
+    searchInput.addEventListener('blur', () => {
+      topbar.classList.remove('search-focused');
+      // Collapse search recommendations after a small delay (allows clicking results)
+      setTimeout(() => {
+        if (searchRecommendations) {
+          searchRecommendations.classList.remove('expanded');
+        }
+      }, 200);
+    });
+  }
+
   // Close search when clicking outside
   document.addEventListener('click', (e) => {
     if (searchRecommendations && searchInput) {
       const clickedInSearch = searchInput.contains(e.target);
       const clickedInResults = searchRecommendations.contains(e.target);
-      
+
       if (!clickedInSearch && !clickedInResults) {
         searchRecommendations.classList.remove('active');
       }
@@ -1673,24 +1872,1174 @@ document.addEventListener('click', (e) => {
   if (currentLanguage === 't-th' && soundEffectsEnabled) {
     // Check if clicked element is interactive
     const target = e.target;
-    const isInteractive = 
+    const isInteractive =
       target.tagName === 'BUTTON' ||
       target.tagName === 'A' ||
+      target.tagName === 'INPUT' ||
       target.classList.contains('menu-item') ||
       target.classList.contains('search-result-item') ||
       target.classList.contains('floor-item') ||
+      target.classList.contains('floor-pill-item') ||
+      target.classList.contains('floor-pill-current') ||
       target.classList.contains('path-item') ||
       target.classList.contains('btn') ||
       target.closest('button') ||
       target.closest('.menu-item') ||
+      target.closest('.floor-pill') ||
       target.closest('.clickable');
-    
+
     if (isInteractive) {
       playRandomSound();
     }
   }
 }, true); // Use capture phase to catch all clicks
 
+// =================== GPS & NAVIGATION SYSTEM ===================
+
+// Navigation Graph Data
+let navGraph = { nodes: {}, edges: [], transitions: [] };
+
+// GPS Tracker Class
+class GPSTracker {
+  constructor(mapInstance) {
+    this.map = mapInstance;
+    this.currentPosition = null;
+    this.watchId = null;
+    this.userMarker = null;
+    this.accuracyCircle = null;
+    this.isTracking = false;
+    this.manualMode = false;
+    this.currentFloor = 1;
+    this.callbacks = [];
+  }
+
+  isGPSAvailable() {
+    return 'geolocation' in navigator;
+  }
+
+  startTracking() {
+    if (!this.isGPSAvailable()) {
+      showToast(t('gpsUnavailable'), 'error');
+      return false;
+    }
+
+    this.isTracking = true;
+    document.getElementById('gpsBtn')?.classList.add('active');
+
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 1000  // Reduced for more frequent updates
+    };
+
+    // Get initial position
+    navigator.geolocation.getCurrentPosition(
+      (pos) => this.handlePosition(pos),
+      (err) => this.handleError(err),
+      options
+    );
+
+    // Watch position updates
+    this.watchId = navigator.geolocation.watchPosition(
+      (pos) => this.handlePosition(pos),
+      (err) => this.handleError(err),
+      options
+    );
+
+    return true;
+  }
+
+  stopTracking() {
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
+    }
+    this.isTracking = false;
+    this.manualMode = false;
+    document.getElementById('gpsBtn')?.classList.remove('active', 'manual-mode');
+  }
+
+  handlePosition(pos) {
+    const { latitude, longitude, accuracy, heading, speed } = pos.coords;
+
+    // Check if within school bounds
+    if (!this.isWithinBounds(latitude, longitude)) {
+      showToast(t('gpsOutOfBounds'), 'error');
+      return;
+    }
+
+    this.currentPosition = {
+      lat: latitude,
+      lng: longitude,
+      accuracy: accuracy,
+      floor: this.currentFloor,
+      source: 'gps',
+      timestamp: Date.now(),
+      heading: heading,
+      speed: speed
+    };
+
+    this.updateMarker();
+    this.notifyCallbacks();
+  }
+
+  handleError(err) {
+    console.warn('GPS Error:', err.message);
+    if (err.code === err.PERMISSION_DENIED) {
+      showToast(t('gpsPermissionDenied'), 'error');
+    } else if (err.code === err.POSITION_UNAVAILABLE) {
+      showToast(t('gpsUnavailable'), 'error');
+    }
+  }
+
+  setManualPosition(latlng, floor) {
+    this.currentPosition = {
+      lat: latlng.lat,
+      lng: latlng.lng,
+      accuracy: 5,
+      floor: floor || currentFloor + 1,
+      source: 'manual',
+      timestamp: Date.now()
+    };
+
+    this.manualMode = true;
+    document.getElementById('gpsBtn')?.classList.remove('active');
+    document.getElementById('gpsBtn')?.classList.add('manual-mode');
+
+    this.updateMarker();
+    this.notifyCallbacks();
+    showToast(t('locationSet'), 'success');
+  }
+
+  updateMarker() {
+    if (!this.currentPosition) return;
+
+    const { lat, lng, accuracy } = this.currentPosition;
+
+    // Create user location icon
+    const userIcon = L.divIcon({
+      className: 'user-location-marker',
+      html: `
+        <div class="user-marker-outer">
+          <div class="user-marker-pulse"></div>
+          <div class="user-marker-inner">
+            <div class="user-marker-direction"></div>
+          </div>
+        </div>
+      `,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    });
+
+    // Update or create marker
+    if (this.userMarker) {
+      this.userMarker.setLatLng([lat, lng]);
+    } else {
+      this.userMarker = L.marker([lat, lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(this.map);
+    }
+
+    // Update or create accuracy circle
+    if (accuracy && accuracy > 10) {
+      if (this.accuracyCircle) {
+        this.accuracyCircle.setLatLng([lat, lng]);
+        this.accuracyCircle.setRadius(accuracy);
+      } else {
+        this.accuracyCircle = L.circle([lat, lng], {
+          radius: accuracy,
+          className: 'user-accuracy-circle',
+          interactive: false
+        }).addTo(this.map);
+      }
+    } else if (this.accuracyCircle) {
+      this.accuracyCircle.remove();
+      this.accuracyCircle = null;
+    }
+  }
+
+  removeMarker() {
+    if (this.userMarker) {
+      this.userMarker.remove();
+      this.userMarker = null;
+    }
+    if (this.accuracyCircle) {
+      this.accuracyCircle.remove();
+      this.accuracyCircle = null;
+    }
+  }
+
+  isWithinBounds(lat, lng) {
+    return lat >= 14.083915 && lat <= 14.086142 &&
+           lng >= 100.606071 && lng <= 100.610199;
+  }
+
+  centerOnUser() {
+    if (this.currentPosition) {
+      this.map.setView([this.currentPosition.lat, this.currentPosition.lng], 20);
+    }
+  }
+
+  onPositionUpdate(callback) {
+    this.callbacks.push(callback);
+  }
+
+  notifyCallbacks() {
+    this.callbacks.forEach(cb => cb(this.currentPosition));
+  }
+
+  setFloor(floor) {
+    this.currentFloor = floor;
+    if (this.currentPosition) {
+      this.currentPosition.floor = floor;
+    }
+  }
+}
+
+// MinHeap for A* algorithm
+class MinHeap {
+  constructor() {
+    this.heap = [];
+  }
+
+  push(item) {
+    this.heap.push(item);
+    this.bubbleUp(this.heap.length - 1);
+  }
+
+  pop() {
+    if (this.heap.length === 0) return null;
+    if (this.heap.length === 1) return this.heap.pop();
+
+    const min = this.heap[0];
+    this.heap[0] = this.heap.pop();
+    this.bubbleDown(0);
+    return min;
+  }
+
+  bubbleUp(index) {
+    while (index > 0) {
+      const parentIndex = Math.floor((index - 1) / 2);
+      if (this.heap[parentIndex].f <= this.heap[index].f) break;
+      [this.heap[parentIndex], this.heap[index]] = [this.heap[index], this.heap[parentIndex]];
+      index = parentIndex;
+    }
+  }
+
+  bubbleDown(index) {
+    const length = this.heap.length;
+    while (true) {
+      const leftChild = 2 * index + 1;
+      const rightChild = 2 * index + 2;
+      let smallest = index;
+
+      if (leftChild < length && this.heap[leftChild].f < this.heap[smallest].f) {
+        smallest = leftChild;
+      }
+      if (rightChild < length && this.heap[rightChild].f < this.heap[smallest].f) {
+        smallest = rightChild;
+      }
+
+      if (smallest === index) break;
+      [this.heap[smallest], this.heap[index]] = [this.heap[index], this.heap[smallest]];
+      index = smallest;
+    }
+  }
+
+  isEmpty() {
+    return this.heap.length === 0;
+  }
+
+  contains(id) {
+    return this.heap.some(item => item.id === id);
+  }
+}
+
+// Pathfinder Class (A* Algorithm)
+class Pathfinder {
+  constructor(graph) {
+    this.nodes = graph.nodes || {};
+    this.edges = graph.edges || [];
+    this.transitions = graph.transitions || [];
+  }
+
+  findPath(startNodeId, endNodeId, options = {}) {
+    const { preferElevator = false, avoidStairs = false } = options;
+
+    if (!this.nodes[startNodeId] || !this.nodes[endNodeId]) {
+      console.warn('Invalid start or end node');
+      return null;
+    }
+
+    const openSet = new MinHeap();
+    const cameFrom = new Map();
+    const gScore = new Map();
+    const fScore = new Map();
+    const closedSet = new Set();
+
+    gScore.set(startNodeId, 0);
+    fScore.set(startNodeId, this.heuristic(startNodeId, endNodeId));
+    openSet.push({ id: startNodeId, f: fScore.get(startNodeId) });
+
+    while (!openSet.isEmpty()) {
+      const current = openSet.pop();
+
+      if (current.id === endNodeId) {
+        return this.reconstructPath(cameFrom, current.id);
+      }
+
+      if (closedSet.has(current.id)) continue;
+      closedSet.add(current.id);
+
+      const neighbors = this.getNeighbors(current.id, { avoidStairs, preferElevator });
+
+      for (const neighbor of neighbors) {
+        if (closedSet.has(neighbor.id)) continue;
+
+        const tentativeG = gScore.get(current.id) + neighbor.cost;
+
+        if (tentativeG < (gScore.get(neighbor.id) || Infinity)) {
+          cameFrom.set(neighbor.id, {
+            node: current.id,
+            edge: neighbor.edge,
+            transition: neighbor.transition
+          });
+          gScore.set(neighbor.id, tentativeG);
+          fScore.set(neighbor.id, tentativeG + this.heuristic(neighbor.id, endNodeId));
+
+          if (!openSet.contains(neighbor.id)) {
+            openSet.push({ id: neighbor.id, f: fScore.get(neighbor.id) });
+          }
+        }
+      }
+    }
+
+    return null; // No path found
+  }
+
+  heuristic(nodeAId, nodeBId) {
+    const a = this.nodes[nodeAId];
+    const b = this.nodes[nodeBId];
+    if (!a || !b) return Infinity;
+
+    const horizontalDist = this.haversineDistance(a.lat, a.lng, b.lat, b.lng);
+    const floorPenalty = Math.abs((a.floor || 1) - (b.floor || 1)) * 30;
+    return horizontalDist + floorPenalty;
+  }
+
+  haversineDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371e3; // Earth radius in meters
+    const phi1 = lat1 * Math.PI / 180;
+    const phi2 = lat2 * Math.PI / 180;
+    const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+    const deltaLambda = (lng2 - lng1) * Math.PI / 180;
+
+    const a = Math.sin(deltaPhi / 2) ** 2 +
+              Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  }
+
+  getNeighbors(nodeId, options = {}) {
+    const neighbors = [];
+    const node = this.nodes[nodeId];
+    if (!node) return neighbors;
+
+    // Get neighbors from edges
+    for (const edge of this.edges) {
+      let neighborId = null;
+      if (edge.from === nodeId) neighborId = edge.to;
+      else if (edge.to === nodeId && edge.bidirectional !== false) neighborId = edge.from;
+
+      if (neighborId && this.nodes[neighborId]) {
+        neighbors.push({
+          id: neighborId,
+          cost: edge.distance || edge.walkTime || 10,
+          edge: edge
+        });
+      }
+    }
+
+    // Get neighbors from transitions (stairs/elevators)
+    for (const trans of this.transitions) {
+      if (options.avoidStairs && trans.type === 'staircase') continue;
+
+      const nodeIndex = trans.nodes?.indexOf(nodeId);
+      if (nodeIndex !== -1 && trans.nodes) {
+        // Connect to adjacent floors
+        if (nodeIndex > 0) {
+          const neighborId = trans.nodes[nodeIndex - 1];
+          if (this.nodes[neighborId]) {
+            let cost = trans.timeBetweenFloors || 30;
+            if (options.preferElevator && trans.type === 'elevator') cost *= 0.5;
+            neighbors.push({ id: neighborId, cost, transition: trans });
+          }
+        }
+        if (nodeIndex < trans.nodes.length - 1) {
+          const neighborId = trans.nodes[nodeIndex + 1];
+          if (this.nodes[neighborId]) {
+            let cost = trans.timeBetweenFloors || 30;
+            if (options.preferElevator && trans.type === 'elevator') cost *= 0.5;
+            neighbors.push({ id: neighborId, cost, transition: trans });
+          }
+        }
+      }
+    }
+
+    return neighbors;
+  }
+
+  reconstructPath(cameFrom, endNodeId) {
+    const path = [];
+    let currentId = endNodeId;
+
+    while (currentId) {
+      const node = this.nodes[currentId];
+      if (node) {
+        path.unshift({ ...node, id: currentId });
+      }
+      const prev = cameFrom.get(currentId);
+      currentId = prev ? prev.node : null;
+    }
+
+    return path;
+  }
+
+  findNearestNode(lat, lng, floor) {
+    let nearest = null;
+    let minDist = Infinity;
+
+    for (const [id, node] of Object.entries(this.nodes)) {
+      // Prefer same floor
+      const floorMatch = (node.floor || 1) === floor;
+      const dist = this.haversineDistance(lat, lng, node.lat, node.lng);
+      const adjustedDist = floorMatch ? dist : dist + 100; // Penalty for different floor
+
+      if (adjustedDist < minDist) {
+        minDist = adjustedDist;
+        nearest = { ...node, id };
+      }
+    }
+
+    return nearest;
+  }
+}
+
+// Directions Generator Class
+class DirectionsGenerator {
+  constructor(graph) {
+    this.nodes = graph.nodes || {};
+    this.edges = graph.edges || [];
+    this.transitions = graph.transitions || [];
+  }
+
+  generateDirections(path) {
+    if (!path || path.length < 2) return null;
+
+    const steps = [];
+    let totalDistance = 0;
+    let totalTime = 0;
+
+    for (let i = 0; i < path.length; i++) {
+      const currentNode = path[i];
+      const nextNode = path[i + 1];
+      const prevNode = path[i - 1];
+
+      if (!nextNode) {
+        // Final destination
+        steps.push({
+          index: i,
+          instruction: this.formatInstruction('arrive', { name: currentNode.name }),
+          icon: '🏁',
+          distance: 0,
+          time: 0,
+          node: currentNode,
+          floor: currentNode.floor || 1,
+          isDestination: true
+        });
+        break;
+      }
+
+      const instruction = this.generateInstruction(prevNode, currentNode, nextNode);
+      const edge = this.findEdge(currentNode.id, nextNode.id);
+      const distance = edge?.distance || this.calculateDistance(currentNode, nextNode);
+      const time = edge?.walkTime || Math.round(distance / 1.4); // ~1.4 m/s walking speed
+
+      totalDistance += distance;
+      totalTime += time;
+
+      steps.push({
+        index: i,
+        instruction: instruction.text,
+        icon: instruction.icon,
+        distance: distance,
+        time: time,
+        node: currentNode,
+        floor: currentNode.floor || 1,
+        isFloorChange: (currentNode.floor || 1) !== (nextNode.floor || 1)
+      });
+    }
+
+    return {
+      steps,
+      totalDistance: Math.round(totalDistance),
+      totalTime: Math.round(totalTime),
+      startNode: path[0],
+      endNode: path[path.length - 1]
+    };
+  }
+
+  generateInstruction(prevNode, currentNode, nextNode) {
+    // Check for floor transition
+    if ((currentNode.floor || 1) !== (nextNode.floor || 1)) {
+      const direction = (nextNode.floor || 1) > (currentNode.floor || 1) ? 'up' : 'down';
+      const transitionType = currentNode.type || 'staircase';
+
+      if (transitionType === 'elevator') {
+        return {
+          text: this.formatInstruction('takeElevator', { floor: nextNode.floor }),
+          icon: '🛗'
+        };
+      } else {
+        return {
+          text: this.formatInstruction(direction === 'up' ? 'goStairsUp' : 'goStairsDown', { floor: nextNode.floor }),
+          icon: direction === 'up' ? '⬆️' : '⬇️'
+        };
+      }
+    }
+
+    // Calculate turn direction
+    if (prevNode) {
+      const turn = this.calculateTurn(prevNode, currentNode, nextNode);
+      if (turn === 'left') {
+        return { text: t('turnLeft'), icon: '↰' };
+      } else if (turn === 'right') {
+        return { text: t('turnRight'), icon: '↱' };
+      }
+    }
+
+    // Default: go straight or start
+    if (!prevNode) {
+      return { text: this.formatInstruction('startAt', { name: currentNode.name || t('yourLocation') }), icon: '📍' };
+    }
+
+    return { text: t('goStraight'), icon: '↑' };
+  }
+
+  calculateTurn(prevNode, currentNode, nextNode) {
+    const bearing1 = this.calculateBearing(prevNode.lat, prevNode.lng, currentNode.lat, currentNode.lng);
+    const bearing2 = this.calculateBearing(currentNode.lat, currentNode.lng, nextNode.lat, nextNode.lng);
+
+    let turnAngle = bearing2 - bearing1;
+    if (turnAngle > 180) turnAngle -= 360;
+    if (turnAngle < -180) turnAngle += 360;
+
+    if (turnAngle > 30) return 'right';
+    if (turnAngle < -30) return 'left';
+    return 'straight';
+  }
+
+  calculateBearing(lat1, lng1, lat2, lng2) {
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const lat1Rad = lat1 * Math.PI / 180;
+    const lat2Rad = lat2 * Math.PI / 180;
+
+    const y = Math.sin(dLng) * Math.cos(lat2Rad);
+    const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+              Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLng);
+
+    return Math.atan2(y, x) * 180 / Math.PI;
+  }
+
+  calculateDistance(nodeA, nodeB) {
+    const R = 6371e3;
+    const phi1 = nodeA.lat * Math.PI / 180;
+    const phi2 = nodeB.lat * Math.PI / 180;
+    const deltaPhi = (nodeB.lat - nodeA.lat) * Math.PI / 180;
+    const deltaLambda = (nodeB.lng - nodeA.lng) * Math.PI / 180;
+
+    const a = Math.sin(deltaPhi / 2) ** 2 +
+              Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  }
+
+  findEdge(fromId, toId) {
+    return this.edges.find(e =>
+      (e.from === fromId && e.to === toId) ||
+      (e.to === fromId && e.from === toId && e.bidirectional !== false)
+    );
+  }
+
+  formatInstruction(key, params = {}) {
+    let text = t(key) || key;
+    for (const [k, v] of Object.entries(params)) {
+      text = text.replace(`{${k}}`, v);
+    }
+    return text;
+  }
+}
+
+// Navigation Controller
+class NavigationController {
+  constructor(mapInstance) {
+    this.map = mapInstance;
+    this.gpsTracker = new GPSTracker(mapInstance);
+    this.pathfinder = null;
+    this.directionsGenerator = null;
+
+    this.currentRoute = null;
+    this.routePolylines = [];
+    this.destinationMarker = null;
+    this.transitionMarkers = [];
+    this.isNavigating = false;
+    this.currentStepIndex = 0;
+
+    this.init();
+  }
+
+  async init() {
+    await this.loadNavGraph();
+    this.pathfinder = new Pathfinder(navGraph);
+    this.directionsGenerator = new DirectionsGenerator(navGraph);
+    this.setupEventListeners();
+  }
+
+  async loadNavGraph() {
+    try {
+      const response = await fetch('data/navgraph.json');
+      navGraph = await response.json();
+    } catch (err) {
+      console.warn('Could not load navgraph.json:', err);
+      navGraph = { nodes: {}, edges: [], transitions: [] };
+    }
+  }
+
+  setupEventListeners() {
+    // GPS Button
+    const gpsBtn = document.getElementById('gpsBtn');
+    if (gpsBtn) {
+      gpsBtn.addEventListener('click', () => this.handleGPSButtonClick());
+
+      // Double-click to stop tracking
+      gpsBtn.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        this.stopGPSTracking();
+      });
+
+      // Right-click/long-press: manual mode if not tracking, stop if tracking
+      gpsBtn.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (this.gpsTracker.isTracking || this.gpsTracker.manualMode) {
+          this.stopGPSTracking();
+        } else {
+          this.enterManualLocationMode();
+        }
+      });
+    }
+
+    // Manual location overlay
+    const cancelManualBtn = document.getElementById('cancelManualBtn');
+    if (cancelManualBtn) {
+      cancelManualBtn.addEventListener('click', () => this.exitManualLocationMode());
+    }
+
+    // Navigation panel close
+    const navCloseBtn = document.getElementById('navCloseBtn');
+    if (navCloseBtn) {
+      navCloseBtn.addEventListener('click', () => this.endNavigation());
+    }
+
+    // End navigation button
+    const endNavBtn = document.getElementById('endNavBtn');
+    if (endNavBtn) {
+      endNavBtn.addEventListener('click', () => this.endNavigation());
+    }
+
+    // GPS position updates
+    this.gpsTracker.onPositionUpdate((pos) => {
+      if (this.isNavigating) {
+        this.trackProgress(pos);
+      }
+    });
+  }
+
+  handleGPSButtonClick() {
+    if (this.gpsTracker.isTracking || this.gpsTracker.manualMode) {
+      // Already tracking - pan to current position and request fresh update
+      if (this.gpsTracker.currentPosition) {
+        const pos = this.gpsTracker.currentPosition;
+        this.map.setView([pos.lat, pos.lng], 19);
+      }
+      // Request a fresh position update (with maximumAge: 0 to force new position)
+      if (navigator.geolocation && this.gpsTracker.isTracking) {
+        navigator.geolocation.getCurrentPosition(
+          (p) => this.gpsTracker.handlePosition(p),
+          () => {},
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      }
+    } else {
+      // Try GPS first
+      if (!this.gpsTracker.startTracking()) {
+        // GPS failed, prompt manual mode
+        this.enterManualLocationMode();
+      }
+    }
+  }
+
+  stopGPSTracking() {
+    this.gpsTracker.stopTracking();
+    this.gpsTracker.removeMarker();
+  }
+
+  enterManualLocationMode() {
+    const overlay = document.getElementById('manualLocationOverlay');
+    if (overlay) overlay.classList.add('active');
+
+    document.getElementById('gpsBtn')?.classList.add('manual-mode');
+
+    // One-time map click handler
+    const mapClickHandler = (e) => {
+      this.gpsTracker.setManualPosition(e.latlng, currentFloor + 1);
+      this.exitManualLocationMode();
+      this.map.off('click', mapClickHandler);
+    };
+
+    this.map.on('click', mapClickHandler);
+    this._manualClickHandler = mapClickHandler;
+  }
+
+  exitManualLocationMode() {
+    const overlay = document.getElementById('manualLocationOverlay');
+    if (overlay) overlay.classList.remove('active');
+
+    if (!this.gpsTracker.manualMode) {
+      document.getElementById('gpsBtn')?.classList.remove('manual-mode');
+    }
+
+    if (this._manualClickHandler) {
+      this.map.off('click', this._manualClickHandler);
+      this._manualClickHandler = null;
+    }
+  }
+
+  async startNavigation(destinationId, options = {}) {
+    // Get current position
+    const startPos = this.gpsTracker.currentPosition;
+    if (!startPos) {
+      showToast(t('setLocationFirst'), 'error');
+      this.enterManualLocationMode();
+      return;
+    }
+
+    // Find nearest node to current position
+    const startNode = this.pathfinder.findNearestNode(
+      startPos.lat,
+      startPos.lng,
+      startPos.floor || currentFloor + 1
+    );
+
+    if (!startNode) {
+      showToast(t('noRouteFound'), 'error');
+      return;
+    }
+
+    // Calculate path
+    const path = this.pathfinder.findPath(startNode.id, destinationId, options);
+
+    if (!path || path.length === 0) {
+      showToast(t('noRouteFound'), 'error');
+      return;
+    }
+
+    // Generate directions
+    this.currentRoute = this.directionsGenerator.generateDirections(path);
+
+    if (!this.currentRoute) {
+      showToast(t('noRouteFound'), 'error');
+      return;
+    }
+
+    // Display route on map
+    this.displayRoute(path);
+
+    // Show navigation panel
+    this.showNavigationPanel();
+
+    // Start tracking progress
+    this.isNavigating = true;
+    this.currentStepIndex = 0;
+  }
+
+  // Navigate to a pin or location by name/coords
+  navigateToLocation(location) {
+    if (!location) return;
+
+    // If location has an ID in navGraph, use it
+    if (location.id && navGraph.nodes[location.id]) {
+      this.startNavigation(location.id);
+      return;
+    }
+
+    // Otherwise find nearest node to this location
+    const nearestNode = this.pathfinder.findNearestNode(
+      location.lat,
+      location.lng,
+      location.floor || 1
+    );
+
+    if (nearestNode) {
+      this.startNavigation(nearestNode.id);
+    } else {
+      showToast(t('noRouteFound'), 'error');
+    }
+  }
+
+  displayRoute(path) {
+    this.clearRoute();
+
+    if (!path || path.length < 2) return;
+
+    // Group path by floor
+    const floorSegments = [];
+    let currentSegment = { floor: path[0].floor || 1, coords: [] };
+
+    for (const node of path) {
+      if ((node.floor || 1) !== currentSegment.floor) {
+        if (currentSegment.coords.length > 0) {
+          floorSegments.push(currentSegment);
+        }
+        currentSegment = { floor: node.floor || 1, coords: [] };
+      }
+      currentSegment.coords.push([node.lat, node.lng]);
+    }
+    if (currentSegment.coords.length > 0) {
+      floorSegments.push(currentSegment);
+    }
+
+    // Draw polylines for each floor segment
+    for (const segment of floorSegments) {
+      if (segment.coords.length < 2) continue;
+
+      const shadow = L.polyline(segment.coords, {
+        color: 'rgba(10, 132, 255, 0.3)',
+        weight: 12,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });
+
+      const line = L.polyline(segment.coords, {
+        color: '#0a84ff',
+        weight: 6,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });
+
+      // Only show on current floor
+      if (segment.floor === currentFloor + 1) {
+        shadow.addTo(this.map);
+        line.addTo(this.map);
+      }
+
+      this.routePolylines.push({ floor: segment.floor, shadow, line });
+    }
+
+    // Add destination marker
+    const endNode = path[path.length - 1];
+    this.destinationMarker = L.marker([endNode.lat, endNode.lng], {
+      icon: L.divIcon({
+        className: 'destination-marker',
+        html: '<div class="destination-marker-inner">🏁</div>',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32]
+      })
+    });
+
+    if ((endNode.floor || 1) === currentFloor + 1) {
+      this.destinationMarker.addTo(this.map);
+    }
+
+    // Add floor transition markers
+    for (let i = 0; i < path.length - 1; i++) {
+      const current = path[i];
+      const next = path[i + 1];
+
+      if ((current.floor || 1) !== (next.floor || 1)) {
+        const marker = L.marker([current.lat, current.lng], {
+          icon: L.divIcon({
+            className: 'floor-transition-marker',
+            html: current.type === 'elevator' ? '🛗' : '🪜',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+          })
+        });
+
+        if ((current.floor || 1) === currentFloor + 1) {
+          marker.addTo(this.map);
+        }
+
+        this.transitionMarkers.push({ floor: current.floor || 1, marker });
+      }
+    }
+
+    // Fit map to route
+    const allCoords = path.map(n => [n.lat, n.lng]);
+    this.map.fitBounds(L.latLngBounds(allCoords), { padding: [50, 50] });
+  }
+
+  updateVisibleRoute(floor) {
+    // Show/hide polylines based on floor
+    for (const polyline of this.routePolylines) {
+      if (polyline.floor === floor) {
+        if (!this.map.hasLayer(polyline.shadow)) {
+          polyline.shadow.addTo(this.map);
+          polyline.line.addTo(this.map);
+        }
+      } else {
+        if (this.map.hasLayer(polyline.shadow)) {
+          polyline.shadow.remove();
+          polyline.line.remove();
+        }
+      }
+    }
+
+    // Show/hide destination marker
+    if (this.destinationMarker && this.currentRoute) {
+      const endFloor = this.currentRoute.endNode.floor || 1;
+      if (endFloor === floor) {
+        if (!this.map.hasLayer(this.destinationMarker)) {
+          this.destinationMarker.addTo(this.map);
+        }
+      } else {
+        if (this.map.hasLayer(this.destinationMarker)) {
+          this.destinationMarker.remove();
+        }
+      }
+    }
+
+    // Show/hide transition markers
+    for (const tm of this.transitionMarkers) {
+      if (tm.floor === floor) {
+        if (!this.map.hasLayer(tm.marker)) {
+          tm.marker.addTo(this.map);
+        }
+      } else {
+        if (this.map.hasLayer(tm.marker)) {
+          tm.marker.remove();
+        }
+      }
+    }
+  }
+
+  clearRoute() {
+    for (const polyline of this.routePolylines) {
+      polyline.shadow.remove();
+      polyline.line.remove();
+    }
+    this.routePolylines = [];
+
+    if (this.destinationMarker) {
+      this.destinationMarker.remove();
+      this.destinationMarker = null;
+    }
+
+    for (const tm of this.transitionMarkers) {
+      tm.marker.remove();
+    }
+    this.transitionMarkers = [];
+  }
+
+  showNavigationPanel() {
+    const panel = document.getElementById('navigationPanel');
+    if (panel) panel.classList.add('active');
+
+    this.updateNavigationUI();
+  }
+
+  hideNavigationPanel() {
+    const panel = document.getElementById('navigationPanel');
+    if (panel) panel.classList.remove('active');
+  }
+
+  updateNavigationUI() {
+    if (!this.currentRoute) return;
+
+    // Update destination
+    const destEl = document.getElementById('navDestination');
+    if (destEl) destEl.textContent = this.currentRoute.endNode.name || t('destination');
+
+    // Update stats
+    const distEl = document.getElementById('navDistance');
+    if (distEl) {
+      const dist = this.currentRoute.totalDistance;
+      distEl.textContent = dist >= 1000 ? `${(dist / 1000).toFixed(1)} km` : `${Math.round(dist)} m`;
+    }
+
+    const timeEl = document.getElementById('navTime');
+    if (timeEl) {
+      const mins = Math.ceil(this.currentRoute.totalTime / 60);
+      timeEl.textContent = `${mins} ${t('minutes') || 'min'}`;
+    }
+
+    // Update current step
+    const currentStep = this.currentRoute.steps[this.currentStepIndex];
+    if (currentStep) {
+      const iconEl = document.getElementById('navStepIcon');
+      if (iconEl) iconEl.textContent = currentStep.icon;
+
+      const instrEl = document.getElementById('navStepInstruction');
+      if (instrEl) instrEl.textContent = currentStep.instruction;
+    }
+
+    // Update steps list
+    const listEl = document.getElementById('navStepsList');
+    if (listEl) {
+      listEl.innerHTML = this.currentRoute.steps.map((step, i) => `
+        <div class="nav-step-item ${i < this.currentStepIndex ? 'completed' : ''} ${i === this.currentStepIndex ? 'current' : ''} ${step.isFloorChange ? 'floor-change' : ''}">
+          <div class="step-icon">${i < this.currentStepIndex ? '✓' : step.icon}</div>
+          <div class="step-text">
+            <div class="step-instruction">${step.instruction}</div>
+            <div class="step-distance">${step.distance > 0 ? `${Math.round(step.distance)} m` : ''}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  trackProgress(pos) {
+    if (!this.currentRoute || !this.isNavigating) return;
+
+    const currentStep = this.currentRoute.steps[this.currentStepIndex];
+    if (!currentStep || currentStep.isDestination) return;
+
+    // Calculate distance to current step's node
+    const dist = this.calculateDistance(pos.lat, pos.lng, currentStep.node.lat, currentStep.node.lng);
+
+    // If within 10 meters, advance to next step
+    if (dist < 10) {
+      this.advanceStep();
+    }
+
+    // Check for floor change
+    if (currentStep.isFloorChange && pos.floor !== currentStep.floor) {
+      // User might have changed floors, update route visibility
+      this.updateVisibleRoute(pos.floor);
+    }
+  }
+
+  calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371e3;
+    const phi1 = lat1 * Math.PI / 180;
+    const phi2 = lat2 * Math.PI / 180;
+    const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+    const deltaLambda = (lng2 - lng1) * Math.PI / 180;
+
+    const a = Math.sin(deltaPhi / 2) ** 2 +
+              Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  }
+
+  advanceStep() {
+    this.currentStepIndex++;
+
+    if (this.currentStepIndex >= this.currentRoute.steps.length) {
+      this.arriveAtDestination();
+      return;
+    }
+
+    this.updateNavigationUI();
+
+    // Auto-switch floor if needed
+    const step = this.currentRoute.steps[this.currentStepIndex];
+    if (step && step.floor !== currentFloor + 1) {
+      switchFloor(step.floor - 1);
+    }
+  }
+
+  arriveAtDestination() {
+    showToast(t('arrivedAtDestination'), 'success');
+    this.endNavigation();
+  }
+
+  endNavigation() {
+    this.isNavigating = false;
+    this.currentRoute = null;
+    this.currentStepIndex = 0;
+    this.clearRoute();
+    this.hideNavigationPanel();
+  }
+
+  // Update route visibility when floor changes
+  onFloorChange(newFloor) {
+    if (this.isNavigating) {
+      this.updateVisibleRoute(newFloor + 1); // newFloor is 0-indexed
+    }
+    this.gpsTracker.setFloor(newFloor + 1);
+  }
+}
+
+// Initialize Navigation Controller
+let navigationController;
+
+// Wait for map to be ready, then initialize
+const initNavigation = () => {
+  if (typeof map !== 'undefined' && map) {
+    navigationController = new NavigationController(map);
+
+    // Hook into floor switching to update route visibility
+    const originalSwitchFloor = window.switchFloor;
+    if (originalSwitchFloor) {
+      window.switchFloor = function(floorIndex) {
+        originalSwitchFloor(floorIndex);
+        if (navigationController) {
+          navigationController.onFloorChange(floorIndex);
+        }
+      };
+    }
+
+    console.log('🧭 Navigation system initialized!');
+  } else {
+    setTimeout(initNavigation, 100);
+  }
+};
+
+// Start initialization
+setTimeout(initNavigation, 500);
+
+// Add navigation to search results
+const originalDisplaySearchResults = window.displaySearchResults;
+if (typeof displaySearchResults === 'function') {
+  window.displaySearchResults = function(results) {
+    if (originalDisplaySearchResults) {
+      originalDisplaySearchResults(results);
+    }
+
+    // Add navigation buttons to search results
+    setTimeout(() => {
+      const resultItems = document.querySelectorAll('.search-result-item');
+      resultItems.forEach((item, index) => {
+        if (results[index] && !item.querySelector('.nav-to-btn')) {
+          const navBtn = document.createElement('button');
+          navBtn.className = 'nav-to-btn';
+          navBtn.innerHTML = '🧭';
+          navBtn.title = t('navigateTo');
+          navBtn.style.cssText = 'position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--accent);border:none;border-radius:50%;width:28px;height:28px;color:white;cursor:pointer;font-size:14px;';
+          navBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (navigationController) {
+              navigationController.navigateToLocation(results[index]);
+            }
+          });
+          item.style.position = 'relative';
+          item.appendChild(navBtn);
+        }
+      });
+    }, 50);
+  };
+}
+
 console.log('✅ All features loaded!');
 console.log('🔊 Sound effects:', soundEffectsEnabled ? 'enabled' : 'disabled');
-

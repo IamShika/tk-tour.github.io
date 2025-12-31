@@ -15,13 +15,65 @@
   <!-- Dev Mode Button -->
   <button id="devModeBtn" class="floating-btn" title="Dev Tools">🛠</button>
 
+  <!-- GPS Location Button -->
+  <button id="gpsBtn" class="gps-btn" title="My Location">
+    <span class="gps-icon"></span>
+  </button>
+
+  <!-- Navigation Panel (slide-up from bottom) -->
+  <div id="navigationPanel" class="navigation-panel">
+    <div class="nav-panel-header">
+      <div class="nav-route-info">
+        <span class="nav-destination" id="navDestination">Destination</span>
+        <div class="nav-stats">
+          <span class="nav-distance" id="navDistance">0 m</span>
+          <span class="nav-separator">|</span>
+          <span class="nav-time" id="navTime">0 min</span>
+        </div>
+      </div>
+      <button class="nav-close-btn" id="navCloseBtn">×</button>
+    </div>
+
+    <div class="nav-panel-body">
+      <div class="nav-current-step" id="navCurrentStep">
+        <div class="step-icon" id="navStepIcon">→</div>
+        <div class="step-instruction" id="navStepInstruction">Start navigation to see directions</div>
+      </div>
+
+      <div class="nav-steps-list" id="navStepsList">
+        <!-- Steps populated by JS -->
+      </div>
+    </div>
+
+    <div class="nav-panel-footer">
+      <button id="endNavBtn" class="btn-end-nav">End Navigation</button>
+    </div>
+  </div>
+
+  <!-- Manual Location Mode Overlay -->
+  <div id="manualLocationOverlay" class="manual-location-overlay">
+    <div class="manual-location-content">
+      <h3 id="manualLocationText">Tap on the map to set your location</h3>
+      <button class="cancel-manual-btn" id="cancelManualBtn">Cancel</button>
+    </div>
+  </div>
+
   <!-- Topbar -->
   <div id="topbar">
-    <input id="searchInput" placeholder="หาชื่อห้องหรือเลขห้อง..." />
-    <button id="floorSelector" class="floor-selector-btn" title="Select Floor">
-      <span id="currentFloorText">Floor 1</span>
-      <span class="floor-arrow">▼</span>
-    </button>
+    <div class="search-container">
+      <input id="searchInput" placeholder="หาชื่อห้องหรือเลขห้อง..." />
+      <button id="searchClear" class="search-clear" type="button" title="Clear">×</button>
+    </div>
+    <!-- Floor Pill - Unified Component -->
+    <div id="floorPill" class="floor-pill">
+      <div class="floor-pill-current" id="floorPillCurrent">
+        <span class="floor-num" id="currentFloorNum">1</span>
+        <span class="floor-label">F</span>
+      </div>
+      <div class="floor-pill-list" id="floorPillList">
+        <!-- Other floors populated by JS -->
+      </div>
+    </div>
     <button id="menuToggle" title="Menu">☰</button>
   </div>
 
@@ -30,15 +82,6 @@
     <!-- Results will be populated by JS -->
   </div>
 
-  <!-- Floor Selector Dropdown -->
-  <div id="floorDropdown" class="floor-dropdown">
-    <div class="floor-dropdown-header">
-      <span class="floor-dropdown-title">Select Floor</span>
-    </div>
-    <div class="floor-list" id="floorList">
-      <!-- Floors will be populated by JS -->
-    </div>
-  </div>
 
   <!-- Language Change Loading Overlay -->
   <div id="languageLoadingOverlay" class="language-loading-overlay">

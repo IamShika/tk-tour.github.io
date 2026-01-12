@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TK Map</title>
+  <title>Project Absolute TK Map</title>
   <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photo-sphere-viewer@4.2.0/dist/photo-sphere-viewer.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -15,10 +16,15 @@
   <!-- Dev Mode Button -->
   <button id="devModeBtn" class="floating-btn" title="Dev Tools">🛠</button>
 
-  <!-- GPS Location Button -->
-  <button id="gpsBtn" class="gps-btn" title="My Location">
-    <span class="gps-icon"></span>
-  </button>
+  <!-- GPS Location Buttons -->
+  <div class="gps-btn-group">
+    <button id="gpsBtn" class="gps-btn" title="My Location">
+      <i class="fa-solid fa-location-arrow"></i>
+    </button>
+    <button id="gpsStopBtn" class="gps-stop-btn" title="Stop GPS" style="display:none;">
+      ×
+    </button>
+  </div>
 
   <!-- Navigation Panel (slide-up from bottom) -->
   <div id="navigationPanel" class="navigation-panel">
@@ -103,8 +109,8 @@
     <nav class="sidebar-body">
       <ul class="sidebar-menu">
         <li class="menu-item" data-modal="about">📘 About / Credits</li>
-        <li class="menu-item" data-modal="howto">❔ How to Use</li>
-        <li class="menu-item" data-modal="settings">⚙ Settings</li>
+        <li class="menu-item" data-modal="howto">❓ How to Use</li>
+        <li class="menu-item" data-modal="settings">⚙️ Settings</li>
         <li class="menu-item" data-modal="donate">💝 Donate</li>
         <li class="menu-item" data-action="feedback">⭐ Rate & Feedback</li>
       </ul>
@@ -148,7 +154,7 @@
               </button>
               <div id="drawingTools" class="drawing-tools" style="display:none;">
                 <button id="undoPointBtn" class="btn-tool">↶ Undo</button>
-                <button id="clearPathBtn" class="btn-tool">✕ Clear</button>
+                <button id="clearPathBtn" class="btn-tool">× Clear</button>
                 <button id="finishPathBtn" class="btn-tool-primary">✓ Finish</button>
               </div>
             </div>
@@ -234,7 +240,7 @@
 
         <!-- Saved Pins List -->
         <div class="saved-routes-header">
-          <h4>📍 Saved Pins</h4>
+          <h4><i class="fa-solid fa-map-pin"></i> Saved Pins</h4>
           <span id="pinCount" class="route-count">0</span>
         </div>
         <div id="savedPinsList" class="paths-list"></div>
@@ -270,5 +276,4 @@
   <script src="https://cdn.jsdelivr.net/npm/photo-sphere-viewer@4.2.0/dist/photo-sphere-viewer.min.js"></script>
   <script src="script.js"></script>
 </body>
-
 </html>

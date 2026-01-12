@@ -1,5 +1,5 @@
 // =================== CONFIG ===================
-const APP_VERSION = 'BETA dec1.2.0-h';
+const APP_VERSION = 'BETA Jan2.0.0';
 // version identifer [release] {month Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec}{howmanyversionnow}{is "H"alf a month}
 const CENTER = [14.085933, 100.608844];
 const FLOORS = [
@@ -131,7 +131,7 @@ function applyTranslations() {
   if (mainSidebarTitle) mainSidebarTitle.textContent = t('menu').toUpperCase();
   
   const devSidebarTitle = document.querySelector('#devSidebar .sidebar-title');
-  if (devSidebarTitle) devSidebarTitle.textContent = t('devTools');
+  if (devSidebarTitle) devSidebarTitle.innerHTML = '<i class="fa-solid fa-map-location-dot"></i> ' + t('devTools').replace(/^🛠️\s*/, '');
   
   // Update close button titles
   document.querySelectorAll('.close-btn').forEach(btn => {
@@ -142,7 +142,7 @@ function applyTranslations() {
   document.querySelectorAll('.menu-item').forEach(item => {
     const modalId = item.getAttribute('data-modal');
     const action = item.getAttribute('data-action');
-    
+
     if (modalId === 'about') item.textContent = t('about');
     if (modalId === 'howto') item.textContent = t('howto');
     if (modalId === 'settings') item.textContent = t('settings');
@@ -478,7 +478,7 @@ function generateSettingsHTML() {
     <div style="padding: 10px 0;">
       <!-- Language Setting -->
       <div class="settings-row">
-        <span class="settings-label">${t('language')}</span>
+        <span class="settings-label"><b>${t('language')}</b></span>
         <select class="settings-select" id="languageSelect">
           <option value="th" ${currentLanguage === 'th' ? 'selected' : ''}>ภาษาไทย</option>
           <option value="t-th" ${currentLanguage === 't-th' ? 'selected' : ''}>ภาษาไทยเดิม</option>
@@ -491,8 +491,8 @@ function generateSettingsHTML() {
       <div class="theme-toggle-container">
         <span class="theme-toggle-label">
           <span class="theme-icon">🔊</span>
-          ${t('traditionalThaiSounds')}
-          <span class="info-tooltip" title="${t('soundsTooltip')}" style="margin-left:8px;cursor:help;color:var(--accent);">❓</span>
+          <b>${t('traditionalThaiSounds')}</b>
+          <span class="info-tooltip" data-tooltip="${t('soundsTooltip')}" style="margin-left:8px;cursor:help;color:var(--accent);">❓</span>
         </span>
         <div class="theme-toggle ${soundEffectsEnabled ? 'active' : ''}" id="soundEffectsToggle">
           <div class="theme-toggle-slider">
@@ -506,7 +506,7 @@ function generateSettingsHTML() {
       <div class="theme-toggle-container">
         <span class="theme-toggle-label">
           <span class="theme-icon">${currentTheme === 'dark' ? '🌙' : '☀️'}</span>
-          ${t('theme')}
+          <b>${t('theme')}</b>
         </span>
         <div class="theme-toggle ${currentTheme === 'dark' ? 'active' : ''}" id="themeToggle">
           <div class="theme-toggle-slider">
@@ -517,7 +517,7 @@ function generateSettingsHTML() {
 
       <!-- Display Mode Setting -->
       <div class="settings-row">
-        <span class="settings-label">${t('displayMode')}</span>
+        <span class="settings-label"><b>${t('displayMode')}</b></span>
         <select class="settings-select" id="displayModeSelect">
           <option value="auto" ${displayMode === 'auto' ? 'selected' : ''}>${t('auto')}</option>
           <option value="phone" ${displayMode === 'phone' ? 'selected' : ''}>${t('phone')}</option>
@@ -532,7 +532,7 @@ function generateSettingsHTML() {
 const modalContent = {
   about: {
     get title() { return t('aboutTitle'); },
-    get body() { return t('aboutContent'); }
+    get body() { return t('aboutContent').replace(/{{VERSION}}/g, APP_VERSION); }
   },
   howto: {
     get title() { return t('howtoTitle'); },
@@ -616,7 +616,23 @@ function openModal(modalId) {
           showToast(soundEffectsEnabled ? t('soundOn') : t('soundOff'), 'info');
         });
       }
-      
+
+      // Tooltip tap handler for mobile
+      const tooltips = document.querySelectorAll('.info-tooltip');
+      tooltips.forEach(tooltip => {
+        tooltip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          tooltip.classList.toggle('show');
+          // Hide after 3 seconds
+          setTimeout(() => tooltip.classList.remove('show'), 3000);
+        });
+      });
+
+      // Hide tooltips when clicking elsewhere
+      document.addEventListener('click', () => {
+        tooltips.forEach(t => t.classList.remove('show'));
+      });
+
       if (displayModeSelect) {
         displayModeSelect.addEventListener('change', (e) => {
           applyDisplayMode(e.target.value);
@@ -960,7 +976,14 @@ function loadPins() {
       }
 
       allPins.forEach(pin => {
-        const m = L.marker([pin.lat, pin.lng]).addTo(map);
+        const m = L.marker([pin.lat, pin.lng], {
+          icon: L.divIcon({
+            className: 'custom-pin-icon',
+            html: '<i class="fa-solid fa-map-pin" style="font-size:32px;color:#0a84ff;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+          })
+        }).addTo(map);
         m.bindPopup(`
           <div style="text-align:center;">
             <strong>${pin.name}</strong><br>
@@ -985,12 +1008,12 @@ function loadPins() {
           const m = L.marker([pin.lat, pin.lng], {
             icon: L.divIcon({
               className: 'custom-pin-icon',
-              html: '<div style="background:#ff6b6b;width:25px;height:25px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
-              iconSize: [25, 25],
-              iconAnchor: [12, 12]
+              html: '<i class="fa-solid fa-map-pin" style="font-size:32px;color:#ff6b6b;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>',
+              iconSize: [32, 32],
+              iconAnchor: [16, 32]
             })
           }).addTo(map);
-          
+
           m.bindPopup(`
             <div style="text-align:center;">
               <strong>${pin.name}</strong><br>
@@ -1174,9 +1197,9 @@ function onMouseMovePreview(e) {
     previewMarker = L.marker(e.latlng, {
       icon: L.divIcon({
         className: 'pin-preview-marker',
-        html: '<div style="background:rgba(10,132,255,0.5);width:30px;height:30px;border-radius:50%;border:3px solid #0a84ff;box-shadow:0 4px 12px rgba(10,132,255,0.4);"></div>',
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
+        html: '<i class="fa-solid fa-map-pin" style="font-size:36px;color:#0a84ff;opacity:0.6;filter:drop-shadow(0 4px 12px rgba(10,132,255,0.4));"></i>',
+        iconSize: [36, 36],
+        iconAnchor: [18, 36]
       })
     }).addTo(map);
   }
@@ -1202,9 +1225,9 @@ const originalMapClick = map.on('click', (e) => {
       draggable: true,
       icon: L.divIcon({
         className: 'temp-pin-marker',
-        html: '<div style="background:#0a84ff;width:30px;height:30px;border-radius:50%;border:3px solid white;box-shadow:0 4px 12px rgba(10,132,255,0.6);"></div>',
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
+        html: '<i class="fa-solid fa-map-pin" style="font-size:40px;color:#0a84ff;filter:drop-shadow(0 4px 12px rgba(10,132,255,0.6));"></i>',
+        iconSize: [40, 40],
+        iconAnchor: [20, 40]
       })
     }).addTo(map);
 
@@ -1767,8 +1790,8 @@ if (searchInput) {
     const avgCharWidth = fontSize * 0.55;
     const textWidth = Math.min(text.length * avgCharWidth, searchInput.offsetWidth - paddingLeft - 40);
 
-    // Glitch colors array
-    const glitchColors = ['#0dff39', '#fffa5e', '#d7ff5e', '#5ea4ff', '#1c7eff', '#000000ff', '#fb00ff', '#ff006f'];
+    // Glitch colors array - iOS-style theme colors
+    const glitchColors = ['#1100ff', '#0a84ff', '#0ffbf9', '#8c00ff', '#2bff00', '#cc0f39', '#000000', '#ff2d55', '#007aff'];
 
     // Create particles based on text length (spawn where text is)
     const particleCount = Math.min(text.length * 3, 45);
@@ -1925,6 +1948,7 @@ class GPSTracker {
 
     this.isTracking = true;
     document.getElementById('gpsBtn')?.classList.add('active');
+    document.getElementById('gpsStopBtn').style.display = 'flex';
 
     const options = {
       enableHighAccuracy: true,
@@ -1957,6 +1981,7 @@ class GPSTracker {
     this.isTracking = false;
     this.manualMode = false;
     document.getElementById('gpsBtn')?.classList.remove('active', 'manual-mode');
+    document.getElementById('gpsStopBtn').style.display = 'none';
   }
 
   handlePosition(pos) {
@@ -1964,7 +1989,11 @@ class GPSTracker {
 
     // Check if within school bounds
     if (!this.isWithinBounds(latitude, longitude)) {
-      showToast(t('gpsOutOfBounds'), 'error');
+      // Stop tracking when out of bounds (only show toast once)
+      if (this.isTracking) {
+        showToast(t('gpsOutOfBounds'), 'error');
+        this.stopTracking();
+      }
       return;
     }
 
@@ -2005,6 +2034,7 @@ class GPSTracker {
     this.manualMode = true;
     document.getElementById('gpsBtn')?.classList.remove('active');
     document.getElementById('gpsBtn')?.classList.add('manual-mode');
+    document.getElementById('gpsStopBtn').style.display = 'none';
 
     this.updateMarker();
     this.notifyCallbacks();
@@ -2022,9 +2052,7 @@ class GPSTracker {
       html: `
         <div class="user-marker-outer">
           <div class="user-marker-pulse"></div>
-          <div class="user-marker-inner">
-            <div class="user-marker-direction"></div>
-          </div>
+          <div class="user-marker-inner"></div>
         </div>
       `,
       iconSize: [40, 40],
@@ -2538,6 +2566,12 @@ class NavigationController {
       });
     }
 
+    // GPS Stop Button
+    const gpsStopBtn = document.getElementById('gpsStopBtn');
+    if (gpsStopBtn) {
+      gpsStopBtn.addEventListener('click', () => this.stopGPSTracking());
+    }
+
     // Manual location overlay
     const cancelManualBtn = document.getElementById('cancelManualBtn');
     if (cancelManualBtn) {
@@ -3040,6 +3074,101 @@ if (typeof displaySearchResults === 'function') {
     }, 50);
   };
 }
+
+// =================== FLUENT EMOJI PARSER ===================
+// Parse emojis to use Microsoft's Windows 11 Fluent Emojis across all platforms
+function parseEmojis(element = document.body) {
+  const emojiRegex = /(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/gu;
+
+  function getEmojiUrl(emoji) {
+    // Convert emoji to codepoint
+    const codePoint = [...emoji].map(char => {
+      return char.codePointAt(0).toString(16).padStart(4, '0');
+    }).join('_');
+
+    // Microsoft Fluent Emoji CDN (3D style - Windows 11)
+    return `https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/${codePoint.toUpperCase()}/3D/${codePoint}_3d.png`;
+  }
+
+  function replaceEmojis(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent;
+      if (emojiRegex.test(text)) {
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+
+        text.replace(emojiRegex, (match, _p1, offset) => {
+          // Add text before emoji
+          if (offset > lastIndex) {
+            fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
+          }
+
+          // Create emoji image
+          const img = document.createElement('img');
+          img.className = 'emoji';
+          img.src = getEmojiUrl(match);
+          img.alt = match;
+          img.draggable = false;
+          img.loading = 'lazy';
+
+          // Fallback to original emoji if image fails to load
+          img.onerror = function() {
+            const textNode = document.createTextNode(match);
+            this.parentNode.replaceChild(textNode, this);
+          };
+
+          fragment.appendChild(img);
+          lastIndex = offset + match.length;
+        });
+
+        // Add remaining text
+        if (lastIndex < text.length) {
+          fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+
+        if (fragment.childNodes.length > 0) {
+          node.parentNode.replaceChild(fragment, node);
+        }
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+      // Don't parse if already has emoji images
+      if (!node.classList.contains('emoji')) {
+        Array.from(node.childNodes).forEach(child => replaceEmojis(child));
+      }
+    }
+  }
+
+  replaceEmojis(element);
+}
+
+// Parse all emojis on page load
+window.addEventListener('load', () => {
+  parseEmojis();
+});
+
+// Also parse immediately for elements already rendered
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => parseEmojis());
+} else {
+  parseEmojis();
+}
+
+// MutationObserver to parse emojis when DOM changes
+const emojiObserver = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (node.nodeType === 1) { // Element node
+        parseEmojis(node);
+      }
+    });
+  });
+});
+
+// Start observing the document for DOM changes
+emojiObserver.observe(document.body, {
+  childList: true,
+  subtree: true
+});
 
 console.log('✅ All features loaded!');
 console.log('🔊 Sound effects:', soundEffectsEnabled ? 'enabled' : 'disabled');

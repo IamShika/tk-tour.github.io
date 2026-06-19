@@ -1,0 +1,27 @@
+{
+  "version": "2.0",
+  "school": {
+    "name": "Project Absolute TK Map",
+    "center": [14.085933, 100.608844],
+    "bounds": [[14.083915, 100.606071], [14.086142, 100.610199]],
+    "defaultZoom": 19,
+    "maxZoom": 22,
+    "minZoom": 15,
+    "defaultPitch": 45,
+    "defaultBearing": 0
+  },
+  "floors": [
+    { "id": "F1", "name": "Floor 1", "overlay": "images/floor_1.png", "elevation": 0 },
+    { "id": "F2", "name": "Floor 2", "overlay": "images/floor_2.png", "elevation": 4 },
+    { "id": "F3", "name": "Floor 3", "overlay": "images/floor_3.png", "elevation": 8 },
+    { "id": "F4", "name": "Floor 4", "overlay": "images/floor_4.png", "elevation": 12 },
+    { "id": "F5", "name": "Floor 5", "overlay": "images/floor_5.png", "elevation": 16 },
+    { "id": "F6", "name": "Floor 6", "overlay": "images/floor_6.png", "elevation": 20 }
+  ],
+  "overlayBounds": {
+    "topLeft":     [14.086142, 100.606071],
+    "topRight":    [14.086142, 100.610199],
+    "bottomRight": [14.083915, 100.610199],
+    "bottomLeft":  [14.083915, 100.606071]
+  }
+}

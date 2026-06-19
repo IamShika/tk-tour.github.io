@@ -1,5 +1,5 @@
 // =================== CONFIG ===================
-const APP_VERSION = 'BETA Jan2.0.0';
+const APP_VERSION = 'BETA Jun2.1H';
 // version identifer [release] {month Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec}{howmanyversionnow}{is "H"alf a month}
 const CENTER = [14.085933, 100.608844];
 const FLOORS = [
@@ -7,37 +7,37 @@ const FLOORS = [
     id: 'floor1',
     name: 'Floor 1',
     img: 'images/floor_1.png',
-    bounds: [[14.086142,100.606071],[14.083915,100.610199]]
+    bounds: [[14.086142, 100.606071], [14.083915, 100.610199]]
   },
   {
     id: 'floor2',
     name: 'Floor 2',
     img: 'images/floor_2.png',
-    bounds: [[14.086142,100.606071],[14.083915,100.610199]]
+    bounds: [[14.086142, 100.606071], [14.083915, 100.610199]]
   },
   {
     id: 'floor3',
     name: 'Floor 3',
     img: 'images/floor_3.png',
-    bounds: [[14.086142,100.606071],[14.083915,100.610199]]
+    bounds: [[14.086142, 100.606071], [14.083915, 100.610199]]
   },
   {
     id: 'floor4',
     name: 'Floor 4',
     img: 'images/floor_4.png',
-    bounds: [[14.086142,100.606071],[14.083915,100.610199]]
+    bounds: [[14.086142, 100.606071], [14.083915, 100.610199]]
   },
   {
     id: 'floor5',
     name: 'Floor 5',
     img: 'images/floor_5.png',
-    bounds: [[14.086142,100.606071],[14.083915,100.610199]]
+    bounds: [[14.086142, 100.606071], [14.083915, 100.610199]]
   },
   {
     id: 'floor6',
     name: 'Floor 6',
     img: 'images/floor_6.png',
-    bounds: [[14.086142,100.606071],[14.083915,100.610199]]
+    bounds: [[14.086142, 100.606071], [14.083915, 100.610199]]
   }
 ];
 
@@ -51,10 +51,60 @@ let locationsFromFile = [];
 fetch('locations.json')
   .then(r => r.json())
   .then(data => {
-    locationsFromFile = data.locations || [];
-    console.log('✅ Loaded', locationsFromFile.length, 'locations from file');
+    locationsFromFile = Array.isArray(data) ? data : (data.locations || []);
+    console.log('Loaded', locationsFromFile.length, 'locations from file');
   })
-  .catch(err => console.warn('⚠️ locations.json not found, using pins only'));
+  .catch(err => console.warn('locations.json not found, using pins only'));
+
+// Initialize savedBuildings (used by search, may be populated by dev-tools)
+let savedBuildings = [];
+
+// =================== ACCESSIBILITY HELPERS ===================
+
+// Focus trap for modal/sidebar — returns cleanup function
+function trapFocus(container) {
+  const focusableSelectors = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [role="button"][tabindex]';
+  const focusables = container.querySelectorAll(focusableSelectors);
+  if (focusables.length === 0) return null;
+
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+
+  const handler = (e) => {
+    if (e.key !== 'Tab') return;
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
+
+  container.addEventListener('keydown', handler);
+  first.focus();
+  return () => container.removeEventListener('keydown', handler);
+}
+
+// Debounce utility
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+// Sanitize text for safe innerHTML usage
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
 
 // =================== SOUND EFFECTS SYSTEM ===================
 let soundEffectsEnabled = localStorage.getItem('soundEffects') !== 'false';
@@ -71,21 +121,21 @@ async function loadSoundFiles() {
     'sound10.ogg', 'sound11.ogg', 'sound12.ogg',
     'sound14.ogg', 'sound15.ogg', 'sound16.ogg'
   ];
-  
+
   soundFiles = soundFileNames.map(name => `sounds/${name}`);
 }
 
 function playRandomSound() {
   if (!soundEffectsEnabled || currentLanguage !== 't-th') return;
   if (soundFiles.length === 0) return;
-  
+
   try {
     // Stop current sound if playing
     if (currentSound) {
       currentSound.pause();
       currentSound.currentTime = 0;
     }
-    
+
     // Pick random sound
     const randomIndex = Math.floor(Math.random() * soundFiles.length);
     currentSound = new Audio(soundFiles[randomIndex]);
@@ -102,6 +152,39 @@ function playRandomSound() {
 // Initialize sounds
 loadSoundFiles();
 
+// =================== GLITCH SOUND SYSTEM ===================
+const glitchSoundFiles = [
+  'sounds/Glitch/Glitch1.mp3',
+  'sounds/Glitch/Glitch2.mp3',
+  'sounds/Glitch/Glitch3.mp3',
+  'sounds/Glitch/Glitch4.mp3',
+  'sounds/Glitch/Glitch5.mp3'
+];
+let currentGlitchSound = null;
+
+function playGlitchSound() {
+  // Glitch sounds play on search clear regardless of language
+  // But in t-th mode, the regular sounds will play over it
+  if (currentLanguage === 't-th' && soundEffectsEnabled) return; // t-th plays over it
+
+  try {
+    if (currentGlitchSound) {
+      currentGlitchSound.pause();
+      currentGlitchSound.currentTime = 0;
+    }
+
+    const randomIndex = Math.floor(Math.random() * glitchSoundFiles.length);
+    currentGlitchSound = new Audio(glitchSoundFiles[randomIndex]);
+    currentGlitchSound.volume = 0.25;
+    currentGlitchSound.playbackRate = 1.5; // Make the glitch sound play faster
+    currentGlitchSound.play().catch(err => {
+      console.debug('Glitch sound play failed:', err);
+    });
+  } catch (err) {
+    console.debug('Glitch sound error:', err);
+  }
+}
+
 // =================== SETTINGS & TRANSLATIONS ===================
 let currentLanguage = localStorage.getItem('language') || 'th';
 let currentTheme = localStorage.getItem('theme') || 'light';
@@ -115,52 +198,68 @@ fetch('translations.json')
     translations = data;
     applyTranslations();
   })
-  .catch(err => console.warn('⚠️ translations.json not found'));
+  .catch(err => console.warn('translations.json not found'));
 
 function t(key) {
   return translations[currentLanguage]?.[key] || key;
 }
 
 function applyTranslations() {
+  // Update all elements with data-translate attribute
+  document.querySelectorAll('[data-translate]').forEach(el => {
+    const key = el.getAttribute('data-translate');
+    const translation = t(key);
+
+    // For option elements, update textContent
+    if (el.tagName === 'OPTION') {
+      el.textContent = translation;
+    }
+    // For other elements, replace textContent
+    else {
+      el.textContent = translation;
+    }
+  });
+
   // Update all translatable elements
   const searchInputEl = document.getElementById('searchInput');
   if (searchInputEl) searchInputEl.placeholder = t('searchPlaceholder');
-  
+
   // Update sidebar titles
   const mainSidebarTitle = document.querySelector('#mainSidebar .sidebar-title');
   if (mainSidebarTitle) mainSidebarTitle.textContent = t('menu').toUpperCase();
-  
+
   const devSidebarTitle = document.querySelector('#devSidebar .sidebar-title');
-  if (devSidebarTitle) devSidebarTitle.innerHTML = '<i class="fa-solid fa-map-location-dot"></i> ' + t('devTools').replace(/^🛠️\s*/, '');
-  
+  if (devSidebarTitle) devSidebarTitle.innerHTML = '<i class="fa-solid fa-map-location-dot"></i> ' + t('devTools');
+
   // Update close button titles
   document.querySelectorAll('.close-btn').forEach(btn => {
     btn.title = t('close');
   });
-  
+
   // Update menu items
   document.querySelectorAll('.menu-item').forEach(item => {
     const modalId = item.getAttribute('data-modal');
     const action = item.getAttribute('data-action');
+    const textSpan = item.querySelector('.menu-text') || item;
 
-    if (modalId === 'about') item.textContent = t('about');
-    if (modalId === 'howto') item.textContent = t('howto');
-    if (modalId === 'settings') item.textContent = t('settings');
-    if (modalId === 'donate') item.textContent = t('donate');
-    if (action === 'feedback') item.textContent = t('feedback');
+    if (modalId === 'about') textSpan.textContent = t('about');
+    if (modalId === 'howto') textSpan.textContent = t('howto');
+    if (modalId === 'settings') textSpan.textContent = t('settings');
+    if (modalId === 'donate') textSpan.textContent = t('donate');
+    if (action === 'feedback') textSpan.textContent = t('feedback');
   });
-  
+
   // Update route creator sections
   const pathSectionHeaders = document.querySelectorAll('.path-section h4');
   if (pathSectionHeaders[0]) pathSectionHeaders[0].textContent = t('routeCreator');
   if (pathSectionHeaders[1]) pathSectionHeaders[1].textContent = t('add360Pin');
-  
+
   document.querySelectorAll('.step-title').forEach((el, i) => {
-    const titles = [t('nameYourRoute'), t('drawYourRoute'), t('saveYourRoute'), 
-                    t('placePinOnMap'), t('addPinDetails'), t('savePin')];
+    const titles = [t('nameYourRoute'), t('drawYourRoute'), t('saveYourRoute'),
+    t('placePinOnMap'), t('addPinDetails'), t('savePin')];
     if (titles[i]) el.textContent = titles[i];
   });
-  
+
   // Buttons
   const btnTexts = {
     'startPathBtn': 'startDrawing',
@@ -173,20 +272,24 @@ function applyTranslations() {
     'savePin': 'savePin',
     'cancelPin': 'cancel'
   };
-  
+
   Object.entries(btnTexts).forEach(([id, key]) => {
     const btn = document.getElementById(id);
     if (btn && btn.querySelector('.btn-icon')) {
       const icon = btn.querySelector('.btn-icon').outerHTML;
-      btn.innerHTML = icon + ' ' + t(key);
+      let translatedText = t(key);
+      if (typeof translatedText === 'string') {
+        translatedText = translatedText.replace(/^[^\w\s]+\s/, '');
+      }
+      btn.innerHTML = icon + ' ' + translatedText;
     }
   });
-  
+
   // Update saved routes headers
   const savedRoutesHeaders = document.querySelectorAll('.saved-routes-header h4');
   if (savedRoutesHeaders[0]) savedRoutesHeaders[0].textContent = t('savedRoutes');
   if (savedRoutesHeaders[1]) savedRoutesHeaders[1].textContent = t('savedPins');
-  
+
   // Update floor pill
   initFloorPill();
 
@@ -195,18 +298,18 @@ function applyTranslations() {
   if (currentFloorNum) {
     currentFloorNum.textContent = currentFloor + 1;
   }
-  
+
   // Update placeholders
   const pathName = document.getElementById('pathName');
   if (pathName) pathName.placeholder = t('routeNamePlaceholder');
-  
+
   const pinName = document.getElementById('pinName');
   if (pinName) pinName.placeholder = t('locationNamePlaceholder');
-  
+
   // Update path status
   const pathStatus = document.getElementById('pathStatus');
   if (pathStatus && !drawingMode) pathStatus.textContent = t('readyToDraw');
-  
+
   const pinPlacingStatus = document.getElementById('pinPlacingStatus');
   if (pinPlacingStatus && !placingPinMode) pinPlacingStatus.textContent = t('readyToPlace');
 }
@@ -215,28 +318,28 @@ function changeLanguage(lang) {
   return new Promise((resolve) => {
     const overlay = document.getElementById('languageLoadingOverlay');
     const loadingText = document.getElementById('languageLoadingText');
-    
+
     // Stop all currently playing sounds
     if (currentSound) {
       currentSound.pause();
       currentSound.currentTime = 0;
       currentSound = null;
     }
-    
+
     if (loadingText) loadingText.textContent = t('changingLanguage');
     if (overlay) overlay.classList.add('active');
-    
+
     setTimeout(() => {
       currentLanguage = lang;
       localStorage.setItem('language', lang);
       applyTranslations();
-      
+
       // Dispatch language change event
       window.dispatchEvent(new Event('languagechange'));
-      
+
       setTimeout(() => {
         if (overlay) overlay.classList.remove('active');
-        
+
         // Play sound8 when switching TO t-th
         if (lang === 't-th' && soundEffectsEnabled) {
           if (currentSound) {
@@ -247,7 +350,7 @@ function changeLanguage(lang) {
           currentSound.volume = 0.3;
           currentSound.play().catch(err => console.debug('Sound play failed:', err));
         }
-        
+
         resolve();
       }, 1500);
     }, 100);
@@ -267,7 +370,7 @@ function applyTheme(theme) {
 function applyDisplayMode(mode) {
   displayMode = mode;
   localStorage.setItem('displayMode', mode);
-  
+
   // Auto-detect if mode is auto
   if (mode === 'auto') {
     const width = window.innerWidth;
@@ -287,39 +390,10 @@ function applyDisplayMode(mode) {
 applyTheme(currentTheme);
 applyDisplayMode(displayMode);
 
-// =================== DEV MODE CONFIG ===================
-let devMode = false;
-
-fetch('config.json')
-  .then(r => {
-    if (!r.ok) throw new Error('config.json not found');
-    return r.json();
-  })
-  .then(cfg => {
-    devMode = !!cfg.devMode;
-    const devBtn = document.getElementById('devModeBtn');
-    console.log('✅ Config loaded! Dev mode:', devMode);
-    
-    if (devBtn) {
-      if (devMode) {
-        devBtn.style.display = 'block';
-        devBtn.title = 'Dev Mode: ON';
-        console.log('✅ Dev button is now visible');
-      } else {
-        devBtn.style.display = 'none';
-      }
-    }
-  })
-  .catch(err => {
-    console.warn('⚠️ config.json not found - dev mode disabled');
-    const devBtn = document.getElementById('devModeBtn');
-    if (devBtn) devBtn.style.display = 'none';
-  });
-
 // =================== TOAST SYSTEM ===================
 const toastContainer = document.getElementById('toastContainer');
 
-function showToast(message, type='info', options={}) {
+function showToast(message, type = 'info', options = {}) {
   const duration = options.duration ?? 3000;
   const t = document.createElement('div');
   t.className = `toast ${type}`;
@@ -330,7 +404,8 @@ function showToast(message, type='info', options={}) {
 
   const closeBtn = document.createElement('button');
   closeBtn.className = 'close';
-  closeBtn.innerHTML = '×';
+  closeBtn.textContent = '×';
+  closeBtn.setAttribute('aria-label', 'Dismiss notification');
   closeBtn.onclick = () => hideToast(t);
 
   t.appendChild(msg);
@@ -346,40 +421,128 @@ function showToast(message, type='info', options={}) {
 function hideToast(el) {
   el.classList.remove('show');
   el.classList.add('hide');
-  setTimeout(() => { try { el.remove(); } catch(e){} }, 300);
+  setTimeout(() => { try { el.remove(); } catch (e) { } }, 300);
 }
 
-// =================== MAP INIT ===================
-console.log('Initializing map...');
+// =================== MAP INIT (MapLibre GL JS) ===================
+console.log('Initializing map with MapLibre...');
 
-// Set map boundaries (school area only)
-const SCHOOL_BOUNDS = [[14.083915, 100.606071], [14.086142, 100.610199]]; //set bounds bruh
+// School config loaded from data/config.json later, using defaults first
+const mapEngine = new MapEngine('map', {
+  center: CENTER,
+  zoom: 17,
+  bounds: FLOORS[0].bounds, // [[lat1,lng1],[lat2,lng2]] — fitBounds on load
+  maxZoom: 21,
+  minZoom: 14,
+  pitch: 0,
+  bearing: 0
+});
 
-const map = L.map('map', {
-  zoomControl: true,
-  attributionControl: true,
-  maxBounds: SCHOOL_BOUNDS, // Lock to school area
-  maxBoundsViscosity: 1.0 // Completely prevent moving outside
-}).setView(CENTER, 19);
-
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; OpenStreetMap & Carto',
-  subdomains: 'abcd',
-  maxZoom: 20
-}).addTo(map);
+// Raw MapLibre map for direct API access
+const map = mapEngine.map;
+window.mapEngine = mapEngine;
 
 let currentFloor = 0;
-const floorOverlay = L.imageOverlay(FLOORS[currentFloor].img, FLOORS[currentFloor].bounds).addTo(map);
+
+// Load floor overlay and 3D buildings once map is ready
+mapEngine._ready.then(() => {
+  // Floor overlay
+  const overlayBounds = {
+    topLeft: FLOORS[currentFloor].bounds[0],
+    topRight: [FLOORS[currentFloor].bounds[0][0], FLOORS[currentFloor].bounds[1][1]],
+    bottomRight: FLOORS[currentFloor].bounds[1],
+    bottomLeft: [FLOORS[currentFloor].bounds[1][0], FLOORS[currentFloor].bounds[0][1]]
+  };
+  mapEngine.setFloorOverlay(FLOORS[currentFloor].img, overlayBounds);
+
+  // Load 3D buildings
+  mapEngine.loadBuildings('data/buildings.geojson');
+
+  console.log('Map initialized with MapLibre GL JS');
+});
 
 setTimeout(() => {
-  map.invalidateSize();
-  console.log('Map initialized with boundary lock');
+  mapEngine.resize();
 }, 200);
 
 window.addEventListener('resize', () => {
-  map.invalidateSize();
+  mapEngine.resize();
   if (displayMode === 'auto') applyDisplayMode('auto');
 });
+
+// ---- Leaflet Compat: patch map methods immediately ----
+(function patchMapCompat() {
+  // Store handler mappings for map.off compatibility
+  const _handlerMap = new Map();
+
+  // Wrap map.on to convert MapLibre e.lngLat → Leaflet e.latlng
+  const _origOn = map.on.bind(map);
+  const _origOff = map.off.bind(map);
+
+  map.on = function (event, handler) {
+    const wrappedHandler = (e) => {
+      if (e && e.lngLat) {
+        e.latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+      }
+      handler(e);
+    };
+    const key = event + '_' + (handler.name || '') + '_' + handler.toString().slice(0, 50);
+    _handlerMap.set(key, wrappedHandler);
+    handler._wrappedCompat = wrappedHandler;
+    _origOn(event, wrappedHandler);
+    return map;
+  };
+
+  map.off = function (event, handler) {
+    if (handler && handler._wrappedCompat) {
+      _origOff(event, handler._wrappedCompat);
+    } else {
+      try { _origOff(event, handler); } catch (e) { }
+    }
+    return map;
+  };
+
+  // map.removeLayer compat
+  map.removeLayer = function (layer) {
+    if (layer && typeof layer.remove === 'function') layer.remove();
+  };
+
+  // map.hasLayer compat
+  map.hasLayer = function (layer) {
+    return !!(layer && layer._id);
+  };
+
+  // map.closePopup compat
+  map.closePopup = function () { mapEngine.closePopup(); };
+
+  // map.fitBounds with L.latLngBounds compat
+  const _origFit = map.fitBounds.bind(map);
+  map.fitBounds = function (bounds, options = {}) {
+    if (bounds && bounds._sw) {
+      const sw = [bounds._sw.lng, bounds._sw.lat];
+      const ne = [bounds._ne.lng, bounds._ne.lat];
+      const pad = options.padding ? options.padding[0] || 50 : 50;
+      _origFit([sw, ne], { padding: pad });
+    } else if (Array.isArray(bounds)) {
+      mapEngine.fitBounds(bounds, options);
+    } else {
+      _origFit(bounds, options);
+    }
+  };
+
+  // map.panTo compat (accept [lat,lng] array)
+  map.panTo = function (latLng) { mapEngine.panTo(latLng); };
+
+  // map.getZoom is native to MapLibre, no patch needed
+  // map.dragging compat
+  map.dragging = {
+    disable: () => mapEngine.disableDragging(),
+    enable: () => mapEngine.enableDragging()
+  };
+
+  // map.invalidateSize compat
+  map.invalidateSize = function () { mapEngine.resize(); };
+})();
 
 // =================== GLOBALS ===================
 let allPins = [];
@@ -391,17 +554,42 @@ let currentPolyline = null;
 let savedPaths = [];
 let drawnPathLayers = [];
 
+// Enhanced pathmaker globals
+let previewLine = null; // Cursor follower line
+let pathPointMarkers = []; // Visual markers at each waypoint
+let pathHistory = []; // For undo/redo functionality
+let historyIndex = -1;
+let draggedMarker = null; // Currently dragged marker
+let distanceMarkers = []; // Distance indicator labels
+
 // =================== SIDEBAR LOGIC ===================
 const menuToggle = document.getElementById('menuToggle');
 const mainSidebar = document.getElementById('mainSidebar');
-const devSidebar = document.getElementById('devSidebar');
 const closeMainBtn = document.getElementById('closeSidebarBtn');
-const closeDevBtn = document.getElementById('closeDevBtn');
-const devBtn = document.getElementById('devModeBtn');
+
+window.devMode = false;
+
+// Re-fetch config.json to populate devMode correctly
+fetch('config.json')
+  .then(r => r.json())
+  .then(cfg => {
+    window.devMode = !!cfg.devMode;
+  })
+  .catch(() => { });
 
 function closeAllSidebars() {
   if (mainSidebar) mainSidebar.classList.remove('open');
-  if (devSidebar) devSidebar.classList.remove('open');
+  // Accessibility: release focus trap and restore focus
+  if (window._sidebarFocusTrap) {
+    window._sidebarFocusTrap();
+    window._sidebarFocusTrap = null;
+  }
+  if (mainSidebar) mainSidebar.setAttribute('aria-hidden', 'true');
+  if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+  if (window._sidebarPreviousFocus) {
+    window._sidebarPreviousFocus.focus();
+    window._sidebarPreviousFocus = null;
+  }
 }
 
 if (menuToggle) {
@@ -409,29 +597,18 @@ if (menuToggle) {
     e.stopPropagation();
     const isOpen = mainSidebar.classList.contains('open');
     closeAllSidebars();
-    if (!isOpen) mainSidebar.classList.add('open');
+    if (!isOpen) {
+      mainSidebar.classList.add('open');
+      mainSidebar.setAttribute('aria-hidden', 'false');
+      menuToggle.setAttribute('aria-expanded', 'true');
+      window._sidebarPreviousFocus = document.activeElement;
+      window._sidebarFocusTrap = trapFocus(mainSidebar);
+    }
   });
 }
 
 if (closeMainBtn) {
   closeMainBtn.addEventListener('click', () => mainSidebar.classList.remove('open'));
-}
-
-if (closeDevBtn) {
-  closeDevBtn.addEventListener('click', () => devSidebar.classList.remove('open'));
-}
-
-if (devBtn) {
-  devBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (!devMode) {
-      showToast('Dev mode is disabled. Enable it in config.json', 'info', { duration: 3500 });
-      return;
-    }
-    const isOpen = devSidebar.classList.contains('open');
-    closeAllSidebars();
-    if (!isOpen) devSidebar.classList.add('open');
-  });
 }
 
 document.addEventListener('keydown', (e) => {
@@ -456,11 +633,9 @@ document.addEventListener('keydown', (e) => {
 
 document.addEventListener('click', (e) => {
   const clickedInMain = mainSidebar && mainSidebar.contains(e.target);
-  const clickedInDev = devSidebar && devSidebar.contains(e.target);
   const clickedToggle = menuToggle && menuToggle.contains(e.target);
-  const clickedDevBtn = devBtn && devBtn.contains(e.target);
 
-  if (!clickedInMain && !clickedInDev && !clickedToggle && !clickedDevBtn) {
+  if (!clickedInMain && !clickedToggle) {
     closeAllSidebars();
   }
 });
@@ -473,7 +648,7 @@ const modalClose = document.getElementById('modalClose');
 
 function generateSettingsHTML() {
   const showSoundToggle = currentLanguage === 't-th';
-  
+
   return `
     <div style="padding: 10px 0;">
       <!-- Language Setting -->
@@ -490,13 +665,13 @@ function generateSettingsHTML() {
       <!-- Traditional Thai Sound Effects (only in t-th) -->
       <div class="theme-toggle-container">
         <span class="theme-toggle-label">
-          <span class="theme-icon">🔊</span>
+          <span class="material-symbols-rounded theme-icon">volume_up</span>
           <b>${t('traditionalThaiSounds')}</b>
-          <span class="info-tooltip" data-tooltip="${t('soundsTooltip')}" style="margin-left:8px;cursor:help;color:var(--accent);">❓</span>
+          <span class="material-symbols-rounded info-tooltip" data-tooltip="${t('soundsTooltip')}" style="margin-left:8px;cursor:help;color:var(--accent);">help</span>
         </span>
         <div class="theme-toggle ${soundEffectsEnabled ? 'active' : ''}" id="soundEffectsToggle">
-          <div class="theme-toggle-slider">
-            ${soundEffectsEnabled ? '🔊' : '🔇'}
+          <div class="theme-toggle-slider" style="display:flex;align-items:center;justify-content:center;">
+            <span class="material-symbols-rounded">${soundEffectsEnabled ? 'volume_up' : 'volume_off'}</span>
           </div>
         </div>
       </div>
@@ -505,12 +680,12 @@ function generateSettingsHTML() {
       <!-- Theme Setting -->
       <div class="theme-toggle-container">
         <span class="theme-toggle-label">
-          <span class="theme-icon">${currentTheme === 'dark' ? '🌙' : '☀️'}</span>
+          <span class="material-symbols-rounded theme-icon">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>
           <b>${t('theme')}</b>
         </span>
         <div class="theme-toggle ${currentTheme === 'dark' ? 'active' : ''}" id="themeToggle">
-          <div class="theme-toggle-slider">
-            ${currentTheme === 'dark' ? '🌙' : '☀️'}
+          <div class="theme-toggle-slider" style="display:flex;align-items:center;justify-content:center;">
+            <span class="material-symbols-rounded">${currentTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>
           </div>
         </div>
       </div>
@@ -551,15 +726,15 @@ const modalContent = {
 function openModal(modalId) {
   if (modalId && modalContent[modalId]) {
     modalTitle.textContent = modalContent[modalId].title;
-    
+
     if (modalId === 'settings') {
       modalBody.innerHTML = generateSettingsHTML();
-      
+
       // Attach event listeners for settings
       const languageSelect = document.getElementById('languageSelect');
       const themeToggle = document.getElementById('themeToggle');
       const displayModeSelect = document.getElementById('displayModeSelect');
-      
+
       if (languageSelect) {
         languageSelect.addEventListener('change', (e) => {
           changeLanguage(e.target.value).then(() => {
@@ -570,23 +745,23 @@ function openModal(modalId) {
           });
         });
       }
-      
+
       if (themeToggle) {
         themeToggle.addEventListener('click', () => {
           const newTheme = currentTheme === 'light' ? 'dark' : 'light';
           applyTheme(newTheme);
           themeToggle.classList.toggle('active');
-          
+
           // Update icon
           const slider = themeToggle.querySelector('.theme-toggle-slider');
           const icon = themeToggle.closest('.theme-toggle-container').querySelector('.theme-icon');
           if (slider && icon) {
-            slider.textContent = newTheme === 'dark' ? '🌙' : '☀️';
-            icon.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+            slider.innerHTML = `<span class="material-symbols-rounded">${newTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
+            icon.innerHTML = `<span class="material-symbols-rounded">${newTheme === 'dark' ? 'dark_mode' : 'light_mode'}</span>`;
           }
         });
       }
-      
+
       // Sound Effects Toggle (only in t-th mode)
       const soundEffectsToggle = document.getElementById('soundEffectsToggle');
       if (soundEffectsToggle) {
@@ -598,7 +773,7 @@ function openModal(modalId) {
           // Update icon
           const slider = soundEffectsToggle.querySelector('.theme-toggle-slider');
           if (slider) {
-            slider.textContent = soundEffectsEnabled ? '🔊' : '🔇';
+            slider.innerHTML = `<span class="material-symbols-rounded">${soundEffectsEnabled ? 'volume_up' : 'volume_off'}</span>`;
           }
 
           if (soundEffectsEnabled) {
@@ -642,40 +817,65 @@ function openModal(modalId) {
     } else {
       modalBody.innerHTML = modalContent[modalId].body;
     }
-    
+
     modalOverlay.classList.add('active');
+    // Accessibility: trap focus inside modal
+    window._modalPreviousFocus = document.activeElement;
+    window._modalFocusTrap = trapFocus(document.querySelector('.modal-content'));
   }
 }
 
 document.querySelectorAll('.menu-item').forEach(item => {
-  item.addEventListener('click', (e) => {
+  const handleMenuAction = (e) => {
     e.stopPropagation();
     const modalId = item.getAttribute('data-modal');
     const action = item.getAttribute('data-action');
-    
+
     if (action === 'feedback') {
       // Open feedback form in new tab
       window.open('https://forms.gle/o3W4wVamF4PA1AFy9', '_blank');
     } else if (modalId) {
       openModal(modalId);
     }
+  };
+
+  item.addEventListener('click', handleMenuAction);
+
+  // Keyboard support: Enter and Space activate menu items
+  item.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleMenuAction(e);
+    }
   });
 });
 
 function closeModal() {
   if (modalOverlay) {
+    // Accessibility: release focus trap and restore focus
+    if (window._modalFocusTrap) {
+      window._modalFocusTrap();
+      window._modalFocusTrap = null;
+    }
     modalOverlay.classList.add('closing');
-    setTimeout(() => {
-      // Force hide before removing classes to prevent flash
-      modalOverlay.style.display = 'none';
-      modalOverlay.style.opacity = '0';
+    const onTransitionEnd = () => {
       modalOverlay.classList.remove('active', 'closing');
-      // Clear inline styles so CSS takes over again
+      modalOverlay.removeEventListener('transitionend', onTransitionEnd);
+    };
+    modalOverlay.addEventListener('transitionend', onTransitionEnd);
+    // Fallback in case transitionend doesn't fire
+    setTimeout(() => {
+      modalOverlay.classList.remove('active', 'closing');
+    }, 300);
+    // Restore focus after close transition
+    if (window._modalPreviousFocus) {
       setTimeout(() => {
-        modalOverlay.style.display = '';
-        modalOverlay.style.opacity = '';
-      }, 10);
-    }, 250); // Match animation duration exactly
+        if (window._modalPreviousFocus) {
+          window._modalPreviousFocus.focus();
+          window._modalPreviousFocus = null;
+        }
+      }, 310);
+    }
   }
 }
 
@@ -695,306 +895,54 @@ if (modalOverlay) {
   });
 }
 
-// =================== PATH DRAWING ===================
-const startPathBtn = document.getElementById('startPathBtn');
-const finishPathBtn = document.getElementById('finishPathBtn');
-const undoPointBtn = document.getElementById('undoPointBtn');
-const clearPathBtn = document.getElementById('clearPathBtn');
-const savePathBtn = document.getElementById('savePathBtn');
-const pathNameInput = document.getElementById('pathName');
-const pathStatus = document.getElementById('pathStatus');
-const pathsList = document.getElementById('pathsList');
-const drawingTools = document.getElementById('drawingTools');
-const routeCount = document.getElementById('routeCount');
-
-function updatePathStatus(text, isActive = false) {
-  if (pathStatus) {
-    pathStatus.textContent = text;
-    pathStatus.className = 'path-status' + (isActive ? ' active' : '');
-  }
-}
-
-function updateRouteCount() {
-  if (routeCount) routeCount.textContent = savedPaths.length;
-}
-
-if (startPathBtn) {
-  startPathBtn.addEventListener('click', () => {
-    if (drawingMode) {
-      showToast('Already in drawing mode', 'info');
-      return;
-    }
-
-    drawingMode = true;
-    currentPathCoords = [];
-    document.body.classList.add('drawing-path');
-
-    if (drawingTools) drawingTools.style.display = 'grid';
-    if (startPathBtn) startPathBtn.style.display = 'none';
-
-    if (currentPolyline) map.removeLayer(currentPolyline);
-
-    currentPolyline = L.polyline([], {
-      color: '#667eea',
-      weight: 5,
-      opacity: 0.8,
-      dashArray: '10, 10'
-    }).addTo(map);
-
-    updatePathStatus('🖱️ Click on map to add waypoints', true);
-    showToast('Click on map to add waypoints', 'info', { duration: 2500 });
-  });
-}
-
-if (finishPathBtn) finishPathBtn.addEventListener('click', finishPath);
-
-function finishPath() {
-  if (!drawingMode) {
-    showToast('Not in drawing mode', 'info');
-    return;
-  }
-
-  if (currentPathCoords.length < 2) {
-    showToast('Need at least 2 waypoints', 'error');
-    return;
-  }
-
-  drawingMode = false;
-  document.body.classList.remove('drawing-path');
-
-  if (drawingTools) drawingTools.style.display = 'none';
-  if (startPathBtn) startPathBtn.style.display = 'flex';
-
-  const pathName = pathNameInput.value.trim() || `Route ${savedPaths.length + 1}`;
-
-  const pathObj = {
-    id: 'path_' + Date.now(),
-    name: pathName,
-    coords: currentPathCoords.slice(),
-    createdAt: new Date().toISOString()
-  };
-
-  if (currentPolyline) {
-    map.removeLayer(currentPolyline);
-    currentPolyline = null;
-  }
-
-  const poly = L.polyline(pathObj.coords, {
-    color: '#0a84ff',
-    weight: 5
-  }).addTo(map);
-
-  poly.on('click', () => {
-    map.panTo(poly.getBounds().getCenter());
-    showToast(`Route: ${pathObj.name}`, 'info');
-  });
-
-  pathObj.polyline = poly;
-  drawnPathLayers.push(poly);
-  savedPaths.push(pathObj);
-  currentPathCoords = [];
-  if (pathNameInput) pathNameInput.value = '';
-
-  renderPathsList();
-  updateRouteCount();
-  updatePathStatus('✅ Route created! Click "Save Route"');
-  showToast('Route created!', 'success');
-}
-
-if (undoPointBtn) {
-  undoPointBtn.addEventListener('click', () => {
-    if (!drawingMode || currentPathCoords.length === 0) {
-      showToast('No waypoints to undo', 'info');
-      return;
-    }
-
-    currentPathCoords.pop();
-    if (currentPolyline) currentPolyline.setLatLngs(currentPathCoords);
-
-    updatePathStatus(`🖱️ ${currentPathCoords.length} waypoints`, true);
-    showToast('Waypoint removed', 'info');
-  });
-}
-
-if (clearPathBtn) {
-  clearPathBtn.addEventListener('click', () => {
-    if (!drawingMode && currentPathCoords.length === 0) {
-      showToast('Nothing to clear', 'info');
-      return;
-    }
-
-    if (currentPolyline) {
-      map.removeLayer(currentPolyline);
-      currentPolyline = null;
-    }
-
-    currentPathCoords = [];
-    drawingMode = false;
-    document.body.classList.remove('drawing-path');
-
-    if (drawingTools) drawingTools.style.display = 'none';
-    if (startPathBtn) startPathBtn.style.display = 'flex';
-
-    updatePathStatus('Ready to draw');
-    showToast('Cleared', 'info');
-  });
-}
-
-if (savePathBtn) {
-  savePathBtn.addEventListener('click', () => {
-    if (savedPaths.length === 0) {
-      showToast('No routes to save', 'info');
-      return;
-    }
-
-    const pathsToSave = savedPaths.map(p => ({
-      id: p.id,
-      name: p.name,
-      coords: p.coords,
-      createdAt: p.createdAt
-    }));
-
-    fetch('/save_path', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paths: pathsToSave })
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.status === 'success') {
-        showToast('Routes saved ✓', 'success');
-      } else throw new Error('Server error');
-    })
-    .catch(err => {
-      try {
-        localStorage.setItem('saved_paths', JSON.stringify(pathsToSave));
-        showToast('Routes saved locally ✓', 'success');
-      } catch (e) {
-        showToast('Failed to save', 'error');
-      }
-    });
-  });
-}
-
-function deletePath(pathId) {
-  const idx = savedPaths.findIndex(p => p.id === pathId);
-  if (idx === -1) return;
-
-  const path = savedPaths[idx];
-  if (path.polyline) map.removeLayer(path.polyline);
-
-  savedPaths.splice(idx, 1);
-  
-  try {
-    const ps = savedPaths.map(p => ({
-      id: p.id, name: p.name, coords: p.coords, createdAt: p.createdAt
-    }));
-    localStorage.setItem('saved_paths', JSON.stringify(ps));
-  } catch (e) {}
-
-  renderPathsList();
-  updateRouteCount();
-  showToast('Route deleted', 'success');
-}
-
-map.on('click', (e) => {
-  if (drawingMode) {
-    currentPathCoords.push([e.latlng.lat, e.latlng.lng]);
-    if (currentPolyline) currentPolyline.setLatLngs(currentPathCoords);
-    updatePathStatus(`🖱️ ${currentPathCoords.length} waypoints`, true);
-  }
-});
-
-map.on('dblclick', () => {
-  if (drawingMode && currentPathCoords.length >= 2) finishPath();
-});
-
-function renderPathsList() {
-  if (!pathsList) return;
-  pathsList.innerHTML = '';
-  if (savedPaths.length === 0) return;
-
-  savedPaths.forEach(path => {
-    const item = document.createElement('div');
-    item.className = 'path-item';
-    
-    const content = document.createElement('div');
-    content.className = 'path-item-content';
-    content.innerHTML = `
-      <div class="path-item-name">${path.name}</div>
-      <div class="path-item-info">
-        <span class="path-item-badge">${path.coords.length} pts</span>
-      </div>
-    `;
-
-    const actions = document.createElement('div');
-    actions.className = 'path-item-actions';
-
-    const viewBtn = document.createElement('button');
-    viewBtn.className = 'btn-view';
-    viewBtn.innerHTML = '👁️';
-    viewBtn.onclick = (e) => {
-      e.stopPropagation();
-      map.setView([path.coords[0][0], path.coords[0][1]], 19, { animate: true });
-    };
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn-delete';
-    deleteBtn.innerHTML = '🗑️';
-    deleteBtn.onclick = (e) => {
-      e.stopPropagation();
-      if (confirm(`Delete "${path.name}"?`)) deletePath(path.id);
-    };
-
-    actions.appendChild(viewBtn);
-    actions.appendChild(deleteBtn);
-    item.appendChild(content);
-    item.appendChild(actions);
-    
-    item.onclick = () => map.setView([path.coords[0][0], path.coords[0][1]], 19, { animate: true });
-    pathsList.appendChild(item);
-  });
-}
-
-renderPathsList();
-updateRouteCount();
-
 // =================== LOAD PINS ===================
 let mainPathPolyline = null;
 
 function loadPins() {
+  let deletedPins = [];
+  try {
+    deletedPins = JSON.parse(localStorage.getItem('deleted_pins') || '[]');
+  } catch (e) {
+    deletedPins = [];
+  }
+
   fetch('data/pins.json')
     .then(r => r.json())
     .then(pins => {
-      allPins = pins || [];
-      markers.forEach(m => map.removeLayer(m));
+      console.log('Loaded pins from server:', pins?.length || 0);
+
+      (pins || []).forEach(pin => {
+        if (!pin.id) {
+          pin.id = `pin_${pin.name.toLowerCase().replace(/\s+/g, '_')}_${pin.lat.toFixed(5)}_${pin.lng.toFixed(5)}`;
+        }
+      });
+
+      allPins = (pins || []).filter(pin => !deletedPins.includes(pin.id));
+
+      // Clear existing markers
+      markers.forEach(id => mapEngine.removeMarker(id));
       markers = [];
-      
+
       if (mainPathPolyline) {
-        map.removeLayer(mainPathPolyline);
+        mapEngine.removeLine('main-path');
         mainPathPolyline = null;
       }
 
       allPins.forEach(pin => {
-        const m = L.marker([pin.lat, pin.lng], {
-          icon: L.divIcon({
-            className: 'custom-pin-icon',
-            html: '<i class="fa-solid fa-map-pin" style="font-size:32px;color:#0a84ff;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>',
-            iconSize: [32, 32],
-            iconAnchor: [16, 32]
-          })
-        }).addTo(map);
-        m.bindPopup(`
-          <div style="text-align:center;">
+        const markerId = mapEngine.addMarker([pin.lat, pin.lng], {
+          id: `pin_marker_${pin.id}`,
+          className: 'custom-pin-icon',
+          html: '<i class="fa-solid fa-map-pin" style="font-size:32px;color:#0a84ff;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>',
+          popup: `<div style="text-align:center;">
             <strong>${pin.name}</strong><br>
             <button onclick='openViewer("${pin.name}")'
                     style="margin-top:10px;padding:8px 16px;background:#0a84ff;color:white;border:none;border-radius:8px;cursor:pointer;font-family:Kanit,sans-serif;">
               ดูสตรีทวิว 360°
             </button>
-          </div>
-        `);
-        markers.push(m);
-        m.on('click', () => map.panTo([pin.lat, pin.lng]));
+          </div>`,
+          onClick: () => mapEngine.panTo([pin.lat, pin.lng])
+        });
+        markers.push(markerId);
       });
     })
     .catch(err => {
@@ -1002,42 +950,46 @@ function loadPins() {
     })
     .finally(() => {
       try {
+        const deletedPinsInFinally = JSON.parse(localStorage.getItem('deleted_pins') || '[]');
         const local = JSON.parse(localStorage.getItem('saved_pins') || '[]');
-        local.forEach(pin => {
-          allPins.push(pin);
-          const m = L.marker([pin.lat, pin.lng], {
-            icon: L.divIcon({
-              className: 'custom-pin-icon',
-              html: '<i class="fa-solid fa-map-pin" style="font-size:32px;color:#ff6b6b;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>',
-              iconSize: [32, 32],
-              iconAnchor: [16, 32]
-            })
-          }).addTo(map);
+        const filteredLocal = local.filter(pin => !deletedPinsInFinally.includes(pin.id));
 
-          m.bindPopup(`
-            <div style="text-align:center;">
+        filteredLocal.forEach(pin => {
+          allPins.push(pin);
+          const markerId = mapEngine.addMarker([pin.lat, pin.lng], {
+            id: `pin_marker_${pin.id}`,
+            className: 'custom-pin-icon',
+            html: '<i class="fa-solid fa-map-pin" style="font-size:32px;color:#ff6b6b;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>',
+            popup: `<div style="text-align:center;">
               <strong>${pin.name}</strong><br>
-              <span style="font-size:12px;color:#ff6b6b;">📍 Local</span><br>
+              <span style="font-size:12px;color:#ff6b6b;"><span class="material-symbols-rounded">location_on</span> Local</span><br>
               <button onclick='openViewer("${pin.name}")'
                       style="margin-top:10px;padding:8px 16px;background:#0a84ff;color:white;border:none;border-radius:8px;cursor:pointer;font-family:Kanit,sans-serif;">
                 ดูสตรีทวิว 360°
               </button>
-            </div>
-          `);
-          markers.push(m);
+            </div>`
+          });
+          markers.push(markerId);
         });
-      } catch (e) {}
-      
+      } catch (e) { }
+
       const all = allPins.map(p => [p.lat, p.lng]);
       if (all.length > 1) {
-        mainPathPolyline = L.polyline(all, { color: '#0a84ff', weight: 6 }).addTo(map);
-        mainPathPolyline.on('click', (ev) => {
-          let nearest = null, minD = Infinity;
-          allPins.forEach(p => {
-            const d = ev.latlng.distanceTo(L.latLng(p.lat, p.lng));
-            if (d < minD) { minD = d; nearest = p; }
+        mapEngine._ready.then(() => {
+          mapEngine.addLine('main-path', all, {
+            color: '#0a84ff',
+            weight: 6,
+            onClick: (ev) => {
+              const clickPos = MapEngine.eventLatLng(ev);
+              let nearest = null, minD = Infinity;
+              allPins.forEach(p => {
+                const d = MapEngine.distance(clickPos.lat, clickPos.lng, p.lat, p.lng);
+                if (d < minD) { minD = d; nearest = p; }
+              });
+              if (nearest) openViewer(nearest.name);
+            }
           });
-          if (nearest) openViewer(nearest.name);
+          mainPathPolyline = true;
         });
       }
     });
@@ -1052,10 +1004,52 @@ function loadSavedPaths() {
       if (paths && paths.length > 0) {
         paths.forEach(p => {
           const poly = L.polyline(p.coords, { color: '#0a84ff', weight: 5 }).addTo(map);
-          poly.on('click', () => {
-            map.panTo(poly.getBounds().getCenter());
-            showToast(`Path: ${p.name}`, 'info');
+
+          // Click handler for 360° - find nearest panorama
+          poly.on('click', (ev) => {
+            if (p.panoramas && p.panoramas.length > 0) {
+              // Find nearest panorama to click point
+              let nearest = p.panoramas[0];
+              let minDist = ev.latlng.distanceTo(L.latLng(nearest.lat, nearest.lng));
+
+              p.panoramas.forEach(pano => {
+                const dist = ev.latlng.distanceTo(L.latLng(pano.lat, pano.lng));
+                if (dist < minDist) {
+                  minDist = dist;
+                  nearest = pano;
+                }
+              });
+
+              openPanoramaViewer(nearest);
+            } else {
+              map.panTo(poly.getBounds().getCenter());
+              showToast(`Path: ${p.name}`, 'info');
+            }
           });
+
+          // Add 360° markers along path
+          if (p.panoramas && p.panoramas.length > 0) {
+            p.panoramas.forEach(pano => {
+              const marker = L.circleMarker([pano.lat, pano.lng], {
+                radius: 6,
+                fillColor: '#0a84ff',
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 0.9,
+                className: 'panorama-marker'
+              }).addTo(map);
+
+              marker.bindTooltip(pano.name || '360° View', {
+                direction: 'top',
+                offset: [0, -8]
+              });
+
+              marker.on('click', () => {
+                openPanoramaViewer(pano);
+              });
+            });
+          }
+
           p.polyline = poly;
           drawnPathLayers.push(poly);
           savedPaths.push(p);
@@ -1064,23 +1058,65 @@ function loadSavedPaths() {
         updateRouteCount();
       }
     })
-    .catch(() => {})
+    .catch(() => { })
     .finally(() => {
       try {
         const local = JSON.parse(localStorage.getItem('saved_paths') || '[]');
         local.forEach(p => {
           const poly = L.polyline(p.coords, { color: '#ff6b6b', weight: 5, dashArray: '10, 5' }).addTo(map);
-          poly.on('click', () => {
-            map.panTo(poly.getBounds().getCenter());
-            showToast(`Local: ${p.name}`, 'info');
+
+          // Click handler for 360°
+          poly.on('click', (ev) => {
+            if (p.panoramas && p.panoramas.length > 0) {
+              // Find nearest panorama to click point
+              let nearest = p.panoramas[0];
+              let minDist = ev.latlng.distanceTo(L.latLng(nearest.lat, nearest.lng));
+
+              p.panoramas.forEach(pano => {
+                const dist = ev.latlng.distanceTo(L.latLng(pano.lat, pano.lng));
+                if (dist < minDist) {
+                  minDist = dist;
+                  nearest = pano;
+                }
+              });
+
+              openPanoramaViewer(nearest);
+            } else {
+              map.panTo(poly.getBounds().getCenter());
+              showToast(`Local: ${p.name}`, 'info');
+            }
           });
+
+          // Add 360° markers for local paths
+          if (p.panoramas && p.panoramas.length > 0) {
+            p.panoramas.forEach(pano => {
+              const marker = L.circleMarker([pano.lat, pano.lng], {
+                radius: 6,
+                fillColor: '#ff6b6b',
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 0.9,
+                className: 'panorama-marker'
+              }).addTo(map);
+
+              marker.bindTooltip(pano.name || '360° View', {
+                direction: 'top',
+                offset: [0, -8]
+              });
+
+              marker.on('click', () => {
+                openPanoramaViewer(pano);
+              });
+            });
+          }
+
           p.polyline = poly;
           drawnPathLayers.push(poly);
           savedPaths.push(p);
         });
         renderPathsList();
         updateRouteCount();
-      } catch (e) {}
+      } catch (e) { }
     });
 }
 
@@ -1101,7 +1137,7 @@ function openViewer(name) {
 
   try {
     if (viewerInstance) {
-      try { viewerInstance.destroy(); } catch(e) {}
+      try { viewerInstance.destroy(); } catch (e) { }
       viewerInstance = null;
     }
 
@@ -1122,7 +1158,7 @@ function openViewer(name) {
 if (viewerClose) {
   viewerClose.addEventListener('click', () => {
     if (viewerInstance) {
-      try { viewerInstance.destroy(); } catch(e) {}
+      try { viewerInstance.destroy(); } catch (e) { }
       viewerInstance = null;
     }
     viewerOverlay.style.display = 'none';
@@ -1131,365 +1167,37 @@ if (viewerClose) {
 
 window.openViewer = openViewer;
 
-// =================== PIN SAVING ===================
-const savePinBtn = document.getElementById('savePin');
-const cancelPinBtn = document.getElementById('cancelPin');
-const pinNameInput = document.getElementById('pinName');
-const upload360Input = document.getElementById('upload360');
-const startPlacingPinBtn = document.getElementById('startPlacingPin');
-const confirmPinLocationBtn = document.getElementById('confirmPinLocation');
-const pinPlacingTools = document.getElementById('pinPlacingTools');
-const pinPlacingStatus = document.getElementById('pinPlacingStatus');
-const pinDetailsStep = document.getElementById('pinDetailsStep');
-const pinSaveStep = document.getElementById('pinSaveStep');
-const savedPinsList = document.getElementById('savedPinsList');
-const pinCountEl = document.getElementById('pinCount');
-
-let placingPinMode = false;
-let tempPinMarker = null;
-let tempPinLocation = null;
-let previewMarker = null;
-
-function updatePinStatus(text, isActive = false) {
-  if (pinPlacingStatus) {
-    pinPlacingStatus.textContent = text;
-    pinPlacingStatus.className = 'path-status' + (isActive ? ' active' : '');
-  }
-}
-
-function updatePinCount() {
-  if (pinCountEl) {
-    pinCountEl.textContent = allPins.length;
-  }
-}
-
-// Start placing pin mode
-if (startPlacingPinBtn) {
-  startPlacingPinBtn.addEventListener('click', () => {
-    if (placingPinMode) {
-      showToast('Already in pin placing mode', 'info');
-      return;
-    }
-
-    placingPinMode = true;
-    document.body.classList.add('placing-pin');
-
-    if (pinPlacingTools) pinPlacingTools.style.display = 'none';
-    if (startPlacingPinBtn) startPlacingPinBtn.style.display = 'none';
-    if (pinDetailsStep) pinDetailsStep.style.display = 'none';
-    if (pinSaveStep) pinSaveStep.style.display = 'none';
-
-    // Create preview marker that follows mouse
-    map.on('mousemove', onMouseMovePreview);
-
-    updatePinStatus('🖱️ Click on map to place pin', true);
-    showToast('Click on the map to place your pin', 'info', { duration: 2500 });
-  });
-}
-
-// Mouse move preview
-function onMouseMovePreview(e) {
-  if (!placingPinMode || tempPinMarker) return;
-
-  if (previewMarker) {
-    previewMarker.setLatLng(e.latlng);
-  } else {
-    previewMarker = L.marker(e.latlng, {
-      icon: L.divIcon({
-        className: 'pin-preview-marker',
-        html: '<i class="fa-solid fa-map-pin" style="font-size:36px;color:#0a84ff;opacity:0.6;filter:drop-shadow(0 4px 12px rgba(10,132,255,0.4));"></i>',
-        iconSize: [36, 36],
-        iconAnchor: [18, 36]
-      })
-    }).addTo(map);
-  }
-}
-
-// Map click for pin placement
-const originalMapClick = map.on('click', (e) => {
-  if (drawingMode) {
-    currentPathCoords.push([e.latlng.lat, e.latlng.lng]);
-    if (currentPolyline) currentPolyline.setLatLngs(currentPathCoords);
-    updatePathStatus(`🖱️ ${currentPathCoords.length} waypoints`, true);
-  } else if (placingPinMode && !tempPinMarker) {
-    // Remove preview marker
-    if (previewMarker) {
-      map.removeLayer(previewMarker);
-      previewMarker = null;
-    }
-    map.off('mousemove', onMouseMovePreview);
-
-    // Place temporary draggable pin
-    tempPinLocation = e.latlng;
-    tempPinMarker = L.marker(e.latlng, {
-      draggable: true,
-      icon: L.divIcon({
-        className: 'temp-pin-marker',
-        html: '<i class="fa-solid fa-map-pin" style="font-size:40px;color:#0a84ff;filter:drop-shadow(0 4px 12px rgba(10,132,255,0.6));"></i>',
-        iconSize: [40, 40],
-        iconAnchor: [20, 40]
-      })
-    }).addTo(map);
-
-    tempPinMarker.on('dragend', (ev) => {
-      tempPinLocation = ev.target.getLatLng();
-      updatePinStatus('📍 Pin moved! Click "Confirm Location" when ready', true);
-    });
-
-    if (pinPlacingTools) pinPlacingTools.style.display = 'grid';
-    updatePinStatus('📍 Drag pin to adjust position, then confirm', true);
-    showToast('Drag the pin to adjust position', 'info');
-  }
-});
-
-// Confirm pin location
-if (confirmPinLocationBtn) {
-  confirmPinLocationBtn.addEventListener('click', () => {
-    if (!tempPinMarker || !tempPinLocation) {
-      showToast('No pin placed', 'info');
-      return;
-    }
-
-    placingPinMode = false;
-    document.body.classList.remove('placing-pin');
-
-    if (pinPlacingTools) pinPlacingTools.style.display = 'none';
-    if (startPlacingPinBtn) startPlacingPinBtn.style.display = 'flex';
-    if (pinDetailsStep) pinDetailsStep.style.display = 'block';
-    if (pinSaveStep) pinSaveStep.style.display = 'block';
-
-    updatePinStatus('✅ Location confirmed! Add details below');
-    showToast('Now add pin name and 360° image', 'success');
-  });
-}
-
-// Save pin
-if (savePinBtn) {
-  savePinBtn.addEventListener('click', () => {
-    const name = pinNameInput.value.trim();
-    const file = upload360Input.files[0];
-
-    if (!tempPinMarker || !tempPinLocation) {
-      showToast('Place a pin first', 'error');
-      return;
-    }
-
-    if (!name || !file) {
-      showToast('Enter name and select image', 'error');
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append('name', name);
-    fd.append('lat', tempPinLocation.lat);
-    fd.append('lng', tempPinLocation.lng);
-    fd.append('image', file);
-
-    fetch('/save_pin', { method: 'POST', body: fd })
-      .then(r => r.json())
-      .then(res => {
-        if (res.status === 'success') {
-          showToast('Pin saved to server!', 'success');
-          resetPinPlacement();
-          loadPins();
-        } else throw new Error('Server error');
-      })
-      .catch(err => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const local = JSON.parse(localStorage.getItem('saved_pins') || '[]');
-            const newPin = {
-              id: 'pin_' + Date.now(),
-              name: name,
-              lat: tempPinLocation.lat,
-              lng: tempPinLocation.lng,
-              image: e.target.result,
-              imageFileName: file.name,
-              local: true
-            };
-            local.push(newPin);
-            localStorage.setItem('saved_pins', JSON.stringify(local));
-            showToast('Pin saved locally!', 'success');
-            resetPinPlacement();
-            loadPins();
-          } catch (e) {
-            showToast('Failed to save', 'error');
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-  });
-}
-
-// Cancel pin placement
-if (cancelPinBtn) {
-  cancelPinBtn.addEventListener('click', () => {
-    resetPinPlacement();
-    showToast('Cancelled', 'info');
-  });
-}
-
-function resetPinPlacement() {
-  placingPinMode = false;
-  document.body.classList.remove('placing-pin');
-  
-  if (tempPinMarker) {
-    map.removeLayer(tempPinMarker);
-    tempPinMarker = null;
-  }
-  
-  if (previewMarker) {
-    map.removeLayer(previewMarker);
-    previewMarker = null;
-  }
-  
-  map.off('mousemove', onMouseMovePreview);
-  
-  tempPinLocation = null;
-  
-  if (pinNameInput) pinNameInput.value = '';
-  if (upload360Input) upload360Input.value = '';
-  
-  if (pinPlacingTools) pinPlacingTools.style.display = 'none';
-  if (startPlacingPinBtn) startPlacingPinBtn.style.display = 'flex';
-  if (pinDetailsStep) pinDetailsStep.style.display = 'none';
-  if (pinSaveStep) pinSaveStep.style.display = 'none';
-  
-  updatePinStatus('Ready to place pin');
-}
-
-// Delete pin function
-function deletePin(pinId) {
-  // Find in allPins
-  const pinIndex = allPins.findIndex(p => p.id === pinId);
-  if (pinIndex === -1) return;
-
-  const pin = allPins[pinIndex];
-  
-  // Remove marker from map
-  const markerIndex = markers.findIndex(m => {
-    const ll = m.getLatLng();
-    return Math.abs(ll.lat - pin.lat) < 0.00001 && Math.abs(ll.lng - pin.lng) < 0.00001;
-  });
-  
-  if (markerIndex !== -1) {
-    map.removeLayer(markers[markerIndex]);
-    markers.splice(markerIndex, 1);
-  }
-
-  // Remove from allPins
-  allPins.splice(pinIndex, 1);
-
-  // Update localStorage
-  if (pin.local) {
-    try {
-      const localPins = JSON.parse(localStorage.getItem('saved_pins') || '[]');
-      const filtered = localPins.filter(p => p.id !== pinId);
-      localStorage.setItem('saved_pins', JSON.stringify(filtered));
-    } catch (e) {
-      console.error('Error updating localStorage:', e);
-    }
-  }
-
-  // Reconnect path between remaining pins
-  if (mainPathPolyline) {
-    map.removeLayer(mainPathPolyline);
-    mainPathPolyline = null;
-  }
-
-  const allLatlngs = allPins.map(p => [p.lat, p.lng]);
-  if (allLatlngs.length > 1) {
-    mainPathPolyline = L.polyline(allLatlngs, {
-      color: '#0a84ff',
-      weight: 6
-    }).addTo(map);
-
-    mainPathPolyline.on('click', (ev) => {
-      let nearest = null, minD = Infinity;
-      allPins.forEach(p => {
-        const d = ev.latlng.distanceTo(L.latLng(p.lat, p.lng));
-        if (d < minD) { minD = d; nearest = p; }
-      });
-      if (nearest) openViewer(nearest.name);
-    });
-  }
-
-  renderSavedPinsList();
-  updatePinCount();
-  showToast('Pin deleted', 'success');
-}
-
-// Render saved pins list
-function renderSavedPinsList() {
-  if (!savedPinsList) return;
-
-  savedPinsList.innerHTML = '';
-
-  if (allPins.length === 0) {
+// Open panorama viewer for path 360° photos
+function openPanoramaViewer(panorama) {
+  if (!panorama) {
+    showToast('Panorama not found', 'error');
     return;
   }
 
-  allPins.forEach(pin => {
-    const item = document.createElement('div');
-    item.className = 'path-item';
-    
-    const content = document.createElement('div');
-    content.className = 'path-item-content';
-    content.innerHTML = `
-      <div class="path-item-name">${pin.name}</div>
-      <div class="path-item-info">
-        <span style="color:#999;font-size:11px;">📍 ${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)}</span>
-      </div>
-    `;
+  viewerOverlay.style.display = 'flex';
 
-    const actions = document.createElement('div');
-    actions.className = 'path-item-actions';
+  try {
+    if (viewerInstance) {
+      try { viewerInstance.destroy(); } catch (e) { }
+      viewerInstance = null;
+    }
 
-    const viewBtn = document.createElement('button');
-    viewBtn.className = 'btn-view';
-    viewBtn.innerHTML = '👁️';
-    viewBtn.title = 'View pin';
-    viewBtn.onclick = (e) => {
-      e.stopPropagation();
-      map.setView([pin.lat, pin.lng], 19, { animate: true });
-      
-      // Open popup for this pin
-      const marker = markers.find(m => {
-        const ll = m.getLatLng();
-        return Math.abs(ll.lat - pin.lat) < 0.00001 && Math.abs(ll.lng - pin.lng) < 0.00001;
-      });
-      if (marker) marker.openPopup();
-      
-      showToast(`Viewing: ${pin.name}`, 'info');
-    };
+    document.getElementById('viewer').innerHTML = '';
+    const src = panorama.local ? panorama.image : `images/streetview/${panorama.image}`;
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn-delete';
-    deleteBtn.innerHTML = '🗑️';
-    deleteBtn.title = 'Delete pin';
-    deleteBtn.onclick = (e) => {
-      e.stopPropagation();
-      if (confirm(`Delete pin "${pin.name}"?`)) {
-        deletePin(pin.id);
-      }
-    };
-
-    actions.appendChild(viewBtn);
-    actions.appendChild(deleteBtn);
-    item.appendChild(content);
-    item.appendChild(actions);
-    
-    item.onclick = () => {
-      map.setView([pin.lat, pin.lng], 19, { animate: true });
-    };
-
-    savedPinsList.appendChild(item);
-  });
+    viewerInstance = new PhotoSphereViewer.Viewer({
+      container: document.getElementById('viewer'),
+      panorama: src,
+      caption: panorama.name || '360° View'
+    });
+  } catch (err) {
+    console.error('Panorama viewer error:', err);
+    showToast('Cannot open 360°', 'error');
+    viewerOverlay.style.display = 'none';
+  }
 }
 
-console.log('✅ School Map Loaded');
-console.log('Dev mode:', devMode);
+window.openPanoramaViewer = openPanoramaViewer;
 
 // =================== SOUND EFFECTS MANAGEMENT ===================
 const soundMuteBtn = document.getElementById('soundMuteBtn');
@@ -1600,9 +1308,17 @@ function switchFloor(floorIndex) {
 
   currentFloor = floorIndex;
 
-  // Update overlay
-  floorOverlay.setUrl(FLOORS[floorIndex].img);
-  floorOverlay.setBounds(FLOORS[floorIndex].bounds);
+  // Update floor wayfinding color
+  updateFloorColor(floorIndex);
+
+  // Update overlay via MapEngine
+  const overlayBounds = {
+    topLeft: FLOORS[floorIndex].bounds[0],
+    topRight: [FLOORS[floorIndex].bounds[0][0], FLOORS[floorIndex].bounds[1][1]],
+    bottomRight: FLOORS[floorIndex].bounds[1],
+    bottomLeft: [FLOORS[floorIndex].bounds[1][0], FLOORS[floorIndex].bounds[0][1]]
+  };
+  mapEngine.setFloorOverlay(FLOORS[floorIndex].img, overlayBounds);
 
   // Update current floor display
   const currentFloorNumEl = document.getElementById('currentFloorNum');
@@ -1610,22 +1326,68 @@ function switchFloor(floorIndex) {
     currentFloorNumEl.textContent = floorIndex + 1;
   }
 
-  // Don't auto-close - let user close by clicking outside
+  // Auto-close floor pill
+  if (floorPill) {
+    floorPill.classList.remove('expanded');
+    floorPill.setAttribute('aria-expanded', 'false');
+  }
+  // Update ARIA label
+  if (floorPill) {
+    floorPill.setAttribute('aria-label', `Floor selector, current floor ${floorIndex + 1}`);
+  }
   showToast(`${t('floor')} ${floorIndex + 1}`, 'info');
 }
 
+// Floor wayfinding color — updates indicator and exposes --floor-color
+function updateFloorColor(floorIndex) {
+  const floorNum = floorIndex + 1;
+  const root = document.documentElement;
+  const floorColor = getComputedStyle(root).getPropertyValue(`--floor-${floorNum}`).trim();
+  if (floorColor) {
+    root.style.setProperty('--floor-color', floorColor);
+  }
+}
+
+window.switchFloor = switchFloor;
+
 // Floor pill click - toggle expand/collapse
+function toggleFloorPill() {
+  if (floorPill) {
+    floorPill.classList.toggle('expanded');
+    const isExpanded = floorPill.classList.contains('expanded');
+    floorPill.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+    // Update indicator position when expanded (after animation starts)
+    if (isExpanded) {
+      setTimeout(() => {
+        updateIndicatorPosition(currentFloor, false);
+      }, 50);
+    }
+  }
+}
+
+function closeFloorPill() {
+  if (floorPill) {
+    floorPill.classList.remove('expanded');
+    floorPill.setAttribute('aria-expanded', 'false');
+  }
+}
+
 if (floorPillCurrent) {
   floorPillCurrent.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (floorPill) {
-      floorPill.classList.toggle('expanded');
-      // Update indicator position when expanded (after animation starts)
-      if (floorPill.classList.contains('expanded')) {
-        setTimeout(() => {
-          updateIndicatorPosition(currentFloor, false);
-        }, 50);
-      }
+    toggleFloorPill();
+  });
+}
+
+// Keyboard support for floor pill
+if (floorPill) {
+  floorPill.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleFloorPill();
+    } else if (e.key === 'Escape' && floorPill.classList.contains('expanded')) {
+      e.stopPropagation();
+      closeFloorPill();
     }
   });
 }
@@ -1635,13 +1397,14 @@ document.addEventListener('click', (e) => {
   if (floorPill) {
     const clickedInPill = floorPill.contains(e.target);
     if (!clickedInPill) {
-      floorPill.classList.remove('expanded');
+      closeFloorPill();
     }
   }
 });
 
 // Initialize floor pill
 initFloorPill();
+updateFloorColor(currentFloor);
 
 // Update floor pill when language changes
 window.addEventListener('languagechange', () => {
@@ -1658,25 +1421,25 @@ const searchRecommendations = document.getElementById('searchRecommendations');
 
 function searchLocations(query) {
   if (!query || query.trim() === '') return [];
-  
+
   query = query.toLowerCase().trim();
   let results = [];
-  
+
   // Search in locations.json file
   const fileResults = locationsFromFile.filter(location => {
     // Search in name
     if (location.name.toLowerCase().includes(query)) return true;
     // Search in keywords if available
     if (location.keywords && Array.isArray(location.keywords)) {
-      return location.keywords.some(keyword => 
+      return location.keywords.some(keyword =>
         keyword.toLowerCase().includes(query)
       );
     }
     return false;
   });
-  
+
   results = results.concat(fileResults);
-  
+
   // Search in existing pins (allPins)
   if (allPins && allPins.length > 0) {
     const pinResults = allPins.filter(pin => {
@@ -1688,10 +1451,26 @@ function searchLocations(query) {
       lng: pin.lng,
       type: 'pin'
     }));
-    
+
     results = results.concat(pinResults);
   }
-  
+
+  // Search in buildings
+  if (savedBuildings && savedBuildings.length > 0) {
+    const buildingResults = savedBuildings.filter(building => {
+      return building.name && building.name.toLowerCase().includes(query);
+    }).map(building => ({
+      name: building.name,
+      lat: building.labelPosition[0],
+      lng: building.labelPosition[1],
+      type: 'building',
+      buildingType: building.type,
+      floors: building.floors
+    }));
+
+    results = results.concat(buildingResults);
+  }
+
   // Remove duplicates by name
   const uniqueResults = [];
   const seen = new Set();
@@ -1701,16 +1480,16 @@ function searchLocations(query) {
       uniqueResults.push(result);
     }
   }
-  
+
   // Return only max results
   return uniqueResults.slice(0, SEARCH_MAX_RESULTS);
 }
 
 function displaySearchResults(results) {
   if (!searchRecommendations) return;
-  
+
   searchRecommendations.innerHTML = '';
-  
+
   if (results.length === 0) {
     // Show "Not found" message
     const notFoundDiv = document.createElement('div');
@@ -1722,35 +1501,52 @@ function displaySearchResults(results) {
     results.forEach(result => {
       const resultDiv = document.createElement('div');
       resultDiv.className = 'search-result-item';
+
+      // Determine icon and info text based on type
+      let icon = '<span class="material-symbols-rounded">location_on</span>';
+      let infoText = '';
+
+      if (result.type === 'building') {
+        icon = '🏢';
+        infoText = `${result.floors} floor${result.floors > 1 ? 's' : ''} • ${result.buildingType}`;
+      } else if (result.floor) {
+        infoText = `${t('floor')} ${result.floor}`;
+      }
+
       resultDiv.innerHTML = `
+        <span style="margin-right:8px;">${icon}</span>
         <strong>${result.name}</strong>
-        <span style="color:var(--muted);font-size:12px;margin-left:8px;">${t('floor')} ${result.floor}</span>
+        <span style="color:var(--muted);font-size:12px;margin-left:8px;">${infoText}</span>
       `;
-      
+
       resultDiv.addEventListener('click', () => {
         playRandomSound(); // Play sound on click
-        
-        // Switch to the correct floor
-        if (result.floor && result.floor - 1 !== currentFloor) {
-          switchFloor(result.floor - 1);
+
+        // For buildings, just zoom to location
+        if (result.type === 'building') {
+          mapEngine.setView([result.lat, result.lng], 19, { animate: true });
+        } else {
+          // For regular locations, switch floor if needed
+          if (result.floor && result.floor - 1 !== currentFloor) {
+            switchFloor(result.floor - 1);
+          }
+          mapEngine.setView([result.lat, result.lng], 19, { animate: true });
         }
-        
-        // Zoom to location
-        map.setView([result.lat, result.lng], 19, { animate: true });
-        
+
         // Close search dropdown
         searchRecommendations.classList.remove('active');
         searchInput.value = '';
-        
+
         showToast(`${t('searchResults')}: ${result.name}`, 'success');
       });
-      
+
       searchRecommendations.appendChild(resultDiv);
     });
   }
-  
+
   searchRecommendations.classList.add('active');
 }
+window.displaySearchResults = displaySearchResults;
 
 if (searchInput) {
   const searchClear = document.getElementById('searchClear');
@@ -1766,17 +1562,21 @@ if (searchInput) {
     }
   };
 
-  searchInput.addEventListener('input', (e) => {
-    const query = e.target.value;
-    updateClearButton();
-
+  const debouncedSearch = debounce((query) => {
     if (query.trim() === '') {
       searchRecommendations.classList.remove('active');
+      searchInput.setAttribute('aria-expanded', 'false');
       return;
     }
 
     const results = searchLocations(query);
-    displaySearchResults(results);
+    (window.displaySearchResults || displaySearchResults)(results);
+    searchInput.setAttribute('aria-expanded', searchRecommendations.classList.contains('active') ? 'true' : 'false');
+  }, 200);
+
+  searchInput.addEventListener('input', (e) => {
+    updateClearButton();
+    debouncedSearch(e.target.value);
   });
 
   // Digital glitch particle effect
@@ -1786,49 +1586,96 @@ if (searchInput) {
     const paddingLeft = parseFloat(inputStyle.paddingLeft);
     const fontSize = parseFloat(inputStyle.fontSize);
 
-    // Calculate approximate text width (chars * ~0.6 of font size for average char width)
-    const avgCharWidth = fontSize * 0.55;
-    const textWidth = Math.min(text.length * avgCharWidth, searchInput.offsetWidth - paddingLeft - 40);
+    // Calculate accurate text width using a temporary element
+    const tempSpan = document.createElement('span');
+    tempSpan.style.font = inputStyle.font;
+    tempSpan.style.fontSize = inputStyle.fontSize;
+    tempSpan.style.fontFamily = inputStyle.fontFamily;
+    tempSpan.style.fontWeight = inputStyle.fontWeight;
+    tempSpan.style.letterSpacing = inputStyle.letterSpacing;
+    tempSpan.style.visibility = 'hidden';
+    tempSpan.style.position = 'absolute';
+    tempSpan.textContent = text;
+    document.body.appendChild(tempSpan);
+    const measuredTextWidth = tempSpan.offsetWidth;
+    document.body.removeChild(tempSpan);
 
-    // Glitch colors array - iOS-style theme colors
-    const glitchColors = ['#1100ff', '#0a84ff', '#0ffbf9', '#8c00ff', '#2bff00', '#cc0f39', '#000000', '#ff2d55', '#007aff'];
+    // Constrain width to not overflow the search input
+    const paddingRight = parseFloat(inputStyle.paddingRight);
+    const maxWidth = searchInput.offsetWidth - paddingLeft - paddingRight - 10; // 10px buffer
+    const textWidth = Math.min(measuredTextWidth, maxWidth);
 
-    // Create particles based on text length (spawn where text is)
+    // Updated color palette for a "data deletion" vibe
+    const glitchColors = [
+      '#FF3131',
+      '#00F5FF',
+      '#FFFFFF',
+      '#8c00ff',
+      '#1a1a1b',
+      '#ff2d55',
+      '#FF5C5C'
+    ];
+
+    // Create red neon rectangle that "eats" the text first
+    const wipeRect = document.createElement('div');
+    wipeRect.className = 'text-wipe-rect';
+    wipeRect.style.left = `${paddingLeft}px`;
+    wipeRect.style.top = '8px';
+    wipeRect.style.width = `${textWidth}px`;
+    wipeRect.style.height = `${searchInput.offsetHeight - 16}px`;
+    container.appendChild(wipeRect);
+
+    // Remove rectangle after brief moment and spawn particles
+    setTimeout(() => {
+      wipeRect.remove();
+    }, 150);
+
+    // Create particles based on text length (spawn where text is) - delayed to happen after wipe
     const particleCount = Math.min(text.length * 3, 45);
 
-    for (let i = 0; i < particleCount; i++) {
-      const particle = document.createElement('span');
-      particle.className = 'search-particle';
+    setTimeout(() => {
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('span');
+        particle.className = 'search-particle';
 
-      // Random square size (2-8px)
-      const size = 2 + Math.random() * 6;
-      particle.style.setProperty('--size', `${size}px`);
+        // Random square size (2-8px)
+        const size = 2 + Math.random() * 8;
+        particle.style.setProperty('--size', `${size}px`);
 
-      // Random starting color (so not all green at once)
-      const startColor = glitchColors[Math.floor(Math.random() * glitchColors.length)];
-      particle.style.setProperty('--start-color', startColor);
+        // Random starting color (so not all green at once)
+        const startColor = glitchColors[Math.floor(Math.random() * glitchColors.length)];
+        particle.style.setProperty('--start-color', startColor);
 
-      // Position only within text area
-      const xPos = paddingLeft + Math.random() * textWidth;
-      particle.style.left = `${xPos}px`;
-      particle.style.top = `${10 + Math.random() * 20}px`; // Centered vertically
+        // Position only within text area
+        const xPos = paddingLeft + Math.random() * textWidth;
+        particle.style.left = `${xPos}px`;
+        particle.style.top = `${10 + Math.random() * 20}px`; // Centered vertically
 
-      // Random animation values - scatter outward
-      const tx = (Math.random() - 0.5) * 100;
-      const ty = (Math.random() - 0.5) * 80;
-      const rot = Math.random() * 360;
-      const delay = Math.random() * 0.2; // Staggered start
+        // Random animation values - scatter outward
+        const tx = (Math.random() - 0.5) * 110;
+        const ty = (Math.random() - 0.5) * 25;
+        const delay = Math.random() * 0.2; // Staggered start
 
-      particle.style.setProperty('--tx', `${tx}px`);
-      particle.style.setProperty('--ty', `${ty}px`);
-      particle.style.setProperty('--rot', `${rot}deg`);
-      particle.style.animationDelay = `${delay}s`;
+        particle.style.setProperty('--tx', `${tx}px`);
+        particle.style.setProperty('--ty', `${ty}px`);
+        //particle.style.animationDelay = `${delay}s`;                //delay of particle before moving
 
-      container.appendChild(particle);
+        // Randomly assign one of 5 color cycling animations for variety
+        const colorAnimIndex = Math.floor(Math.random() * 5) + 1;
+        particle.style.animationName = `glitchMove, glitchColor${colorAnimIndex}`;
+        particle.style.animationDuration = '0.7s, 0.1s';  // moving, color changes
+        particle.style.animationTimingFunction = 'linear, steps(1)';
+        particle.style.animationIterationCount = '1, infinite';
+        particle.style.animationFillMode = 'forwards, none';
 
-      // Remove particle after animation (match 1.4s animation + delay)
-      setTimeout(() => particle.remove(), 1600);
-    }
+        container.appendChild(particle);
+
+        // Remove particle after animation (match 0.9s animation + buffer)
+        setTimeout(() => particle.remove(), 1100);
+      }
+    }, 150); // Delay particle spawn to match wipe rectangle disappearance
+
+
   };
 
   // Clear button click handler
@@ -1837,9 +1684,10 @@ if (searchInput) {
       e.preventDefault();
       e.stopPropagation();
 
-      // Create snap effect before clearing
+      // Create snap effect before clearing + play glitch sound
       if (searchInput.value.length > 0) {
         createSnapEffect(searchInput.value);
+        playGlitchSound();
       }
 
       searchInput.value = '';
@@ -1948,7 +1796,6 @@ class GPSTracker {
 
     this.isTracking = true;
     document.getElementById('gpsBtn')?.classList.add('active');
-    document.getElementById('gpsStopBtn').style.display = 'flex';
 
     const options = {
       enableHighAccuracy: true,
@@ -1981,7 +1828,6 @@ class GPSTracker {
     this.isTracking = false;
     this.manualMode = false;
     document.getElementById('gpsBtn')?.classList.remove('active', 'manual-mode');
-    document.getElementById('gpsStopBtn').style.display = 'none';
   }
 
   handlePosition(pos) {
@@ -2034,7 +1880,6 @@ class GPSTracker {
     this.manualMode = true;
     document.getElementById('gpsBtn')?.classList.remove('active');
     document.getElementById('gpsBtn')?.classList.add('manual-mode');
-    document.getElementById('gpsStopBtn').style.display = 'none';
 
     this.updateMarker();
     this.notifyCallbacks();
@@ -2097,12 +1942,12 @@ class GPSTracker {
 
   isWithinBounds(lat, lng) {
     return lat >= 14.083915 && lat <= 14.086142 &&
-           lng >= 100.606071 && lng <= 100.610199;
+      lng >= 100.606071 && lng <= 100.610199;
   }
 
   centerOnUser() {
     if (this.currentPosition) {
-      this.map.setView([this.currentPosition.lat, this.currentPosition.lng], 20);
+      mapEngine.setView([this.currentPosition.lat, this.currentPosition.lng], 20);
     }
   }
 
@@ -2261,7 +2106,7 @@ class Pathfinder {
     const deltaLambda = (lng2 - lng1) * Math.PI / 180;
 
     const a = Math.sin(deltaPhi / 2) ** 2 +
-              Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
+      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c;
@@ -2447,7 +2292,7 @@ class DirectionsGenerator {
 
     // Default: go straight or start
     if (!prevNode) {
-      return { text: this.formatInstruction('startAt', { name: currentNode.name || t('yourLocation') }), icon: '📍' };
+      return { text: this.formatInstruction('startAt', { name: currentNode.name || t('yourLocation') }), icon: '<span class="material-symbols-rounded">location_on</span>' };
     }
 
     return { text: t('goStraight'), icon: '↑' };
@@ -2473,7 +2318,7 @@ class DirectionsGenerator {
 
     const y = Math.sin(dLng) * Math.cos(lat2Rad);
     const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
-              Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLng);
+      Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLng);
 
     return Math.atan2(y, x) * 180 / Math.PI;
   }
@@ -2486,7 +2331,7 @@ class DirectionsGenerator {
     const deltaLambda = (nodeB.lng - nodeA.lng) * Math.PI / 180;
 
     const a = Math.sin(deltaPhi / 2) ** 2 +
-              Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
+      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c;
@@ -2548,28 +2393,6 @@ class NavigationController {
     const gpsBtn = document.getElementById('gpsBtn');
     if (gpsBtn) {
       gpsBtn.addEventListener('click', () => this.handleGPSButtonClick());
-
-      // Double-click to stop tracking
-      gpsBtn.addEventListener('dblclick', (e) => {
-        e.preventDefault();
-        this.stopGPSTracking();
-      });
-
-      // Right-click/long-press: manual mode if not tracking, stop if tracking
-      gpsBtn.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        if (this.gpsTracker.isTracking || this.gpsTracker.manualMode) {
-          this.stopGPSTracking();
-        } else {
-          this.enterManualLocationMode();
-        }
-      });
-    }
-
-    // GPS Stop Button
-    const gpsStopBtn = document.getElementById('gpsStopBtn');
-    if (gpsStopBtn) {
-      gpsStopBtn.addEventListener('click', () => this.stopGPSTracking());
     }
 
     // Manual location overlay
@@ -2600,19 +2423,8 @@ class NavigationController {
 
   handleGPSButtonClick() {
     if (this.gpsTracker.isTracking || this.gpsTracker.manualMode) {
-      // Already tracking - pan to current position and request fresh update
-      if (this.gpsTracker.currentPosition) {
-        const pos = this.gpsTracker.currentPosition;
-        this.map.setView([pos.lat, pos.lng], 19);
-      }
-      // Request a fresh position update (with maximumAge: 0 to force new position)
-      if (navigator.geolocation && this.gpsTracker.isTracking) {
-        navigator.geolocation.getCurrentPosition(
-          (p) => this.gpsTracker.handlePosition(p),
-          () => {},
-          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-        );
-      }
+      // If already tracking or in manual mode, stop tracking (toggle off)
+      this.stopGPSTracking();
     } else {
       // Try GPS first
       if (!this.gpsTracker.startTracking()) {
@@ -2709,6 +2521,12 @@ class NavigationController {
   // Navigate to a pin or location by name/coords
   navigateToLocation(location) {
     if (!location) return;
+
+    // Check if navigation graph is loaded
+    if (!navGraph || !navGraph.nodes || Object.keys(navGraph.nodes).length === 0) {
+      showToast('Navigation system not set up yet. Please create navigation graph first.', 'error');
+      return;
+    }
 
     // If location has an ID in navGraph, use it
     if (location.id && navGraph.nodes[location.id]) {
@@ -2970,7 +2788,7 @@ class NavigationController {
     const deltaLambda = (lng2 - lng1) * Math.PI / 180;
 
     const a = Math.sin(deltaPhi / 2) ** 2 +
-              Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
+      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c;
@@ -3026,7 +2844,7 @@ const initNavigation = () => {
     // Hook into floor switching to update route visibility
     const originalSwitchFloor = window.switchFloor;
     if (originalSwitchFloor) {
-      window.switchFloor = function(floorIndex) {
+      window.switchFloor = function (floorIndex) {
         originalSwitchFloor(floorIndex);
         if (navigationController) {
           navigationController.onFloorChange(floorIndex);
@@ -3046,7 +2864,7 @@ setTimeout(initNavigation, 500);
 // Add navigation to search results
 const originalDisplaySearchResults = window.displaySearchResults;
 if (typeof displaySearchResults === 'function') {
-  window.displaySearchResults = function(results) {
+  window.displaySearchResults = function (results) {
     if (originalDisplaySearchResults) {
       originalDisplaySearchResults(results);
     }
@@ -3077,98 +2895,6 @@ if (typeof displaySearchResults === 'function') {
 
 // =================== FLUENT EMOJI PARSER ===================
 // Parse emojis to use Microsoft's Windows 11 Fluent Emojis across all platforms
-function parseEmojis(element = document.body) {
-  const emojiRegex = /(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/gu;
+console.log('App loaded!');
+console.log('Sound effects:', soundEffectsEnabled ? 'enabled' : 'disabled');
 
-  function getEmojiUrl(emoji) {
-    // Convert emoji to codepoint
-    const codePoint = [...emoji].map(char => {
-      return char.codePointAt(0).toString(16).padStart(4, '0');
-    }).join('_');
-
-    // Microsoft Fluent Emoji CDN (3D style - Windows 11)
-    return `https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/${codePoint.toUpperCase()}/3D/${codePoint}_3d.png`;
-  }
-
-  function replaceEmojis(node) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent;
-      if (emojiRegex.test(text)) {
-        const fragment = document.createDocumentFragment();
-        let lastIndex = 0;
-
-        text.replace(emojiRegex, (match, _p1, offset) => {
-          // Add text before emoji
-          if (offset > lastIndex) {
-            fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
-          }
-
-          // Create emoji image
-          const img = document.createElement('img');
-          img.className = 'emoji';
-          img.src = getEmojiUrl(match);
-          img.alt = match;
-          img.draggable = false;
-          img.loading = 'lazy';
-
-          // Fallback to original emoji if image fails to load
-          img.onerror = function() {
-            const textNode = document.createTextNode(match);
-            this.parentNode.replaceChild(textNode, this);
-          };
-
-          fragment.appendChild(img);
-          lastIndex = offset + match.length;
-        });
-
-        // Add remaining text
-        if (lastIndex < text.length) {
-          fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-        }
-
-        if (fragment.childNodes.length > 0) {
-          node.parentNode.replaceChild(fragment, node);
-        }
-      }
-    } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
-      // Don't parse if already has emoji images
-      if (!node.classList.contains('emoji')) {
-        Array.from(node.childNodes).forEach(child => replaceEmojis(child));
-      }
-    }
-  }
-
-  replaceEmojis(element);
-}
-
-// Parse all emojis on page load
-window.addEventListener('load', () => {
-  parseEmojis();
-});
-
-// Also parse immediately for elements already rendered
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => parseEmojis());
-} else {
-  parseEmojis();
-}
-
-// MutationObserver to parse emojis when DOM changes
-const emojiObserver = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    mutation.addedNodes.forEach((node) => {
-      if (node.nodeType === 1) { // Element node
-        parseEmojis(node);
-      }
-    });
-  });
-});
-
-// Start observing the document for DOM changes
-emojiObserver.observe(document.body, {
-  childList: true,
-  subtree: true
-});
-
-console.log('✅ All features loaded!');
-console.log('🔊 Sound effects:', soundEffectsEnabled ? 'enabled' : 'disabled');

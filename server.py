@@ -110,5 +110,39 @@ def save_navgraph():
         print('save_navgraph error', e)
         return jsonify({'status':'error','msg':str(e)}), 500
 
+@app.route('/save_geojson', methods=['POST'])
+def save_geojson():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'status':'error','msg':'no data'}), 400
+        geojson_file = 'data/buildings.geojson'
+        with open(geojson_file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return jsonify({'status':'success'})
+    except Exception as e:
+        print('save_geojson error', e)
+        return jsonify({'status':'error','msg':str(e)}), 500
+
+@app.route('/save_building', methods=['POST'])
+def save_building():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'status':'error','msg':'no data'}), 400
+        buildings_file = 'data/buildings.json'
+        try:
+            with open(buildings_file, 'r', encoding='utf-8') as f:
+                existing = json.load(f)
+        except:
+            existing = []
+        existing.append(data)
+        with open(buildings_file, 'w', encoding='utf-8') as f:
+            json.dump(existing, f, indent=2, ensure_ascii=False)
+        return jsonify({'status':'success'})
+    except Exception as e:
+        print('save_building error', e)
+        return jsonify({'status':'error','msg':str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,33 +1,43 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Project Absolute TK Map</title>
   <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photo-sphere-viewer@4.2.0/dist/photo-sphere-viewer.min.css" />
+  <!-- MapLibre GL JS -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <!-- Photo Sphere Viewer v5 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5/index.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/virtual-tour-plugin@5/index.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5/index.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/plan-plugin@5/index.min.css" />
+  <!-- Icons & Tooltips -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <div id="map"></div>
+  <h1 class="sr-only">Project Absolute TK Map</h1>
+  <div id="map" role="application" aria-label="Interactive school map"></div>
 
   <!-- Dev Mode Button -->
-  <button id="devModeBtn" class="floating-btn" title="Dev Tools">🛠</button>
+  <button id="devModeBtn" class="floating-btn" title="Dev Tools" aria-label="Developer tools"><span class="material-symbols-rounded">build</span></button>
 
-  <!-- GPS Location Buttons -->
-  <div class="gps-btn-group">
-    <button id="gpsBtn" class="gps-btn" title="My Location">
-      <i class="fa-solid fa-location-arrow"></i>
-    </button>
-    <button id="gpsStopBtn" class="gps-stop-btn" title="Stop GPS" style="display:none;">
-      ×
-    </button>
-  </div>
+  <!-- GPS Location Button -->
+  <button id="gpsBtn" class="gps-btn" title="My Location" aria-label="My Location">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="#ffffff"
+      style="opacity:1;" aria-hidden="true">
+      <path
+        d="M11 21.95v-1q-3.125-.35-5.363-2.587T3.05 13h-1q-.425 0-.712-.288T1.05 12t.288-.712T2.05 11h1q.35-3.125 2.588-5.363T11 3.05v-1q0-.425.288-.712T12 1.05t.713.288t.287.712v1q3.125.35 5.363 2.588T20.95 11h1q.425 0 .713.288t.287.712t-.287.713t-.713.287h-1q-.35 3.125-2.587 5.363T13 20.95v1q0 .425-.288.713T12 22.95t-.712-.287T11 21.95M12 19q2.9 0 4.95-2.05T19 12t-2.05-4.95T12 5T7.05 7.05T5 12t2.05 4.95T12 19m0-3q-1.65 0-2.825-1.175T8 12t1.175-2.825T12 8t2.825 1.175T16 12t-1.175 2.825T12 16" />
+    </svg>
+  </button>
 
   <!-- Navigation Panel (slide-up from bottom) -->
-  <div id="navigationPanel" class="navigation-panel">
+  <div id="navigationPanel" class="navigation-panel" role="region" aria-label="Navigation directions">
     <div class="nav-panel-header">
       <div class="nav-route-info">
         <span class="nav-destination" id="navDestination">Destination</span>
@@ -37,12 +47,12 @@
           <span class="nav-time" id="navTime">0 min</span>
         </div>
       </div>
-      <button class="nav-close-btn" id="navCloseBtn">×</button>
+      <button class="nav-close-btn" id="navCloseBtn" aria-label="Close navigation">×</button>
     </div>
 
     <div class="nav-panel-body">
       <div class="nav-current-step" id="navCurrentStep">
-        <div class="step-icon" id="navStepIcon">→</div>
+        <div class="step-icon" id="navStepIcon"><span class="material-symbols-rounded">arrow_forward</span></div>
         <div class="step-instruction" id="navStepInstruction">Start navigation to see directions</div>
       </div>
 
@@ -67,24 +77,24 @@
   <!-- Topbar -->
   <div id="topbar">
     <div class="search-container">
-      <input id="searchInput" placeholder="หาชื่อห้องหรือเลขห้อง..." />
-      <button id="searchClear" class="search-clear" type="button" title="Clear">×</button>
+      <input id="searchInput" placeholder="หาชื่อห้องหรือเลขห้อง..." aria-label="Search rooms" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRecommendations" aria-autocomplete="list" />
+      <button id="searchClear" class="search-clear" type="button" title="Clear" aria-label="Clear search">×</button>
     </div>
     <!-- Floor Pill - Unified Component -->
-    <div id="floorPill" class="floor-pill">
+    <div id="floorPill" class="floor-pill" role="button" tabindex="0" aria-expanded="false" aria-label="Floor selector, current floor 1" aria-haspopup="listbox">
       <div class="floor-pill-current" id="floorPillCurrent">
         <span class="floor-num" id="currentFloorNum">1</span>
         <span class="floor-label">F</span>
       </div>
-      <div class="floor-pill-list" id="floorPillList">
+      <div class="floor-pill-list" id="floorPillList" role="listbox" aria-label="Select floor">
         <!-- Other floors populated by JS -->
       </div>
     </div>
-    <button id="menuToggle" title="Menu">☰</button>
+    <button id="menuToggle" title="Menu" aria-label="Open menu" aria-expanded="false" aria-controls="mainSidebar">☰</button>
   </div>
 
   <!-- Search Recommendations -->
-  <div id="searchRecommendations" class="search-recommendations">
+  <div id="searchRecommendations" class="search-recommendations" role="listbox" aria-label="Search results">
     <!-- Results will be populated by JS -->
   </div>
 
@@ -100,180 +110,66 @@
   </div>
 
   <!-- MAIN MENU SIDEBAR (right) -->
-  <aside id="mainSidebar" class="sidebar-panel right">
+  <aside id="mainSidebar" class="sidebar-panel right" aria-label="Main menu" aria-hidden="true">
     <div class="sidebar-header">
       <span class="sidebar-title">MENU</span>
-      <button id="closeSidebarBtn" class="close-btn" title="Close">×</button>
+      <button id="closeSidebarBtn" class="close-btn" title="Close" aria-label="Close menu">×</button>
     </div>
 
     <nav class="sidebar-body">
       <ul class="sidebar-menu">
-        <li class="menu-item" data-modal="about">📘 About / Credits</li>
-        <li class="menu-item" data-modal="howto">❓ How to Use</li>
-        <li class="menu-item" data-modal="settings">⚙️ Settings</li>
-        <li class="menu-item" data-modal="donate">💝 Donate</li>
-        <li class="menu-item" data-action="feedback">⭐ Rate & Feedback</li>
+        <li class="menu-item" data-modal="about" role="button" tabindex="0"><span class="material-symbols-rounded">info</span> <span class="menu-text">About / Credits</span></li>
+        <li class="menu-item" data-modal="howto" role="button" tabindex="0"><span class="material-symbols-rounded">help</span> <span class="menu-text">How to Use</span></li>
+        <li class="menu-item" data-modal="settings" role="button" tabindex="0"><span class="material-symbols-rounded">settings</span> <span class="menu-text">Settings</span></li>
+        <li class="menu-item" data-modal="donate" role="button" tabindex="0"><span class="material-symbols-rounded">favorite</span> <span class="menu-text">Donate</span></li>
+        <li class="menu-item" data-action="feedback" role="button" tabindex="0"><span class="material-symbols-rounded">star</span> <span class="menu-text">Rate & Feedback</span></li>
       </ul>
     </nav>
   </aside>
 
-  <!-- DEV TOOLS SIDEBAR (left) -->
-  <aside id="devSidebar" class="sidebar-panel left">
-    <div class="sidebar-header">
-      <span class="sidebar-title">🛠 DEV TOOLS</span>
-      <button id="closeDevBtn" class="close-btn" title="Close">×</button>
-    </div>
-
-    <div class="sidebar-body">
-      <!-- Path Drawing Section - Google Maps Style -->
-      <div class="path-section">
-        <h4>🗺️ Route Creator</h4>
-
-        <div class="path-controls">
-          <!-- Step 1: Name your route -->
-          <div class="route-step">
-            <div class="step-header">
-              <span class="step-number">1</span>
-              <span class="step-title">Name Your Route</span>
-            </div>
-            <div class="path-input-group">
-              <input id="pathName" type="text" placeholder="e.g. Main Entrance to Library">
-            </div>
-          </div>
-
-          <!-- Step 2: Draw on map -->
-          <div class="route-step">
-            <div class="step-header">
-              <span class="step-number">2</span>
-              <span class="step-title">Draw Your Route</span>
-            </div>
-            <div class="drawing-actions">
-              <button id="startPathBtn" class="btn-route">
-                <span class="btn-icon">✏️</span>
-                Start Drawing
-              </button>
-              <div id="drawingTools" class="drawing-tools" style="display:none;">
-                <button id="undoPointBtn" class="btn-tool">↶ Undo</button>
-                <button id="clearPathBtn" class="btn-tool">× Clear</button>
-                <button id="finishPathBtn" class="btn-tool-primary">✓ Finish</button>
-              </div>
-            </div>
-            <div id="pathStatus" class="path-status">
-              Ready to draw
-            </div>
-          </div>
-
-          <!-- Step 3: Save -->
-          <div class="route-step">
-            <div class="step-header">
-              <span class="step-number">3</span>
-              <span class="step-title">Save Your Route</span>
-            </div>
-            <button id="savePathBtn" class="btn-save-route">
-              <span class="btn-icon">💾</span>
-              Save Route
-            </button>
-          </div>
-        </div>
-
-        <!-- Saved Routes List -->
-        <div class="saved-routes-header">
-          <h4>📋 Saved Routes</h4>
-          <span id="routeCount" class="route-count">0</span>
-        </div>
-        <div id="pathsList" class="paths-list"></div>
-      </div>
-
-      <!-- 360 Pin Section -->
-      <div class="path-section">
-        <h4>📸 Add 360° Pin</h4>
-
-        <div class="path-controls">
-          <!-- Step 1: Place on map -->
-          <div class="route-step">
-            <div class="step-header">
-              <span class="step-number">1</span>
-              <span class="step-title">Place Pin on Map</span>
-            </div>
-            <div class="drawing-actions">
-              <button id="startPlacingPin" class="btn-route">
-                <span class="btn-icon">📍</span>
-                Place Pin on Map
-              </button>
-              <div id="pinPlacingTools" class="drawing-tools" style="display:none;">
-                <button id="confirmPinLocation" class="btn-tool-primary" style="grid-column: 1 / -1;">✓ Confirm Location</button>
-              </div>
-            </div>
-            <div id="pinPlacingStatus" class="path-status">
-              Ready to place pin
-            </div>
-          </div>
-
-          <!-- Step 2: Add details (hidden until pin placed) -->
-          <div id="pinDetailsStep" class="route-step" style="display:none;">
-            <div class="step-header">
-              <span class="step-number">2</span>
-              <span class="step-title">Add Pin Details</span>
-            </div>
-            <div class="path-input-group">
-              <label for="pinName">Location Name</label>
-              <input type="text" id="pinName" placeholder="e.g. Main Entrance" />
-            </div>
-            <div class="path-input-group">
-              <label for="upload360">360° Image</label>
-              <input type="file" id="upload360" accept="image/*" />
-            </div>
-          </div>
-
-          <!-- Step 3: Save -->
-          <div id="pinSaveStep" class="route-step" style="display:none;">
-            <div class="step-header">
-              <span class="step-number">3</span>
-              <span class="step-title">Save Pin</span>
-            </div>
-            <div class="path-buttons">
-              <button id="savePin" class="btn btn-success">💾 Save Pin</button>
-              <button id="cancelPin" class="btn btn-ghost">Cancel</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Saved Pins List -->
-        <div class="saved-routes-header">
-          <h4><i class="fa-solid fa-map-pin"></i> Saved Pins</h4>
-          <span id="pinCount" class="route-count">0</span>
-        </div>
-        <div id="savedPinsList" class="paths-list"></div>
-      </div>
-    </div>
-  </aside>
+  <!-- NEW DEV TOOLS CONTAINER -->
+  <div id="newDevToolsContainer"></div>
 
   <!-- Modals -->
-  <div id="modalOverlay" class="modal-overlay">
+  <div id="modalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title" id="modalTitle"></h2>
-        <button class="modal-close" id="modalClose">×</button>
+        <button class="modal-close" id="modalClose" aria-label="Close dialog">×</button>
       </div>
       <div class="modal-body" id="modalBody"></div>
     </div>
   </div>
 
   <!-- Viewer Overlay -->
-  <div id="viewerOverlay">
-    <button id="viewerClose">×</button>
+  <div id="viewerOverlay" role="dialog" aria-modal="true" aria-label="360° viewer">
+    <button id="viewerClose" aria-label="Close viewer">×</button>
     <div id="viewer" class="viewer-card"></div>
   </div>
 
   <!-- Toast Container -->
-  <div id="toastContainer"></div>
+  <div id="toastContainer" role="status" aria-live="polite" aria-atomic="false"></div>
 
   <!-- Scripts -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.121.1/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/uevent@2/browser.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dot/doT.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/photo-sphere-viewer@4.2.0/dist/photo-sphere-viewer.min.js"></script>
+  <!-- MapLibre GL JS -->
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <!-- Photo Sphere Viewer v5 -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/virtual-tour-plugin@5/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/plan-plugin@5/index.min.js"></script>
+  <!-- Tooltips -->
+  <script src="https://unpkg.com/@popperjs/core@2"></script>
+  <script src="https://unpkg.com/tippy.js@6"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- App -->
+  <script src="map-engine.js"></script>
+  <script src="leaflet-compat.js"></script>
   <script src="script.js"></script>
+  <!-- New Dev Tools -->
+  <script src="dev-tools.js"></script>
 </body>
+
 </html>

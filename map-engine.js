@@ -21,6 +21,15 @@ class MapEngine {
     const zoom = options.zoom || 17;
     const bounds = options.bounds || null;
 
+    // Calculate maxBounds from school bounds with padding
+    const schoolBounds = bounds || [[14.083915, 100.606071], [14.086142, 100.610199]];
+    const latPad = 0.003;
+    const lngPad = 0.004;
+    const maxBoundsArr = [
+      [schoolBounds[0][1] - lngPad, schoolBounds[0][0] - latPad], // SW [lng, lat]
+      [schoolBounds[1][1] + lngPad, schoolBounds[1][0] + latPad]  // NE [lng, lat]
+    ];
+
     this.map = new maplibregl.Map({
       container: containerId,
       style: {
@@ -47,6 +56,7 @@ class MapEngine {
       zoom: zoom,
       maxZoom: options.maxZoom || 21,
       minZoom: options.minZoom || 14,
+      maxBounds: maxBoundsArr,
       pitch: 0,
       maxPitch: 0,
       bearing: 0,
@@ -210,7 +220,7 @@ class MapEngine {
       type: 'fill',
       source: 'buildings-source',
       paint: {
-        'fill-color': '#00aaff',
+        'fill-color': ['coalesce', ['get', 'color'], '#00aaff'],
         'fill-opacity': 0.35
       }
     });
@@ -221,7 +231,7 @@ class MapEngine {
       type: 'line',
       source: 'buildings-source',
       paint: {
-        'line-color': '#0088dd',
+        'line-color': ['coalesce', ['get', 'color'], '#0088dd'],
         'line-width': 2,
         'line-opacity': 0.8
       }
@@ -234,11 +244,12 @@ class MapEngine {
       source: 'buildings-source',
       layout: {
         'text-field': ['get', 'name'],
-        'text-size': 14,
-        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+        'text-size': 13,
+        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
         'text-anchor': 'center',
         'text-justify': 'center',
-        'symbol-placement': 'point' // Place label at polygon centroid
+        'text-allow-overlap': true,
+        'symbol-placement': 'point'
       },
       paint: {
         'text-color': '#ffffff',

@@ -37,6 +37,7 @@ class DevTools {
       
       // Buildings
       buildingPoints: [],
+      buildingMarkers: [],
       buildingPolylineId: null,
       buildingPreviewId: null,
       savedBuildings: safeParse('dev_buildings'),
@@ -49,6 +50,7 @@ class DevTools {
       
       // Pathways
       pathPoints: [],
+      pathMarkers: [],
       pathPolylineId: null,
       savedPaths: safeParse('dev_paths')
     };
@@ -442,6 +444,7 @@ class DevTools {
     if (this.state.buildingPreviewId) this.mapEngine.removeBuildingById(this.state.buildingPreviewId);
     this.state.buildingPolylineId = null;
     this.state.buildingPreviewId = null;
+    this._clearDrawingMarkers('building');
     const btnDraw = document.getElementById('btnDrawBldg');
     if (btnDraw) {
       btnDraw.classList.remove('active-tool');
@@ -457,6 +460,7 @@ class DevTools {
     this.state.pathPoints = [];
     if (this.state.pathPolylineId) this.mapEngine.removeLine(this.state.pathPolylineId);
     this.state.pathPolylineId = null;
+    this._clearDrawingMarkers('path');
     const btnDrawPath = document.getElementById('btnDrawPath');
     if (btnDrawPath) {
       btnDrawPath.classList.remove('active-tool');
@@ -486,6 +490,7 @@ class DevTools {
 
     if (this.activeTab === 'buildings' && this.state.drawingMode) {
       this.state.buildingPoints.push(latlng);
+      this._addDrawingMarker('building', latlng, this.state.buildingPoints.length);
       this.updateBuildingLine();
       document.getElementById('btnUndoBldg').disabled = false;
       document.getElementById('btnSaveAction').disabled = this.state.buildingPoints.length < 3;
@@ -496,6 +501,7 @@ class DevTools {
     } 
     else if (this.activeTab === 'paths' && this.state.drawingMode) {
       this.state.pathPoints.push(latlng);
+      this._addDrawingMarker('path', latlng, this.state.pathPoints.length);
       this.updatePathLine();
       document.getElementById('btnUndoPath').disabled = false;
       document.getElementById('btnSaveAction').disabled = this.state.pathPoints.length < 2;
@@ -528,11 +534,12 @@ class DevTools {
   undoBuildingPoint() {
     if (this.state.buildingPoints.length > 0) {
       this.state.buildingPoints.pop();
+      this._removeLastDrawingMarker('building');
       this.updateBuildingLine();
       if (this.state.buildingPoints.length === 0) {
         document.getElementById('btnUndoBldg').disabled = true;
       }
-      document.getElementById('btnSaveBldg').disabled = this.state.buildingPoints.length < 3;
+      document.getElementById('btnSaveAction').disabled = this.state.buildingPoints.length < 3;
     }
   }
 
@@ -541,7 +548,7 @@ class DevTools {
     
     if (this.state.buildingPoints.length > 0) {
       const coords = [...this.state.buildingPoints];
-      if (coords.length > 2) coords.push(coords[0]); // close preview ring
+      if (coords.length > 1) coords.push(coords[0]); // close preview ring
       
       this.state.buildingPolylineId = this.mapEngine.addLine('dev-bldg-line', coords, {
         color: '#ff4757', weight: 3, dashArray: '5,5'
@@ -743,7 +750,7 @@ class DevTools {
       item.innerHTML = `
         <img src="${pin.previewUrl}" alt="${pin.name}" loading="lazy">
         <div class="queue-info">
-          <b>${pin.name}</b>
+          ${isCurrent ? `<input type="text" class="dev-input dev-pin-name-input" value="${pin.name}" data-index="${i}" style="width:100%;margin-bottom:4px;" placeholder="Name this pin">` : `<b>${pin.name}</b>`}
           <span class="queue-meta">${this._formatFileSize(pin.size)}</span>
         </div>
         <div class="queue-actions">
@@ -820,15 +827,17 @@ class DevTools {
 
   startPlacingNextPin() {
     // Find next unprocessed pin
-    let nextIdx = this.state.currentPinIndex + 1;
-    while (nextIdx < this.state.pinQueue.length && 
-           (this.state.pinQueue[nextIdx].status === 'placed' || this.state.pinQueue[nextIdx].status === 'skipped')) {
-      nextIdx++;
+    let nextIdx = -1;
+    for (let i = 0; i < this.state.pinQueue.length; i++) {
+      if (this.state.pinQueue[i].status === 'queued') {
+        nextIdx = i;
+        break;
+      }
     }
     
     this.state.currentPinIndex = nextIdx;
 
-    if (this.state.currentPinIndex >= this.state.pinQueue.length) {
+    if (this.state.currentPinIndex === -1 || this.state.currentPinIndex >= this.state.pinQueue.length) {
       // Done!
       this.state.placingPinMode = false;
       this.map.getCanvas().style.cursor = '';
@@ -837,10 +846,9 @@ class DevTools {
       document.getElementById('statusPins').innerHTML = `<i class="fa-solid fa-check-circle"></i> All done! ${placed} pin${placed !== 1 ? 's' : ''} placed`;
       this._updateStepGuide('pins', 3, `All ${placed} pins placed!`);
       
-      // Revoke remaining URLs
-      this.state.pinQueue.forEach(pin => {
-        if (pin.previewUrl) URL.revokeObjectURL(pin.previewUrl);
-      });
+      // Do NOT revoke previewUrls immediately here, so the 'Test 360 View' button 
+      // still has access to the Blob in memory during this session.
+      // They will be cleared when the user clicks 'Clear Queue' or refreshes.
       
       this.renderPinQueue();
       this.updateQueueProgress();
@@ -863,21 +871,31 @@ class DevTools {
   placeCurrentPin(latlng) {
     const currentPin = this.state.pinQueue[this.state.currentPinIndex];
     
+    // Check if they renamed it in the UI
+    const nameInput = document.querySelector('.dev-pin-name-input');
+    const finalName = nameInput ? nameInput.value.trim() || currentPin.name : currentPin.name;
+    
     const pinData = {
       id: 'pin_' + Date.now(),
-      name: currentPin.name,
+      name: finalName,
       lat: latlng[0],
       lng: latlng[1],
-      image: currentPin.file.name // Keep original filename
+      image: currentPin.file.name // For localStorage, save filename only
     };
     
     this.state.savedPins.push(pinData);
     localStorage.setItem('dev_pins', JSON.stringify(this.state.savedPins));
     
-    // Mark as placed and revoke preview URL
+    // Mark as placed
     currentPin.status = 'placed';
-    if (currentPin.previewUrl) {
-      URL.revokeObjectURL(currentPin.previewUrl);
+    
+    // Inject into the global allPins array with the Blob URL so it works during this session
+    if (typeof allPins !== 'undefined') {
+      allPins.push({
+        ...pinData,
+        image: currentPin.previewUrl, // Use Blob URL for immediate viewing
+        local: true // Force local mode
+      });
     }
     
     // Add to map visually
@@ -892,7 +910,13 @@ class DevTools {
     this.mapEngine.addMarker([pin.lat, pin.lng], {
       id: 'dev_pin_' + pin.id,
       html: '<i class="fa-solid fa-map-pin" style="font-size:24px;color:#2ed573;"></i>',
-      popup: `<b>${pin.name}</b>`
+      popup: `<div style="text-align:center;">
+        <strong>${pin.name}</strong><br>
+        <button onclick='openViewer("${pin.id}")'
+                style="margin-top:10px;padding:8px 16px;background:#0a84ff;color:white;border:none;border-radius:8px;cursor:pointer;font-family:Kanit,sans-serif;">
+          Test 360° View
+        </button>
+      </div>`
     });
   }
 
@@ -961,11 +985,12 @@ class DevTools {
   undoPathPoint() {
     if (this.state.pathPoints.length > 0) {
       this.state.pathPoints.pop();
+      this._removeLastDrawingMarker('path');
       this.updatePathLine();
       if (this.state.pathPoints.length === 0) {
         document.getElementById('btnUndoPath').disabled = true;
       }
-      document.getElementById('btnSavePath').disabled = this.state.pathPoints.length < 2;
+      document.getElementById('btnSaveAction').disabled = this.state.pathPoints.length < 2;
     }
   }
 
@@ -1134,6 +1159,32 @@ class DevTools {
     };
     reader.readAsText(file);
     e.target.value = ''; // Reset
+  }
+
+  // =================== DRAWING MARKERS ===================
+  _addDrawingMarker(type, latlng, index) {
+    const color = type === 'building' ? '#ff4757' : '#0a84ff';
+    const markerId = this.mapEngine.addMarker(latlng, {
+      id: `dev_draw_${type}_${index}_${Date.now()}`,
+      html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;font-size:8px;color:white;font-weight:bold;">${index}</div>`,
+      anchor: 'center'
+    });
+    const markers = type === 'building' ? this.state.buildingMarkers : this.state.pathMarkers;
+    markers.push(markerId);
+  }
+
+  _removeLastDrawingMarker(type) {
+    const markers = type === 'building' ? this.state.buildingMarkers : this.state.pathMarkers;
+    if (markers.length > 0) {
+      const id = markers.pop();
+      this.mapEngine.removeMarker(id);
+    }
+  }
+
+  _clearDrawingMarkers(type) {
+    const markers = type === 'building' ? this.state.buildingMarkers : this.state.pathMarkers;
+    markers.forEach(id => this.mapEngine.removeMarker(id));
+    markers.length = 0;
   }
 
   // =================== UTILS ===================

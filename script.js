@@ -458,6 +458,33 @@ mapEngine._ready.then(() => {
   // Load 3D buildings
   mapEngine.loadBuildings('data/buildings.geojson');
 
+  // Load custom dev buildings so they show up and are searchable
+  try {
+    const customBldgs = JSON.parse(localStorage.getItem('dev_buildings') || '[]');
+    customBldgs.forEach(bldg => {
+      // Add to map
+      mapEngine.addBuildingFromCoords(bldg.id, bldg.coords, bldg);
+      // Make it searchable (search code expects labelPosition)
+      bldg.labelPosition = bldg.coords[0];
+      bldg.floors = 1; // Default
+      savedBuildings.push(bldg);
+    });
+  } catch(e) {}
+
+  // Load custom dev paths so they show up
+  try {
+    const customPaths = JSON.parse(localStorage.getItem('dev_paths') || '[]');
+    customPaths.forEach(path => {
+      mapEngine.addLine('saved_path_' + path.id, path.coords, {
+        color: '#0a84ff', weight: 5
+      });
+      // Optionally add to savedPaths if paths ever become searchable
+      if (typeof savedPaths !== 'undefined') {
+        savedPaths.push(path);
+      }
+    });
+  } catch(e) {}
+
   console.log('Map initialized with MapLibre GL JS');
 });
 
@@ -935,7 +962,7 @@ function loadPins() {
           html: '<i class="fa-solid fa-map-pin" style="font-size:32px;color:#0a84ff;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>',
           popup: `<div style="text-align:center;">
             <strong>${pin.name}</strong><br>
-            <button onclick='openViewer("${pin.name}")'
+            <button onclick='openViewer("${pin.id}")'
                     style="margin-top:10px;padding:8px 16px;background:#0a84ff;color:white;border:none;border-radius:8px;cursor:pointer;font-family:Kanit,sans-serif;">
               ดูสตรีทวิว 360°
             </button>
@@ -951,7 +978,7 @@ function loadPins() {
     .finally(() => {
       try {
         const deletedPinsInFinally = JSON.parse(localStorage.getItem('deleted_pins') || '[]');
-        const local = JSON.parse(localStorage.getItem('saved_pins') || '[]');
+        const local = JSON.parse(localStorage.getItem('dev_pins') || '[]');
         const filteredLocal = local.filter(pin => !deletedPinsInFinally.includes(pin.id));
 
         filteredLocal.forEach(pin => {
@@ -963,7 +990,7 @@ function loadPins() {
             popup: `<div style="text-align:center;">
               <strong>${pin.name}</strong><br>
               <span style="font-size:12px;color:#ff6b6b;"><span class="material-symbols-rounded">location_on</span> Local</span><br>
-              <button onclick='openViewer("${pin.name}")'
+              <button onclick='openViewer("${pin.id}")'
                       style="margin-top:10px;padding:8px 16px;background:#0a84ff;color:white;border:none;border-radius:8px;cursor:pointer;font-family:Kanit,sans-serif;">
                 ดูสตรีทวิว 360°
               </button>
@@ -1126,8 +1153,9 @@ loadSavedPaths();
 const viewerOverlay = document.getElementById('viewerOverlay');
 const viewerClose = document.getElementById('viewerClose');
 
-function openViewer(name) {
-  const pin = allPins.find(p => p.name === name);
+function openViewer(idOrName) {
+  // Try finding by ID first, then fallback to name
+  const pin = allPins.find(p => p.id === idOrName) || allPins.find(p => p.name === idOrName);
   if (!pin) {
     showToast('Pin not found', 'error');
     return;
@@ -1149,6 +1177,14 @@ function openViewer(name) {
       panorama: src,
       caption: pin.name + (pin.local ? ' (Local)' : '')
     });
+    
+    // Catch loading errors to provide a helpful message about missing physical files
+    viewerInstance.addEventListener('error', (e) => {
+      if (!pin.image.startsWith('blob:')) {
+        showToast(`Image not found! Make sure '${pin.image}' is inside the images/streetview/ folder.`, 'error');
+      }
+    });
+
   } catch (err) {
     showToast('Cannot open 360°', 'error');
     viewerOverlay.style.display = 'none';

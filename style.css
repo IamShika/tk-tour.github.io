@@ -1,8 +1,8 @@
 :root {
   /* Surfaces โ€” solid, opaque */
   --bg: #f2f2f7;
-  --card: #ffffff;
-  --card-solid: #ffffff;
+  --card: #fefefe;
+  --card-solid: #fefefe;
   --surface: #e5e5ea;
 
   /* Accent */
@@ -64,10 +64,10 @@
 
 /* Dark theme */
 body.dark-theme {
-  --bg: #1c1c1e;
-  --card: #2c2c2e;
-  --card-solid: #2c2c2e;
-  --surface: #3a3a3c;
+  --bg: #000000;
+  --card: #000;
+  --card-solid: #000;
+  --surface: #000;
 
   --accent: #0a84ff;
   --accent-light: rgba(10, 132, 255, 0.18);
@@ -345,23 +345,31 @@ body.dark-theme .maplibregl-ctrl-attrib {
 /* Compat marker styles */
 .compat-marker,
 .circle-marker-compat,
-.custom-pin-icon {
-  cursor: pointer;
-  transition: transform 0.15s ease;
-}
-
-.compat-marker:hover,
-.custom-pin-icon:hover {
-  transform: scale(1.15);
-}
-
+.custom-pin-icon,
 .map-marker {
   cursor: pointer;
-  transition: transform 0.15s ease;
 }
 
-.map-marker:hover {
-  transform: scale(1.15);
+/* Apply hover animations only to the inner icon to avoid breaking MapLibre panning transform */
+.compat-marker i,
+.circle-marker-compat i,
+.custom-pin-icon i,
+.map-marker i,
+.compat-marker svg,
+.circle-marker-compat svg,
+.custom-pin-icon svg,
+.map-marker svg {
+  transition: transform 0.15s ease;
+  display: block; /* ensure transform works */
+}
+
+.compat-marker:hover i,
+.custom-pin-icon:hover i,
+.map-marker:hover i,
+.compat-marker:hover svg,
+.custom-pin-icon:hover svg,
+.map-marker:hover svg {
+  transform: scale(1.15) translateY(-2px);
 }
 
 /* Topbar */
@@ -797,13 +805,19 @@ body.dark-theme .maplibregl-ctrl-attrib {
 
 /* =================== GPS & NAVIGATION =================== */
 
+/*GPS Button size*/
+:root {
+  --gps-size: 49px;
+}
+
+
 /* GPS Button */
 .gps-btn {
   position: fixed;
-  right: 88px;
-  bottom: 24px;
-  width: 56px;
-  height: 56px;
+  right: 15px;
+  bottom: 155px;
+  width: var(--gps-size);
+  height: var(--gps-size);
   border-radius: 50%;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -852,10 +866,13 @@ body.dark-theme .maplibregl-ctrl-attrib {
 }
 
 @keyframes gpsPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.1);
     opacity: 0.8;
@@ -1385,7 +1402,7 @@ body.dark-theme .maplibregl-ctrl-attrib {
   transition: opacity 0.18s ease;
   z-index: -1;
   pointer-events: none;
-  background-image: 
+  background-image:
     url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E"),
     linear-gradient(to right, var(--menu-bg-color, transparent) 0%, transparent 100%);
   background-size: 100px 100px, auto;
@@ -1399,25 +1416,50 @@ body.dark-theme .maplibregl-ctrl-attrib {
   opacity: 1;
 }
 
-.menu-item[data-modal="about"] { --menu-bg-color: var(--color-iabout-light); }
+.menu-item[data-modal="about"] {
+  --menu-bg-color: var(--color-iabout-light);
+}
+
 .menu-item[data-modal="about"] .material-symbols-rounded,
-.menu-item[data-modal="about"]:hover .material-symbols-rounded { color: var(--color-iabout); }
+.menu-item[data-modal="about"]:hover .material-symbols-rounded {
+  color: var(--color-iabout);
+}
 
-.menu-item[data-modal="howto"] { --menu-bg-color: var(--color-ihowto-light); }
+.menu-item[data-modal="howto"] {
+  --menu-bg-color: var(--color-ihowto-light);
+}
+
 .menu-item[data-modal="howto"] .material-symbols-rounded,
-.menu-item[data-modal="howto"]:hover .material-symbols-rounded { color: var(--color-ihowto); }
+.menu-item[data-modal="howto"]:hover .material-symbols-rounded {
+  color: var(--color-ihowto);
+}
 
-.menu-item[data-modal="settings"] { --menu-bg-color: var(--color-isettings-light); }
+.menu-item[data-modal="settings"] {
+  --menu-bg-color: var(--color-isettings-light);
+}
+
 .menu-item[data-modal="settings"] .material-symbols-rounded,
-.menu-item[data-modal="settings"]:hover .material-symbols-rounded { color: var(--color-isettings); }
+.menu-item[data-modal="settings"]:hover .material-symbols-rounded {
+  color: var(--color-isettings);
+}
 
-.menu-item[data-modal="donate"] { --menu-bg-color: var(--color-idonate-light); }
+.menu-item[data-modal="donate"] {
+  --menu-bg-color: var(--color-idonate-light);
+}
+
 .menu-item[data-modal="donate"] .material-symbols-rounded,
-.menu-item[data-modal="donate"]:hover .material-symbols-rounded { color: var(--color-idonate); }
+.menu-item[data-modal="donate"]:hover .material-symbols-rounded {
+  color: var(--color-idonate);
+}
 
-.menu-item[data-action="feedback"] { --menu-bg-color: var(--color-ifeedback-light); }
+.menu-item[data-action="feedback"] {
+  --menu-bg-color: var(--color-ifeedback-light);
+}
+
 .menu-item[data-action="feedback"] .material-symbols-rounded,
-.menu-item[data-action="feedback"]:hover .material-symbols-rounded { color: var(--color-ifeedback); }
+.menu-item[data-action="feedback"]:hover .material-symbols-rounded {
+  color: var(--color-ifeedback);
+}
 
 /* Base Material Symbol Rules for all instances */
 .material-symbols-rounded {

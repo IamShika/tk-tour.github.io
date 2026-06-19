@@ -2,11 +2,11 @@
 This is the map of my school, as a final project with limited budget. We used Ai to create this website and adjust everything.
 [tktour.site](https://tktour.site)
 
-# $`\textcolor{pink}{\text{VERSION : BETA Jan2.0.0}}`$
+# $`\textcolor{pink}{\text{VERSION : BETA Jun2.1H}}`$
 
 
 # Functions :
-- Viewing 360 images
+- Viewing 360 images 
 - GPS navigation
 - Simple and easy to use UI
 - Info about that room/buliding (adding soon.)

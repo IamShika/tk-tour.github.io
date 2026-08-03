@@ -46,7 +46,7 @@ class DevTools {
       pinQueue: [],
       currentPinIndex: -1,
       placingPinMode: false,
-      savedPins: safeParse('dev_pins'),
+      savedPins: [], // Loaded from server (data/pins.json)
       
       // Pathways
       pathPoints: [],
@@ -60,7 +60,7 @@ class DevTools {
     
     // Render initial saved data
     this.renderSavedBuildings();
-    this.renderSavedPins();
+    this.loadPinsFromServer(); // Load pins from server instead of localStorage
     this.renderSavedPaths();
     this.updateTabBadges();
   }
@@ -357,7 +357,6 @@ class DevTools {
     document.getElementById('btnRailClear').addEventListener('click', () => {
       if (confirm('Clear ALL locally saved Dev Tools data? This cannot be undone.')) {
         localStorage.removeItem('dev_buildings');
-        localStorage.removeItem('dev_pins');
         localStorage.removeItem('dev_paths');
         location.reload();
       }
@@ -748,7 +747,10 @@ class DevTools {
       item.className = `queue-item ${isCurrent ? 'current' : ''} ${isPlaced ? 'placed' : ''} ${isSkipped ? 'skipped' : ''}`;
       
       item.innerHTML = `
-        <img src="${pin.previewUrl}" alt="${pin.name}" loading="lazy">
+        <div class="queue-img-wrap">
+          <img src="${pin.previewUrl}" alt="${pin.name}" loading="lazy">
+          ${pin.previewUrl ? '<span class="queue-preview-badge" title="Click image to preview 360°"><i class="fa-solid fa-expand"></i></span>' : ''}
+        </div>
         <div class="queue-info">
           ${isCurrent ? `<input type="text" class="dev-input dev-pin-name-input" value="${pin.name}" data-index="${i}" style="width:100%;margin-bottom:4px;" placeholder="Name this pin">` : `<b>${pin.name}</b>`}
           <span class="queue-meta">${this._formatFileSize(pin.size)}</span>
@@ -762,6 +764,16 @@ class DevTools {
           }
         </div>
       `;
+      
+      // Click on image thumbnail to preview 360°
+      const img = item.querySelector('img');
+      if (img && pin.previewUrl) {
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this._preview360(pin.previewUrl, pin.name);
+        });
+      }
       
       list.appendChild(item);
     });
@@ -868,33 +880,62 @@ class DevTools {
     this._updateStepGuide('pins', 2, `Click on map to place <b>${currentPin.name}</b>`);
   }
 
-  placeCurrentPin(latlng) {
+  async placeCurrentPin(latlng) {
     const currentPin = this.state.pinQueue[this.state.currentPinIndex];
     
     // Check if they renamed it in the UI
     const nameInput = document.querySelector('.dev-pin-name-input');
     const finalName = nameInput ? nameInput.value.trim() || currentPin.name : currentPin.name;
     
+    const pinId = 'pin_' + Date.now();
+    
+    // Upload to server — image goes to images/streetview/, pin data to data/pins.json
+    const formData = new FormData();
+    formData.append('name', finalName);
+    formData.append('lat', latlng[0]);
+    formData.append('lng', latlng[1]);
+    formData.append('floor', typeof currentFloor !== 'undefined' ? currentFloor : 0);
+    formData.append('id', pinId);
+    formData.append('image', currentPin.file);
+    
+    try {
+      const response = await fetch('/save_pin', { method: 'POST', body: formData });
+      const result = await response.json();
+      if (result.status !== 'success') {
+        throw new Error(result.msg || 'Server error');
+      }
+      // Use server-returned values (secure_filename may alter the name)
+      var serverImage = result.image || currentPin.file.name;
+      var serverId = result.id || pinId;
+    } catch (e) {
+      this._toast('Failed to save pin: ' + e.message + '. Is server.py running?', 'error');
+      currentPin.status = 'queued'; // Allow retry
+      this.state.placingPinMode = false;
+      this.map.getCanvas().style.cursor = '';
+      this.renderPinQueue();
+      this.updateQueueProgress();
+      return;
+    }
+    
     const pinData = {
-      id: 'pin_' + Date.now(),
+      id: serverId,
       name: finalName,
       lat: latlng[0],
       lng: latlng[1],
-      image: currentPin.file.name // For localStorage, save filename only
+      floor: typeof currentFloor !== 'undefined' ? currentFloor : 0,
+      image: serverImage
     };
     
     this.state.savedPins.push(pinData);
-    localStorage.setItem('dev_pins', JSON.stringify(this.state.savedPins));
     
     // Mark as placed
     currentPin.status = 'placed';
     
-    // Inject into the global allPins array with the Blob URL so it works during this session
+    // Inject into the global allPins array so the pin works immediately
     if (typeof allPins !== 'undefined') {
       allPins.push({
         ...pinData,
-        image: currentPin.previewUrl, // Use Blob URL for immediate viewing
-        local: true // Force local mode
+        image: pinData.image // Server-saved filename, loads from images/streetview/
       });
     }
     
@@ -907,8 +948,10 @@ class DevTools {
   }
 
   addPinMarker(pin) {
+    const pinFloor = pin.floor !== undefined ? pin.floor : 0;
     this.mapEngine.addMarker([pin.lat, pin.lng], {
       id: 'dev_pin_' + pin.id,
+      floor: pinFloor,
       html: '<i class="fa-solid fa-map-pin" style="font-size:24px;color:#2ed573;"></i>',
       popup: `<div style="text-align:center;">
         <strong>${pin.name}</strong><br>
@@ -933,10 +976,6 @@ class DevTools {
 
       this.state.savedPins.forEach((p) => {
         if (!p || typeof p.lat === 'undefined') return;
-        // Ensure on map
-        if (!this.mapEngine.getMarker('dev_pin_' + p.id)) {
-          this.addPinMarker(p);
-        }
         
         const div = document.createElement('div');
         div.className = 'dev-saved-item';
@@ -948,21 +987,94 @@ class DevTools {
           </div>
           <button class="dev-delete-btn" title="Delete"><i class="fa-solid fa-xmark"></i></button>
         `;
-        // FIX: Use p.id to find/remove instead of stale index
-        div.querySelector('.dev-delete-btn').onclick = () => {
-          this.mapEngine.removeMarker('dev_pin_' + p.id);
-          this.state.savedPins = this.state.savedPins.filter(x => x.id !== p.id);
-          localStorage.setItem('dev_pins', JSON.stringify(this.state.savedPins));
-          this.renderSavedPins();
-          this.updateTabBadges();
-          this._toast('Pin deleted', 'info');
-        };
+        div.querySelector('.dev-delete-btn').onclick = () => this.deletePin(p);
         list.appendChild(div);
       });
     } catch(e) {
-      console.warn("Cleared invalid dev_pins data", e);
+      console.warn("Error rendering saved pins", e);
       this.state.savedPins = [];
-      localStorage.removeItem('dev_pins');
+    }
+  }
+
+  // Load pins from server (data/pins.json) instead of localStorage
+  async loadPinsFromServer() {
+    try {
+      const response = await fetch('/get_pins');
+      const pins = await response.json();
+      this.state.savedPins = Array.isArray(pins) ? pins : [];
+      // Generate IDs for pins that don't have them
+      this.state.savedPins.forEach(pin => {
+        if (!pin.id) {
+          pin.id = `pin_${pin.name.toLowerCase().replace(/\s+/g, '_')}_${pin.lat.toFixed(5)}_${pin.lng.toFixed(5)}`;
+        }
+      });
+    } catch (e) {
+      this.state.savedPins = [];
+    }
+    this.renderSavedPins();
+    this.updateTabBadges();
+  }
+
+  // Delete pin from server
+  async deletePin(pin) {
+    try {
+      const response = await fetch('/delete_pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: pin.id, name: pin.name, lat: pin.lat, lng: pin.lng })
+      });
+      const result = await response.json();
+      if (result.status !== 'success') {
+        this._toast('Failed to delete pin from server', 'error');
+        return;
+      }
+    } catch (e) {
+      this._toast('Server not reachable. Is server.py running?', 'error');
+      return;
+    }
+    
+    // Remove markers from map (both dev-tools and script.js markers)
+    this.mapEngine.removeMarker('dev_pin_' + pin.id);
+    this.mapEngine.removeMarker('pin_marker_' + pin.id);
+    
+    // Remove from state
+    this.state.savedPins = this.state.savedPins.filter(x => x.id !== pin.id);
+    
+    // Remove from global allPins if present
+    if (typeof allPins !== 'undefined') {
+      const idx = allPins.findIndex(p => p.id === pin.id);
+      if (idx !== -1) allPins.splice(idx, 1);
+    }
+    
+    this.renderSavedPins();
+    this.updateTabBadges();
+    this._toast('Pin deleted', 'info');
+  }
+
+  // Preview 360° image in the viewer overlay
+  _preview360(imageUrl, name) {
+    const overlay = document.getElementById('viewerOverlay');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    
+    const container = document.getElementById('viewer');
+    container.innerHTML = '';
+    
+    // Clean up any existing dev preview viewer
+    if (window._devPreviewViewer) {
+      try { window._devPreviewViewer.destroy(); } catch(e) {}
+      window._devPreviewViewer = null;
+    }
+    
+    try {
+      window._devPreviewViewer = new PhotoSphereViewer.Viewer({
+        container: container,
+        panorama: imageUrl,
+        caption: name || 'Preview'
+      });
+    } catch(e) {
+      this._toast('Cannot preview this image as 360°', 'warning');
+      overlay.style.display = 'none';
     }
   }
 
@@ -1123,7 +1235,8 @@ class DevTools {
         }
         
         if (data.pins && Array.isArray(data.pins)) {
-          data.pins.forEach(p => {
+          // Import pins to server via individual save calls
+          for (const p of data.pins) {
             if (p.id && typeof p.lat !== 'undefined') {
               if (!this.state.savedPins.find(x => x.id === p.id)) {
                 this.state.savedPins.push(p);
@@ -1131,8 +1244,8 @@ class DevTools {
                 imported++;
               }
             }
-          });
-          localStorage.setItem('dev_pins', JSON.stringify(this.state.savedPins));
+          }
+          // Note: imported pins metadata only — images must be in images/streetview/ manually
         }
         
         if (data.paths && Array.isArray(data.paths)) {

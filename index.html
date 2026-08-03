@@ -16,7 +16,9 @@
   <!-- Icons & Tooltips -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -25,12 +27,13 @@
   <div id="map" role="application" aria-label="Interactive school map"></div>
 
   <!-- Dev Mode Button -->
-  <button id="devModeBtn" class="floating-btn" title="Dev Tools" aria-label="Developer tools"><span class="material-symbols-rounded">build</span></button>
+  <button id="devModeBtn" class="floating-btn" title="Dev Tools" aria-label="Developer tools"><span
+      class="material-symbols-rounded">build</span></button>
 
   <!-- GPS Location Button -->
   <button id="gpsBtn" class="gps-btn" title="My Location" aria-label="My Location">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="#ffffff"
-      style="opacity:1;" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="#fefefe" style="opacity:1;"
+      aria-hidden="true">
       <path
         d="M11 21.95v-1q-3.125-.35-5.363-2.587T3.05 13h-1q-.425 0-.712-.288T1.05 12t.288-.712T2.05 11h1q.35-3.125 2.588-5.363T11 3.05v-1q0-.425.288-.712T12 1.05t.713.288t.287.712v1q3.125.35 5.363 2.588T20.95 11h1q.425 0 .713.288t.287.712t-.287.713t-.713.287h-1q-.35 3.125-2.587 5.363T13 20.95v1q0 .425-.288.713T12 22.95t-.712-.287T11 21.95M12 19q2.9 0 4.95-2.05T19 12t-2.05-4.95T12 5T7.05 7.05T5 12t2.05 4.95T12 19m0-3q-1.65 0-2.825-1.175T8 12t1.175-2.825T12 8t2.825 1.175T16 12t-1.175 2.825T12 16" />
     </svg>
@@ -77,11 +80,13 @@
   <!-- Topbar -->
   <div id="topbar">
     <div class="search-container">
-      <input id="searchInput" placeholder="หาชื่อห้องหรือเลขห้อง..." aria-label="Search rooms" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRecommendations" aria-autocomplete="list" />
+      <input id="searchInput" placeholder="หาชื่อห้องหรือเลขห้อง..." aria-label="Search rooms" autocomplete="off"
+        role="combobox" aria-expanded="false" aria-controls="searchRecommendations" aria-autocomplete="list" />
       <button id="searchClear" class="search-clear" type="button" title="Clear" aria-label="Clear search">×</button>
     </div>
     <!-- Floor Pill - Unified Component -->
-    <div id="floorPill" class="floor-pill" role="button" tabindex="0" aria-expanded="false" aria-label="Floor selector, current floor 1" aria-haspopup="listbox">
+    <div id="floorPill" class="floor-pill" role="button" tabindex="0" aria-expanded="false"
+      aria-label="Floor selector, current floor 1" aria-haspopup="listbox">
       <div class="floor-pill-current" id="floorPillCurrent">
         <span class="floor-num" id="currentFloorNum">1</span>
         <span class="floor-label">F</span>
@@ -90,7 +95,8 @@
         <!-- Other floors populated by JS -->
       </div>
     </div>
-    <button id="menuToggle" title="Menu" aria-label="Open menu" aria-expanded="false" aria-controls="mainSidebar">☰</button>
+    <button id="menuToggle" title="Menu" aria-label="Open menu" aria-expanded="false"
+      aria-controls="mainSidebar">☰</button>
   </div>
 
   <!-- Search Recommendations -->
@@ -118,11 +124,16 @@
 
     <nav class="sidebar-body">
       <ul class="sidebar-menu">
-        <li class="menu-item" data-modal="about" role="button" tabindex="0"><span class="material-symbols-rounded">info</span> <span class="menu-text">About / Credits</span></li>
-        <li class="menu-item" data-modal="howto" role="button" tabindex="0"><span class="material-symbols-rounded">help</span> <span class="menu-text">How to Use</span></li>
-        <li class="menu-item" data-modal="settings" role="button" tabindex="0"><span class="material-symbols-rounded">settings</span> <span class="menu-text">Settings</span></li>
-        <li class="menu-item" data-modal="donate" role="button" tabindex="0"><span class="material-symbols-rounded">favorite</span> <span class="menu-text">Donate</span></li>
-        <li class="menu-item" data-action="feedback" role="button" tabindex="0"><span class="material-symbols-rounded">star</span> <span class="menu-text">Rate & Feedback</span></li>
+        <li class="menu-item" data-modal="about" role="button" tabindex="0"><span
+            class="material-symbols-rounded">info</span> <span class="menu-text">About / Credits</span></li>
+        <li class="menu-item" data-modal="howto" role="button" tabindex="0"><span
+            class="material-symbols-rounded">help</span> <span class="menu-text">How to Use</span></li>
+        <li class="menu-item" data-modal="settings" role="button" tabindex="0"><span
+            class="material-symbols-rounded">settings</span> <span class="menu-text">Settings</span></li>
+        <li class="menu-item" data-modal="donate" role="button" tabindex="0"><span
+            class="material-symbols-rounded">favorite</span> <span class="menu-text">Donate</span></li>
+        <li class="menu-item" data-action="feedback" role="button" tabindex="0"><span
+            class="material-symbols-rounded">star</span> <span class="menu-text">Rate & Feedback</span></li>
       </ul>
     </nav>
   </aside>

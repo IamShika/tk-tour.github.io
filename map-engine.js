@@ -336,9 +336,12 @@ class MapEngine {
     if (options.onClick) {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (marker.getPopup()) marker.togglePopup();
         options.onClick(marker, e);
       });
     }
+
+    marker._floor = options.floor; // Store floor for visibility filtering
 
     if (options.draggable && options.onDragEnd) {
       marker.on('dragend', () => {
@@ -366,6 +369,14 @@ class MapEngine {
     if (!marker) return;
     const popup = new maplibregl.Popup({ offset: 25 }).setHTML(html);
     marker.setPopup(popup);
+  }
+
+  updateMarkerVisibility(currentFloor) {
+    this._markers.forEach(marker => {
+      if (marker._floor !== undefined && marker._floor !== null) {
+        marker.getElement().style.display = (marker._floor === currentFloor) ? 'block' : 'none';
+      }
+    });
   }
 
   openMarkerPopup(id) {

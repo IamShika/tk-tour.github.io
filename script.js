@@ -311,7 +311,7 @@ function applyTranslations() {
   if (pathStatus && !drawingMode) pathStatus.textContent = t('readyToDraw');
 
   const pinPlacingStatus = document.getElementById('pinPlacingStatus');
-  if (pinPlacingStatus && !placingPinMode) pinPlacingStatus.textContent = t('readyToPlace');
+  if (pinPlacingStatus) pinPlacingStatus.textContent = t('readyToPlace');
 }
 
 function changeLanguage(lang) {
@@ -582,12 +582,7 @@ let savedPaths = [];
 let drawnPathLayers = [];
 
 // Enhanced pathmaker globals
-let previewLine = null; // Cursor follower line
 let pathPointMarkers = []; // Visual markers at each waypoint
-let pathHistory = []; // For undo/redo functionality
-let historyIndex = -1;
-let draggedMarker = null; // Currently dragged marker
-let distanceMarkers = []; // Distance indicator labels
 
 // =================== SIDEBAR LOGIC ===================
 const menuToggle = document.getElementById('menuToggle');
@@ -926,14 +921,7 @@ if (modalOverlay) {
 let mainPathPolyline = null;
 
 function loadPins() {
-  let deletedPins = [];
-  try {
-    deletedPins = JSON.parse(localStorage.getItem('deleted_pins') || '[]');
-  } catch (e) {
-    deletedPins = [];
-  }
-
-  fetch('data/pins.json')
+  fetch('/get_pins')
     .then(r => r.json())
     .then(pins => {
       console.log('Loaded pins from server:', pins?.length || 0);
@@ -944,7 +932,7 @@ function loadPins() {
         }
       });
 
-      allPins = (pins || []).filter(pin => !deletedPins.includes(pin.id));
+      allPins = pins || [];
 
       // Clear existing markers
       markers.forEach(id => mapEngine.removeMarker(id));
@@ -956,8 +944,10 @@ function loadPins() {
       }
 
       allPins.forEach(pin => {
+        const pinFloor = pin.floor !== undefined ? pin.floor : 0;
         const markerId = mapEngine.addMarker([pin.lat, pin.lng], {
           id: `pin_marker_${pin.id}`,
+          floor: pinFloor,
           className: 'custom-pin-icon',
           html: '<i class="fa-solid fa-map-pin" style="font-size:32px;color:#0a84ff;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>',
           popup: `<div style="text-align:center;">
@@ -971,35 +961,12 @@ function loadPins() {
         });
         markers.push(markerId);
       });
+      mapEngine.updateMarkerVisibility(currentFloor);
     })
     .catch(err => {
       allPins = [];
     })
     .finally(() => {
-      try {
-        const deletedPinsInFinally = JSON.parse(localStorage.getItem('deleted_pins') || '[]');
-        const local = JSON.parse(localStorage.getItem('dev_pins') || '[]');
-        const filteredLocal = local.filter(pin => !deletedPinsInFinally.includes(pin.id));
-
-        filteredLocal.forEach(pin => {
-          allPins.push(pin);
-          const markerId = mapEngine.addMarker([pin.lat, pin.lng], {
-            id: `pin_marker_${pin.id}`,
-            className: 'custom-pin-icon',
-            html: '<i class="fa-solid fa-map-pin" style="font-size:32px;color:#ff6b6b;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>',
-            popup: `<div style="text-align:center;">
-              <strong>${pin.name}</strong><br>
-              <span style="font-size:12px;color:#ff6b6b;"><span class="material-symbols-rounded">location_on</span> Local</span><br>
-              <button onclick='openViewer("${pin.id}")'
-                      style="margin-top:10px;padding:8px 16px;background:#0a84ff;color:white;border:none;border-radius:8px;cursor:pointer;font-family:Kanit,sans-serif;">
-                ดูสตรีทวิว 360°
-              </button>
-            </div>`
-          });
-          markers.push(markerId);
-        });
-      } catch (e) { }
-
       const all = allPins.map(p => [p.lat, p.lng]);
       if (all.length > 1) {
         mapEngine._ready.then(() => {
@@ -1081,8 +1048,6 @@ function loadSavedPaths() {
           drawnPathLayers.push(poly);
           savedPaths.push(p);
         });
-        renderPathsList();
-        updateRouteCount();
       }
     })
     .catch(() => { })
@@ -1141,8 +1106,6 @@ function loadSavedPaths() {
           drawnPathLayers.push(poly);
           savedPaths.push(p);
         });
-        renderPathsList();
-        updateRouteCount();
       } catch (e) { }
     });
 }
@@ -1197,6 +1160,11 @@ if (viewerClose) {
       try { viewerInstance.destroy(); } catch (e) { }
       viewerInstance = null;
     }
+    // Also clean up dev-tools 360° preview viewer
+    if (window._devPreviewViewer) {
+      try { window._devPreviewViewer.destroy(); } catch (e) { }
+      window._devPreviewViewer = null;
+    }
     viewerOverlay.style.display = 'none';
   });
 }
@@ -1236,7 +1204,6 @@ function openPanoramaViewer(panorama) {
 window.openPanoramaViewer = openPanoramaViewer;
 
 // =================== SOUND EFFECTS MANAGEMENT ===================
-const soundMuteBtn = document.getElementById('soundMuteBtn');
 
 // =================== FLOOR PILL - Unified Component ===================
 const floorPill = document.getElementById('floorPill');
@@ -1346,6 +1313,9 @@ function switchFloor(floorIndex) {
 
   // Update floor wayfinding color
   updateFloorColor(floorIndex);
+
+  // Update pin visibility based on floor
+  mapEngine.updateMarkerVisibility(floorIndex);
 
   // Update overlay via MapEngine
   const overlayBounds = {

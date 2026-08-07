@@ -999,8 +999,15 @@ class DevTools {
   // Load pins from server (data/pins.json) instead of localStorage
   async loadPinsFromServer() {
     try {
-      const response = await fetch('/get_pins');
-      const pins = await response.json();
+      const response = await fetch('/get_pins').catch(() => null);
+      let pins;
+      if (response && response.ok) {
+        pins = await response.json();
+      } else {
+        // Fall back to static file (GitHub Pages)
+        const fallback = await fetch('data/pins.json');
+        pins = await fallback.json();
+      }
       this.state.savedPins = Array.isArray(pins) ? pins : [];
       // Generate IDs for pins that don't have them
       this.state.savedPins.forEach(pin => {

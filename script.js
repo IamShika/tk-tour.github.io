@@ -1,5 +1,5 @@
 // =================== CONFIG ===================
-const APP_VERSION = 'BETA Aug1';
+const APP_VERSION = 'BETA Jun2.1H';
 // version identifer [release] {month Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec}{howmanyversionnow}{is "H"alf a month}
 const CENTER = [14.085933, 100.608844];
 const FLOORS = [
@@ -921,8 +921,10 @@ if (modalOverlay) {
 let mainPathPolyline = null;
 
 function loadPins() {
+  // Try server API first (local dev with server.py), fall back to static file (GitHub Pages)
   fetch('/get_pins')
-    .then(r => r.json())
+    .then(r => { if (!r.ok) throw new Error('API not available'); return r.json(); })
+    .catch(() => fetch('data/pins.json').then(r => r.json()))
     .then(pins => {
       console.log('Loaded pins from server:', pins?.length || 0);
 

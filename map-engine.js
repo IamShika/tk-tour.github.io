@@ -678,36 +678,57 @@ class MapEngine {
   // ---- Base Layer Switching (GISTDA Satellite) ----
   setGistdaApiKey(apiKey) {
     this._gistdaApiKey = apiKey;
+    console.log('[MapEngine] GISTDA API key set:', apiKey ? apiKey.substring(0, 8) + '...' : 'null');
   }
 
   _ensureGistdaLayer() {
-    if (this._gistdaLayerAdded || !this._gistdaApiKey) return;
+    if (this._gistdaLayerAdded) return;
+    if (!this._gistdaApiKey) {
+      console.warn('[MapEngine] Cannot add GISTDA layer: no API key set');
+      return false;
+    }
     this._gistdaLayerAdded = true;
 
-    // Add GISTDA satellite imagery (thaichote) raster tile source
-    // API key must be appended as ?key= query parameter for authentication
-    this.map.addSource('gistda-satellite', {
-      type: 'raster',
-      tiles: [
-        `https://basemap.sphere.gistda.or.th/tiles/thailand_images/EPSG3857/{z}/{x}/{y}.jpeg?key=${this._gistdaApiKey}`
-      ],
-      tileSize: 256,
-      minzoom: 1,
-      maxzoom: 19,
-      attribution: '&copy; <a href="https://sphere.gistda.or.th">GISTDA</a>'
-    });
+    const tileUrl = `https://basemap.sphere.gistda.or.th/tiles/thailand_images/EPSG3857/{z}/{x}/{y}.jpeg?key=${this._gistdaApiKey}`;
+    console.log('[MapEngine] Adding GISTDA satellite source with URL:', tileUrl.replace(this._gistdaApiKey, '***'));
 
-    // Insert satellite layer BELOW the floor overlay but above nothing
-    // We insert it right after osm-layer, before any other layers
-    const firstLayerAfterBase = this._getFirstNonBaseLayer();
-    this.map.addLayer({
-      id: 'gistda-satellite-layer',
-      type: 'raster',
-      source: 'gistda-satellite',
-      minzoom: 0,
-      maxzoom: 22,
-      layout: { 'visibility': 'none' } // Hidden by default
-    }, firstLayerAfterBase);
+    try {
+      // Add GISTDA satellite imagery (thaichote) raster tile source
+      this.map.addSource('gistda-satellite', {
+        type: 'raster',
+        tiles: [tileUrl],
+        tileSize: 256,
+        minzoom: 1,
+        maxzoom: 19,
+        attribution: '&copy; <a href="https://sphere.gistda.or.th">GISTDA</a>'
+      });
+
+      // Insert satellite layer BELOW the floor overlay but above nothing
+      const firstLayerAfterBase = this._getFirstNonBaseLayer();
+      this.map.addLayer({
+        id: 'gistda-satellite-layer',
+        type: 'raster',
+        source: 'gistda-satellite',
+        minzoom: 0,
+        maxzoom: 22,
+        layout: { 'visibility': 'none' } // Hidden by default
+      }, firstLayerAfterBase);
+
+      console.log('[MapEngine] GISTDA satellite layer added successfully');
+
+      // Listen for tile errors
+      this.map.on('error', (e) => {
+        if (e.sourceId === 'gistda-satellite') {
+          console.error('[MapEngine] GISTDA tile error:', e.error?.message || e);
+        }
+      });
+
+      return true;
+    } catch (err) {
+      console.error('[MapEngine] Failed to add GISTDA layer:', err);
+      this._gistdaLayerAdded = false;
+      return false;
+    }
   }
 
   _getFirstNonBaseLayer() {
@@ -723,9 +744,17 @@ class MapEngine {
 
   switchBaseLayer(layerType) {
     // layerType: 'osm' | 'satellite'
-    this._ensureGistdaLayer();
+    console.log('[MapEngine] switchBaseLayer called:', layerType, '| API key set:', !!this._gistdaApiKey);
 
     if (layerType === 'satellite') {
+      const layerReady = this._ensureGistdaLayer();
+
+      // Guard: if GISTDA layer couldn't be added, don't hide OSM (prevents blank map)
+      if (!this.map.getLayer('gistda-satellite-layer')) {
+        console.error('[MapEngine] GISTDA satellite layer not available. Keeping OSM visible.');
+        return;
+      }
+
       if (this.map.getLayer('osm-layer')) {
         this.map.setLayoutProperty('osm-layer', 'visibility', 'none');
       }

@@ -879,6 +879,216 @@ body.dark-theme .maplibregl-ctrl-attrib {
   }
 }
 
+/* =================== LAYER SWITCHER =================== */
+
+.layer-switcher {
+  position: fixed;
+  left: 15px;
+  bottom: 40px;
+  z-index: 1100;
+}
+
+.layer-switcher-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.layer-switcher-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  transform: scale(1.08);
+  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3);
+}
+
+.layer-switcher-btn:active {
+  transform: scale(0.92);
+}
+
+.layer-switcher-btn .material-symbols-rounded {
+  font-size: 22px;
+}
+
+/* Panel */
+.layer-switcher-panel {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--glass-shadow), 0 12px 40px rgba(0, 0, 0, 0.12);
+  padding: 10px;
+  display: flex;
+  gap: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.95);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.layer-switcher-panel.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Layer Option */
+.layer-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.layer-option:hover {
+  transform: scale(1.05);
+}
+
+.layer-option:active {
+  transform: scale(0.95);
+}
+
+.layer-option-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  border: 3px solid transparent;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.layer-option.active .layer-option-preview {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent), 0 4px 12px rgba(0, 122, 255, 0.25);
+}
+
+/* OSM Preview - uses a subtle map pattern */
+.layer-preview-osm {
+  background: linear-gradient(135deg, #e8f0e8 0%, #d4e4d4 25%, #c8d8c8 50%, #dceadc 75%, #e4f0e4 100%);
+  position: relative;
+}
+
+.layer-preview-osm::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(180, 200, 180, 0.6) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(180, 200, 180, 0.6) 1px, transparent 1px),
+    linear-gradient(45deg, rgba(160, 180, 160, 0.4) 2px, transparent 2px);
+  background-size: 16px 16px, 16px 16px, 32px 32px;
+}
+
+.layer-preview-osm::after {
+  content: '🗺️';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+/* Satellite Preview */
+.layer-preview-satellite {
+  background: linear-gradient(135deg, #1a3a2a 0%, #2d4a3a 25%, #1e3828 50%, #3a5a4a 75%, #2a4a38 100%);
+  position: relative;
+}
+
+.layer-preview-satellite::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 40%, rgba(60, 100, 80, 0.8) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 60%, rgba(50, 90, 70, 0.6) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 20%, rgba(80, 120, 100, 0.5) 0%, transparent 35%);
+}
+
+.layer-preview-satellite::after {
+  content: '🛰️';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+/* Label */
+.layer-option-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.layer-option.active .layer-option-label {
+  color: var(--accent);
+}
+
+/* Dark theme adjustments */
+.dark-theme .layer-preview-osm {
+  background: linear-gradient(135deg, #2a3a2a 0%, #1e2e1e 25%, #233323 50%, #2c3c2c 75%, #263626 100%);
+}
+
+.dark-theme .layer-preview-osm::before {
+  background:
+    linear-gradient(90deg, rgba(100, 130, 100, 0.3) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(100, 130, 100, 0.3) 1px, transparent 1px),
+    linear-gradient(45deg, rgba(80, 110, 80, 0.2) 2px, transparent 2px);
+  background-size: 16px 16px, 16px 16px, 32px 32px;
+}
+
+.dark-theme .layer-preview-satellite {
+  background: linear-gradient(135deg, #0d1f15 0%, #1a2e22 25%, #0f2118 50%, #223a2a 75%, #182e20 100%);
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .layer-switcher {
+    left: 12px;
+    bottom: 30px;
+  }
+
+  .layer-switcher-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .layer-option-preview {
+    width: 56px;
+    height: 56px;
+  }
+
+  .layer-option-label {
+    font-size: 10px;
+  }
+}
+
 /* User Location Marker */
 .user-location-marker {
   background: transparent !important;
@@ -2153,15 +2363,48 @@ body.dark-theme .route-step {
   animation: fadeIn 0.3s;
 }
 
+/* 360° Viewer Loading Spinner */
+.viewer-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+  gap: 16px;
+}
+
+.viewer-loading-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: viewerSpin 0.8s linear infinite;
+}
+
+.viewer-loading-text {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-family: 'Kanit', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+@keyframes viewerSpin {
+  to { transform: rotate(360deg); }
+}
+
 .viewer-card {
-  width: 92vw;
-  max-width: 1200px;
-  height: 78vh;
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
   background: #000;
-  border-radius: 14px;
+  border-radius: 0;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: none;
 }
 
 #viewerClose {
@@ -3569,6 +3812,7 @@ body[data-display="tablet"] .sidebar-title {
   display: flex;
   border-radius: 16px;
   overflow: hidden;
+  resize: both;
   box-shadow:
     0 16px 56px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(255, 255, 255, 0.06) inset;

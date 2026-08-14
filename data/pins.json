@@ -6,7 +6,8 @@
     "lng": 100.60892016289142,
     "floor": 0,
     "image": "111andprinter.jpg",
-    "connections": {}
+    "connections": {},
+    "yawOffset": 1.4835298641951802
   },
   {
     "id": "pin_1785735143361",
@@ -15,16 +16,8 @@
     "lng": 100.60892113696787,
     "floor": 0,
     "image": "112.jpg",
-    "connections": {}
-  },
-  {
-    "id": "pin_1785735160697",
-    "name": "113",
-    "lat": 14.084860698042064,
-    "lng": 100.60892016289142,
-    "floor": 0,
-    "image": "113.jpg",
-    "connections": {}
+    "connections": {},
+    "yawOffset": 1.4835298641951802
   },
   {
     "id": "pin_1785735179654",
@@ -33,7 +26,8 @@
     "lng": 100.6089210091111,
     "floor": 0,
     "image": "114.jpg",
-    "connections": {}
+    "connections": {},
+    "yawOffset": 4.677482395344803
   },
   {
     "id": "pin_1785735189160",
@@ -42,7 +36,8 @@
     "lng": 100.60892198318885,
     "floor": 0,
     "image": "115.jpg",
-    "connections": {}
+    "connections": {},
+    "yawOffset": 4.677482395344803
   },
   {
     "id": "pin_1785735391599",
@@ -51,7 +46,8 @@
     "lng": 100.60891584734833,
     "floor": 2,
     "image": "132.jpg",
-    "connections": {}
+    "connections": {},
+    "yawOffset": 4.834562028024293
   },
   {
     "id": "pin_1785735405998",
@@ -114,6 +110,7 @@
     "lng": 100.60891701418535,
     "floor": 2,
     "image": "131.jpg",
-    "connections": {}
+    "connections": {},
+    "yawOffset": 4.76474885794452
   }
 ]

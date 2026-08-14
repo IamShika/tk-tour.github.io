@@ -15,6 +15,9 @@ class MapEngine {
     this._floorLayerId = null;
     this._buildingsLoaded = false;
     this._eventHandlers = {};
+    this._currentBaseLayer = 'osm';
+    this._gistdaApiKey = null;
+    this._gistdaLayerAdded = false;
 
     const center = options.center || [14.085933, 100.608844];
     // Start at a safe zoom that definitely has tiles, then fitBounds after load
@@ -336,6 +339,15 @@ class MapEngine {
     if (options.onClick) {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
+
+        // Close all other open popups
+        this._markers.forEach(m => {
+          const p = m.getPopup();
+          if (m !== marker && p && p.isOpen()) {
+            p.remove();
+          }
+        });
+
         if (marker.getPopup()) marker.togglePopup();
         options.onClick(marker, e);
       });
@@ -381,7 +393,17 @@ class MapEngine {
 
   openMarkerPopup(id) {
     const marker = this._markers.get(id);
-    if (marker) marker.togglePopup();
+    if (marker) {
+      this._markers.forEach(m => {
+        const p = m.getPopup();
+        if (m !== marker && p && p.isOpen()) {
+          p.remove();
+        }
+      });
+      if (marker.getPopup() && !marker.getPopup().isOpen()) {
+        marker.togglePopup();
+      }
+    }
   }
 
   updateMarkerPosition(id, latLng) {
@@ -651,6 +673,80 @@ class MapEngine {
 
   off(event, handler) {
     this.map.off(event, handler);
+  }
+
+  // ---- Base Layer Switching (GISTDA Satellite) ----
+  setGistdaApiKey(apiKey) {
+    this._gistdaApiKey = apiKey;
+  }
+
+  _ensureGistdaLayer() {
+    if (this._gistdaLayerAdded || !this._gistdaApiKey) return;
+    this._gistdaLayerAdded = true;
+
+    // Add GISTDA satellite imagery (thaichote) raster tile source
+    // API key must be appended as ?key= query parameter for authentication
+    this.map.addSource('gistda-satellite', {
+      type: 'raster',
+      tiles: [
+        `https://basemap.sphere.gistda.or.th/tiles/thailand_images/EPSG3857/{z}/{x}/{y}.jpeg?key=${this._gistdaApiKey}`
+      ],
+      tileSize: 256,
+      minzoom: 1,
+      maxzoom: 19,
+      attribution: '&copy; <a href="https://sphere.gistda.or.th">GISTDA</a>'
+    });
+
+    // Insert satellite layer BELOW the floor overlay but above nothing
+    // We insert it right after osm-layer, before any other layers
+    const firstLayerAfterBase = this._getFirstNonBaseLayer();
+    this.map.addLayer({
+      id: 'gistda-satellite-layer',
+      type: 'raster',
+      source: 'gistda-satellite',
+      minzoom: 0,
+      maxzoom: 22,
+      layout: { 'visibility': 'none' } // Hidden by default
+    }, firstLayerAfterBase);
+  }
+
+  _getFirstNonBaseLayer() {
+    // Find the first layer that isn't a base map layer
+    const layers = this.map.getStyle().layers;
+    for (const layer of layers) {
+      if (layer.id !== 'osm-layer' && layer.id !== 'gistda-satellite-layer') {
+        return layer.id;
+      }
+    }
+    return undefined;
+  }
+
+  switchBaseLayer(layerType) {
+    // layerType: 'osm' | 'satellite'
+    this._ensureGistdaLayer();
+
+    if (layerType === 'satellite') {
+      if (this.map.getLayer('osm-layer')) {
+        this.map.setLayoutProperty('osm-layer', 'visibility', 'none');
+      }
+      if (this.map.getLayer('gistda-satellite-layer')) {
+        this.map.setLayoutProperty('gistda-satellite-layer', 'visibility', 'visible');
+      }
+    } else {
+      // Default: OSM
+      if (this.map.getLayer('osm-layer')) {
+        this.map.setLayoutProperty('osm-layer', 'visibility', 'visible');
+      }
+      if (this.map.getLayer('gistda-satellite-layer')) {
+        this.map.setLayoutProperty('gistda-satellite-layer', 'visibility', 'none');
+      }
+    }
+
+    this._currentBaseLayer = layerType;
+  }
+
+  getCurrentBaseLayer() {
+    return this._currentBaseLayer;
   }
 
   // ---- Utilities ----

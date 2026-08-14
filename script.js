@@ -1,5 +1,5 @@
 // =================== CONFIG ===================
-const APP_VERSION = 'BETA Jun2.1H';
+const APP_VERSION = 'BETA Aug1.0';
 // version identifer [release] {month Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec}{howmanyversionnow}{is "H"alf a month}
 const CENTER = [14.085933, 100.608844];
 const FLOORS = [
@@ -469,7 +469,7 @@ mapEngine._ready.then(() => {
       bldg.floors = 1; // Default
       savedBuildings.push(bldg);
     });
-  } catch(e) {}
+  } catch (e) { }
 
   // Load custom dev paths so they show up
   try {
@@ -483,7 +483,7 @@ mapEngine._ready.then(() => {
         savedPaths.push(path);
       }
     });
-  } catch(e) {}
+  } catch (e) { }
 
   console.log('Map initialized with MapLibre GL JS');
 });
@@ -591,11 +591,18 @@ const closeMainBtn = document.getElementById('closeSidebarBtn');
 
 window.devMode = false;
 
-// Re-fetch config.json to populate devMode correctly
+// Re-fetch config.json to populate devMode and GISTDA API key
 fetch('config.json')
   .then(r => r.json())
   .then(cfg => {
     window.devMode = !!cfg.devMode;
+    // Initialize GISTDA satellite layer if API key is available
+    if (cfg.gistdaApiKey) {
+      mapEngine._ready.then(() => {
+        mapEngine.setGistdaApiKey(cfg.gistdaApiKey);
+        console.log('GISTDA satellite layer initialized');
+      });
+    }
   })
   .catch(() => { });
 
@@ -649,6 +656,13 @@ document.addEventListener('keydown', (e) => {
     const searchRecs = document.getElementById('searchRecommendations');
     if (searchRecs && searchRecs.classList.contains('active')) {
       searchRecs.classList.remove('active');
+    }
+    // Close layer switcher panel if open
+    const layerPanel = document.getElementById('layerSwitcherPanel');
+    if (layerPanel && layerPanel.classList.contains('open')) {
+      layerPanel.classList.remove('open');
+      const layerBtn = document.getElementById('layerSwitcherBtn');
+      if (layerBtn) layerBtn.setAttribute('aria-expanded', 'false');
     }
   }
 });
@@ -1118,6 +1132,25 @@ loadSavedPaths();
 const viewerOverlay = document.getElementById('viewerOverlay');
 const viewerClose = document.getElementById('viewerClose');
 
+// Show/hide loading spinner inside the viewer card
+function showViewerLoading() {
+  const viewerEl = document.getElementById('viewer');
+  // Remove any existing spinner
+  const existing = viewerEl.querySelector('.viewer-loading');
+  if (existing) existing.remove();
+  // Add spinner
+  const loader = document.createElement('div');
+  loader.className = 'viewer-loading';
+  loader.innerHTML = '<div class="viewer-loading-spinner"></div><div class="viewer-loading-text">Loading 360\u00b0...</div>';
+  viewerEl.appendChild(loader);
+}
+
+function hideViewerLoading() {
+  const viewerEl = document.getElementById('viewer');
+  const loader = viewerEl.querySelector('.viewer-loading');
+  if (loader) loader.remove();
+}
+
 function openViewer(idOrName) {
   // Try finding by ID first, then fallback to name
   const pin = allPins.find(p => p.id === idOrName) || allPins.find(p => p.name === idOrName);
@@ -1135,23 +1168,79 @@ function openViewer(idOrName) {
     }
 
     document.getElementById('viewer').innerHTML = '';
+    showViewerLoading();
     const src = pin.local ? pin.image : `images/streetview/${pin.image}`;
 
     viewerInstance = new PhotoSphereViewer.Viewer({
       container: document.getElementById('viewer'),
-      panorama: src,
-      caption: pin.name + (pin.local ? ' (Local)' : '')
+      plugins: [
+        [PhotoSphereViewer.MarkersPlugin, {}],
+        [PhotoSphereViewer.VirtualTourPlugin, {
+          positionMode: 'gps',
+          renderMode: '3d',
+          transitionOptions: {
+            rotation: false,
+          }
+        }]
+      ]
     });
-    
+
+    const virtualTour = viewerInstance.getPlugin(PhotoSphereViewer.VirtualTourPlugin);
+
+    if (pin.local) {
+      virtualTour.setNodes([{
+        id: pin.id,
+        panorama: src,
+        name: pin.name,
+        caption: pin.name + ' (Local)',
+        links: []
+      }], pin.id);
+    } else {
+      const nodes = allPins.filter(p => !p.local).map(p => {
+        let links = [];
+        if (p.connections && Object.keys(p.connections).length > 0) {
+          links = Object.keys(p.connections).map(targetId => ({ nodeId: targetId }));
+        } else {
+          // Auto-link logic: find closest pins on same floor
+          const sameFloorPins = allPins.filter(other => other.floor === p.floor && other.id !== p.id && !other.local);
+          const distances = sameFloorPins.map(other => {
+            // Rough distance in meters
+            const dx = (other.lng - p.lng) * 111320 * Math.cos(p.lat * Math.PI / 180);
+            const dy = (other.lat - p.lat) * 111320;
+            return { id: other.id, dist: Math.sqrt(dx * dx + dy * dy) };
+          });
+          distances.sort((a, b) => a.dist - b.dist);
+          // Connect to closest pins within 20 meters, max 3 links
+          links = distances.filter(d => d.dist < 20).slice(0, 3).map(d => ({ nodeId: d.id }));
+        }
+
+        return {
+          id: p.id,
+          panorama: `images/streetview/${p.image}`,
+          name: p.name,
+          caption: p.name,
+          links: links,
+          gps: [p.lng, p.lat, 0],
+          sphereCorrection: { pan: p.yawOffset || 0 }
+        };
+      });
+      virtualTour.setNodes(nodes, pin.id);
+    }
+    // Hide spinner when panorama is loaded and rendered
+    viewerInstance.addEventListener('ready', () => {
+      hideViewerLoading();
+    });
+
     // Catch loading errors to provide a helpful message about missing physical files
     viewerInstance.addEventListener('error', (e) => {
+      hideViewerLoading();
       if (!pin.image.startsWith('blob:')) {
         showToast(`Image not found! Make sure '${pin.image}' is inside the images/streetview/ folder.`, 'error');
       }
     });
 
   } catch (err) {
-    showToast('Cannot open 360°', 'error');
+    showToast('Cannot open 360\u00b0', 'error');
     viewerOverlay.style.display = 'none';
   }
 }
@@ -1162,7 +1251,7 @@ if (viewerClose) {
       try { viewerInstance.destroy(); } catch (e) { }
       viewerInstance = null;
     }
-    // Also clean up dev-tools 360° preview viewer
+    // Also clean up dev-tools 360\u00b0 preview viewer
     if (window._devPreviewViewer) {
       try { window._devPreviewViewer.destroy(); } catch (e) { }
       window._devPreviewViewer = null;
@@ -1173,7 +1262,7 @@ if (viewerClose) {
 
 window.openViewer = openViewer;
 
-// Open panorama viewer for path 360° photos
+// Open panorama viewer for path 360\u00b0 photos
 function openPanoramaViewer(panorama) {
   if (!panorama) {
     showToast('Panorama not found', 'error');
@@ -1189,16 +1278,26 @@ function openPanoramaViewer(panorama) {
     }
 
     document.getElementById('viewer').innerHTML = '';
+    showViewerLoading();
     const src = panorama.local ? panorama.image : `images/streetview/${panorama.image}`;
 
     viewerInstance = new PhotoSphereViewer.Viewer({
       container: document.getElementById('viewer'),
       panorama: src,
-      caption: panorama.name || '360° View'
+      caption: panorama.name || '360\u00b0 View'
+    });
+
+    // Hide spinner when panorama is loaded
+    viewerInstance.addEventListener('ready', () => {
+      hideViewerLoading();
+    });
+
+    viewerInstance.addEventListener('error', () => {
+      hideViewerLoading();
     });
   } catch (err) {
     console.error('Panorama viewer error:', err);
-    showToast('Cannot open 360°', 'error');
+    showToast('Cannot open 360\u00b0', 'error');
     viewerOverlay.style.display = 'none';
   }
 }
@@ -1423,6 +1522,63 @@ window.addEventListener('languagechange', () => {
   }
 });
 
+// =================== LAYER SWITCHER ===================
+const layerSwitcherBtn = document.getElementById('layerSwitcherBtn');
+const layerSwitcherPanel = document.getElementById('layerSwitcherPanel');
+
+if (layerSwitcherBtn && layerSwitcherPanel) {
+  // Toggle panel
+  layerSwitcherBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = layerSwitcherPanel.classList.contains('open');
+    layerSwitcherPanel.classList.toggle('open');
+    layerSwitcherBtn.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
+  });
+
+  // Handle layer selection
+  layerSwitcherPanel.querySelectorAll('.layer-option').forEach(option => {
+    option.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const layerType = option.getAttribute('data-layer');
+
+      // Switch the map base layer
+      mapEngine.switchBaseLayer(layerType);
+
+      // Update UI active states
+      layerSwitcherPanel.querySelectorAll('.layer-option').forEach(opt => {
+        opt.classList.remove('active');
+        opt.setAttribute('aria-selected', 'false');
+      });
+      option.classList.add('active');
+      option.setAttribute('aria-selected', 'true');
+
+      // Close panel after selection
+      layerSwitcherPanel.classList.remove('open');
+      layerSwitcherBtn.setAttribute('aria-expanded', 'false');
+
+      // Show toast
+      const layerName = layerType === 'satellite' ? 'Satellite' : 'Map';
+      showToast(`Layer: ${layerName}`, 'info');
+    });
+
+    // Keyboard support
+    option.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        option.click();
+      }
+    });
+  });
+
+  // Close panel when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!layerSwitcherPanel.contains(e.target) && !layerSwitcherBtn.contains(e.target)) {
+      layerSwitcherPanel.classList.remove('open');
+      layerSwitcherBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
 // =================== SEARCH FUNCTIONALITY ===================
 const searchInput = document.getElementById('searchInput');
 const searchRecommendations = document.getElementById('searchRecommendations');
@@ -1453,8 +1609,9 @@ function searchLocations(query) {
     const pinResults = allPins.filter(pin => {
       return pin.name && pin.name.toLowerCase().includes(query);
     }).map(pin => ({
+      id: pin.id,
       name: pin.name,
-      floor: pin.floor || 1,
+      floor: pin.floor !== undefined ? pin.floor : 0,
       lat: pin.lat,
       lng: pin.lng,
       type: 'pin'
@@ -1535,10 +1692,17 @@ function displaySearchResults(results) {
           mapEngine.setView([result.lat, result.lng], 19, { animate: true });
         } else {
           // For regular locations, switch floor if needed
-          if (result.floor && result.floor - 1 !== currentFloor) {
-            switchFloor(result.floor - 1);
+          if (result.floor !== undefined && result.floor !== currentFloor) {
+            switchFloor(result.floor);
           }
           mapEngine.setView([result.lat, result.lng], 19, { animate: true });
+
+          if (result.type === 'pin' && result.id) {
+            // Give the map a moment to pan before opening popup
+            setTimeout(() => {
+              mapEngine.openMarkerPopup(`pin_marker_${result.id}`);
+            }, 100);
+          }
         }
 
         // Close search dropdown

@@ -118,7 +118,7 @@ class DevTools {
           <div class="dev-header" id="devPanelHeader">
             <div class="dev-header-title">
               <span class="dev-header-label" id="devHeaderLabel">BUILDINGS</span>
-              <span class="dev-shortcut-hint">⌘⇧D</span>
+              <span class="dev-shortcut-hint">Ctrl+Shift+X</span>
             </div>
             <button class="dev-close-btn" id="closeDevPanelBtn">
               <i class="fa-solid fa-xmark"></i>
@@ -292,10 +292,24 @@ class DevTools {
     // Show/Hide Toggle
     const devBtn = document.getElementById('devModeBtn');
     if (devBtn) {
-      devBtn.addEventListener('click', () => this.togglePanel());
+      devBtn.addEventListener('click', () => {
+        this.togglePanel();
+        const sidebar = document.getElementById('mainSidebar');
+        if (sidebar) sidebar.classList.remove('open');
+      });
     }
     
     document.getElementById('closeDevPanelBtn').addEventListener('click', () => this.togglePanel(false));
+    
+    // Hook into floor changes to filter pins
+    const originalSwitchFloor = window.switchFloor;
+    if (originalSwitchFloor && !window._devFloorHooked) {
+      window._devFloorHooked = true;
+      window.switchFloor = (floorIndex) => {
+        originalSwitchFloor(floorIndex);
+        if (this.activeTab === 'pins') this.renderSavedPins();
+      };
+    }
     
     // Rail Navigation (sidebar icon tabs)
     const railBtns = document.querySelectorAll('.dev-rail-btn[data-tab]');
@@ -952,6 +966,37 @@ class DevTools {
     this.mapEngine.addMarker([pin.lat, pin.lng], {
       id: 'dev_pin_' + pin.id,
       floor: pinFloor,
+      draggable: true,
+      onDragEnd: async (pos) => {
+        pin.lat = pos.lat;
+        pin.lng = pos.lng;
+        // update UI coordinates silently if it's open
+        const list = document.getElementById('listPins');
+        if (list) {
+            const meta = list.querySelector(`[data-id="${pin.id}"] .dev-saved-meta`);
+            if (meta) meta.textContent = `${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)}`;
+        }
+        // update server
+        try {
+          await fetch('/update_pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: pin.id, lat: pos.lat, lng: pos.lng })
+          });
+          this._toast('Pin location updated', 'success');
+          
+          if (typeof allPins !== 'undefined') {
+            const globalPin = allPins.find(x => x.id === pin.id);
+            if (globalPin) {
+               globalPin.lat = pos.lat;
+               globalPin.lng = pos.lng;
+               if (window.mapEngine) window.mapEngine.updateMarkerPosition('pin_marker_' + pin.id, pos);
+            }
+          }
+        } catch(e) {
+          this._toast('Failed to update location', 'error');
+        }
+      },
       html: '<i class="fa-solid fa-map-pin" style="font-size:24px;color:#2ed573;"></i>',
       popup: `<div style="text-align:center;">
         <strong>${pin.name}</strong><br>
@@ -965,29 +1010,138 @@ class DevTools {
 
   renderSavedPins() {
     try {
-      document.getElementById('countPins').textContent = this.state.savedPins.length;
+      const currentFloorInt = typeof currentFloor !== 'undefined' ? currentFloor : 0;
+      const floorPins = this.state.savedPins.filter(p => (p.floor || 0) === currentFloorInt);
+      
+      document.getElementById('countPins').textContent = floorPins.length;
       const list = document.getElementById('listPins');
       list.innerHTML = '';
       
-      if (this.state.savedPins.length === 0) {
-        list.innerHTML = '<div class="dev-empty-state"><i class="fa-solid fa-map-pin"></i><span>No pins yet</span></div>';
+      if (floorPins.length === 0) {
+        list.innerHTML = `<div class="dev-empty-state"><i class="fa-solid fa-map-pin"></i><span>No pins on floor ${currentFloorInt}</span></div>`;
         return;
       }
 
-      this.state.savedPins.forEach((p) => {
+      floorPins.forEach((p) => {
         if (!p || typeof p.lat === 'undefined') return;
         
         const div = document.createElement('div');
         div.className = 'dev-saved-item';
-        div.innerHTML = `
+        div.style.flexDirection = 'column';
+        div.style.alignItems = 'stretch';
+        
+        const topRow = document.createElement('div');
+        topRow.style.display = 'flex';
+        topRow.style.alignItems = 'center';
+        topRow.style.justifyContent = 'space-between';
+        topRow.style.width = '100%';
+        topRow.innerHTML = `
           <div class="dev-saved-item-info">
             <span class="dev-saved-color" style="background:#2ed573"></span>
-            <span class="dev-saved-name">${p.name}</span>
-            <span class="dev-saved-meta">${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</span>
+            <input type="text" class="dev-edit-name" value="${p.name}" style="background:transparent; border:none; color:inherit; font-weight:bold; width:120px;" title="Edit pin name">
           </div>
-          <button class="dev-delete-btn" title="Delete"><i class="fa-solid fa-xmark"></i></button>
+          <div>
+            <button class="dev-btn-mini preview-btn" title="Preview 360" style="margin-right:4px;"><i class="fa-solid fa-eye"></i></button>
+            <button class="dev-delete-btn" title="Delete"><i class="fa-solid fa-xmark"></i></button>
+          </div>
         `;
-        div.querySelector('.dev-delete-btn').onclick = () => this.deletePin(p);
+        
+        const bottomRow = document.createElement('div');
+        bottomRow.style.marginTop = '8px';
+        bottomRow.style.fontSize = '12px';
+        bottomRow.innerHTML = `
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px; align-items:center;">
+            <span>North Heading:</span>
+            <span>
+              <input type="number" class="yaw-val" value="${Math.round((p.yawOffset || 0)*180/Math.PI)}" style="width:45px; background:transparent; border:1px solid rgba(255,255,255,0.2); color:white; border-radius:4px; padding:2px; text-align:center;" min="0" max="360">°
+            </span>
+          </div>
+          <input type="range" class="yaw-slider" min="0" max="360" value="${Math.round((p.yawOffset || 0)*180/Math.PI)}" style="width:100%;">
+          <div class="dev-saved-meta" style="margin-top:4px; color:var(--muted); font-size:10px;">${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</div>
+        `;
+        
+        div.appendChild(topRow);
+        div.appendChild(bottomRow);
+
+        topRow.querySelector('.dev-delete-btn').onclick = () => this.deletePin(p);
+        topRow.querySelector('.preview-btn').onclick = () => {
+          if (typeof openViewer === 'function') openViewer(p.id);
+        };
+        
+        const nameInput = topRow.querySelector('.dev-edit-name');
+        nameInput.addEventListener('change', async (e) => {
+          const newName = e.target.value.trim();
+          if (!newName) return;
+          p.name = newName;
+          try {
+            await fetch('/update_pin', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: p.id, name: newName })
+            });
+            this._toast('Pin name updated', 'success');
+            if (typeof allPins !== 'undefined') {
+              const globalPin = allPins.find(x => x.id === p.id);
+              if (globalPin) {
+                globalPin.name = newName;
+                if (window.mapEngine) {
+                  window.mapEngine.setMarkerElement('pin_marker_' + p.id, '<i class="fa-solid fa-map-pin" style="font-size:24px;color:#ff4757;"></i>');
+                  window.mapEngine.setMarkerPopup('pin_marker_' + p.id, `<b>${newName}</b><br><button onclick='openViewer("${p.id}")' style="margin-top:10px;padding:8px 16px;background:#0a84ff;color:white;border:none;border-radius:8px;cursor:pointer;">View 360°</button>`);
+                }
+              }
+            }
+          } catch(err) {
+            this._toast('Failed to update name', 'error');
+          }
+        });
+
+        const slider = bottomRow.querySelector('.yaw-slider');
+        const yawVal = bottomRow.querySelector('.yaw-val');
+        
+        const updateHeading = (val) => {
+          let deg = parseInt(val);
+          if (isNaN(deg)) return;
+          if (deg < 0) deg = 0;
+          if (deg > 360) deg = 360;
+          slider.value = deg;
+          yawVal.value = deg;
+          
+          const rad = (deg * Math.PI) / 180;
+          if (typeof viewerInstance !== 'undefined' && viewerInstance) {
+            try {
+              const plugin = viewerInstance.getPlugin(PhotoSphereViewer.VirtualTourPlugin);
+              if (plugin && plugin.getCurrentNode() && plugin.getCurrentNode().id === p.id) {
+                 viewerInstance.setOption('sphereCorrection', { pan: rad });
+              }
+            } catch(err){}
+          }
+        };
+
+        slider.addEventListener('input', (e) => updateHeading(e.target.value));
+        yawVal.addEventListener('input', (e) => updateHeading(e.target.value));
+        
+        const saveHeading = async (val) => {
+          let deg = parseInt(val);
+          if (isNaN(deg)) return;
+          const rad = (deg * Math.PI) / 180;
+          p.yawOffset = rad;
+          try {
+            await fetch('/update_pin', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: p.id, yawOffset: rad })
+            });
+            this._toast('Heading updated', 'success');
+            if (typeof allPins !== 'undefined') {
+              const globalPin = allPins.find(x => x.id === p.id);
+              if (globalPin) globalPin.yawOffset = rad;
+            }
+          } catch(err) {}
+        };
+
+        slider.addEventListener('change', (e) => saveHeading(e.target.value));
+        yawVal.addEventListener('change', (e) => saveHeading(e.target.value));
+
         list.appendChild(div);
       });
     } catch(e) {
@@ -1367,7 +1521,7 @@ class DevTools {
               if (cfg.devMode) {
                 console.log("DevMode config is true, popping up panel...");
                 const devBtn = document.getElementById('devModeBtn');
-                if (devBtn) devBtn.style.display = 'block';
+                if (devBtn) devBtn.style.display = 'flex';
                 window.devTools.togglePanel(true);
               } else {
                 console.log("ℹ️ DevMode config is false.");
@@ -1385,9 +1539,9 @@ class DevTools {
   tryInit();
 })();
 
-// Secret Hotkey to forcefully open Dev Tools (Ctrl + Shift + D)
+// Secret Hotkey to forcefully open Dev Tools (Ctrl + Shift + X)
 document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+  if (e.ctrlKey && e.shiftKey && (e.key === 'X' || e.key === 'x')) {
     e.preventDefault();
     
     if (!window.devTools) {
@@ -1407,7 +1561,7 @@ document.addEventListener('keydown', (e) => {
     if (window.devTools) {
       window.devTools.togglePanel(true);
       const devBtn = document.getElementById('devModeBtn');
-      if (devBtn) devBtn.style.display = 'block';
+      if (devBtn) devBtn.style.display = 'flex';
     }
   }
 });

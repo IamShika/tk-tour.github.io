@@ -26,9 +26,6 @@
   <h1 class="sr-only">Project Absolute TK Map</h1>
   <div id="map" role="application" aria-label="Interactive school map"></div>
 
-  <!-- Dev Mode Button -->
-  <button id="devModeBtn" class="floating-btn" title="Dev Tools" aria-label="Developer tools"><span
-      class="material-symbols-rounded">build</span></button>
 
   <!-- GPS Location Button -->
   <button id="gpsBtn" class="gps-btn" title="My Location" aria-label="My Location">
@@ -38,6 +35,23 @@
         d="M11 21.95v-1q-3.125-.35-5.363-2.587T3.05 13h-1q-.425 0-.712-.288T1.05 12t.288-.712T2.05 11h1q.35-3.125 2.588-5.363T11 3.05v-1q0-.425.288-.712T12 1.05t.713.288t.287.712v1q3.125.35 5.363 2.588T20.95 11h1q.425 0 .713.288t.287.712t-.287.713t-.713.287h-1q-.35 3.125-2.587 5.363T13 20.95v1q0 .425-.288.713T12 22.95t-.712-.287T11 21.95M12 19q2.9 0 4.95-2.05T19 12t-2.05-4.95T12 5T7.05 7.05T5 12t2.05 4.95T12 19m0-3q-1.65 0-2.825-1.175T8 12t1.175-2.825T12 8t2.825 1.175T16 12t-1.175 2.825T12 16" />
     </svg>
   </button>
+
+  <!-- Layer Switcher -->
+  <div id="layerSwitcher" class="layer-switcher">
+    <button id="layerSwitcherBtn" class="layer-switcher-btn" title="Map layers" aria-label="Switch map layers" aria-expanded="false">
+      <span class="material-symbols-rounded">layers</span>
+    </button>
+    <div id="layerSwitcherPanel" class="layer-switcher-panel" role="listbox" aria-label="Map layer options">
+      <div class="layer-option active" data-layer="osm" role="option" aria-selected="true" tabindex="0">
+        <div class="layer-option-preview layer-preview-osm"></div>
+        <span class="layer-option-label">Map</span>
+      </div>
+      <div class="layer-option" data-layer="satellite" role="option" aria-selected="false" tabindex="0">
+        <div class="layer-option-preview layer-preview-satellite"></div>
+        <span class="layer-option-label">Satellite</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Navigation Panel (slide-up from bottom) -->
   <div id="navigationPanel" class="navigation-panel" role="region" aria-label="Navigation directions">
@@ -134,6 +148,8 @@
             class="material-symbols-rounded">favorite</span> <span class="menu-text">Donate</span></li>
         <li class="menu-item" data-action="feedback" role="button" tabindex="0"><span
             class="material-symbols-rounded">star</span> <span class="menu-text">Rate & Feedback</span></li>
+        <li class="menu-item" id="devModeBtn" style="display: none;" role="button" tabindex="0"><span
+            class="material-symbols-rounded">build</span> <span class="menu-text">Developer Tools</span></li>
       </ul>
     </nav>
   </aside>

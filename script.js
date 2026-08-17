@@ -1077,6 +1077,8 @@ function loadPins() {
               text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
               white-space: nowrap;
               transform: translate(-50%, -50%);
+              cursor: pointer;
+              pointer-events: auto;
             ">${pin.name}</div>`,
             popup: `<div style="text-align:center;">
               <strong>${pin.name}</strong><br>

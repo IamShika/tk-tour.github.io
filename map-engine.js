@@ -16,10 +16,13 @@ class MapEngine {
     this._buildingsLoaded = false;
     this._eventHandlers = {};
     this._currentBaseLayer = 'osm';
+    this._mapProvider = 'osm'; // 'osm' or 'google'
     this._satelliteProvider = 'google'; // 'google' or 'gistda'
     this._googleApiKey = null;
     this._googleLayerAdded = false;
     this._googleSessionToken = null;
+    this._googleRoadmapLayerAdded = false;
+    this._googleRoadmapSessionToken = null;
     this._gistdaApiKey = null;
     this._gistdaLayerAdded = false;
 
@@ -65,12 +68,16 @@ class MapEngine {
       minZoom: options.minZoom || 14,
       maxBounds: maxBoundsArr,
       pitch: 0,
-      maxPitch: 0,
+      maxPitch: 85,
       bearing: 0,
       antialias: true
     });
 
-    this.map.addControl(new maplibregl.NavigationControl({ showCompass: true, showZoom: true }), 'bottom-right');
+    this.map.addControl(new maplibregl.NavigationControl({ 
+      showCompass: true, 
+      showZoom: true,
+      visualizePitch: true
+    }), 'bottom-right');
 
     // Wait for map to be ready, then fit to school bounds
     this._ready = new Promise(resolve => {
@@ -314,6 +321,60 @@ class MapEngine {
       source.setData(this._buildingsGeoJSON);
     } else {
       this._addBuildingsLayer(this._buildingsGeoJSON);
+    }
+  }
+
+  // ---- Street View Layer ----
+  addStreetViewLayer(geojson, onClickCallback) {
+    if (this.map.getSource('streetview-source')) {
+      this.map.getSource('streetview-source').setData(geojson);
+    } else {
+      this.map.addSource('streetview-source', { type: 'geojson', data: geojson });
+
+      // The line connecting the panoramas
+      this.map.addLayer({
+        id: 'streetview-path',
+        type: 'line',
+        source: 'streetview-source',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': '#0a84ff',
+          'line-width': 4,
+          'line-opacity': 0.7
+        },
+        filter: ['==', '$type', 'LineString']
+      });
+
+      // The clickable dots for each panorama
+      this.map.addLayer({
+        id: 'streetview-points',
+        type: 'circle',
+        source: 'streetview-source',
+        paint: {
+          'circle-radius': 8,
+          'circle-color': '#0a84ff',
+          'circle-stroke-width': 3,
+          'circle-stroke-color': '#ffffff'
+        },
+        filter: ['==', '$type', 'Point']
+      });
+
+      this.map.on('mouseenter', 'streetview-points', () => {
+        this.map.getCanvas().style.cursor = 'pointer';
+      });
+
+      this.map.on('mouseleave', 'streetview-points', () => {
+        this.map.getCanvas().style.cursor = '';
+      });
+
+      this.map.on('click', 'streetview-points', (e) => {
+        if (e.features.length > 0 && onClickCallback) {
+          onClickCallback(e.features[0].properties.id);
+        }
+      });
     }
   }
 
@@ -696,16 +757,22 @@ class MapEngine {
     console.log('[MapEngine] Satellite provider set to:', provider);
   }
 
-  async _createGoogleSession() {
-    if (this._googleSessionToken) return this._googleSessionToken;
+  setMapProvider(provider) {
+    this._mapProvider = provider;
+    console.log('[MapEngine] Map provider set to:', provider);
+  }
+
+  async _createGoogleSession(mapType = 'satellite') {
+    if (mapType === 'satellite' && this._googleSessionToken) return this._googleSessionToken;
+    if (mapType === 'roadmap' && this._googleRoadmapSessionToken) return this._googleRoadmapSessionToken;
 
     try {
-      console.log('[MapEngine] Creating Google Maps tile session...');
+      console.log(`[MapEngine] Creating Google Maps tile session for ${mapType}...`);
       const res = await fetch(`https://tile.googleapis.com/v1/createSession?key=${this._googleApiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mapType: 'satellite',
+          mapType: mapType,
           language: 'th',
           region: 'TH'
         })
@@ -717,11 +784,13 @@ class MapEngine {
       }
 
       const data = await res.json();
-      this._googleSessionToken = data.session;
-      console.log('[MapEngine] Google Maps session created successfully');
+      if (mapType === 'satellite') this._googleSessionToken = data.session;
+      else if (mapType === 'roadmap') this._googleRoadmapSessionToken = data.session;
+
+      console.log(`[MapEngine] Google Maps ${mapType} session created successfully`);
       return data.session;
     } catch (err) {
-      console.error('[MapEngine] Failed to create Google Maps session:', err);
+      console.error(`[MapEngine] Failed to create Google Maps ${mapType} session:`, err);
       return null;
     }
   }
@@ -733,7 +802,7 @@ class MapEngine {
       return false;
     }
 
-    const session = await this._createGoogleSession();
+    const session = await this._createGoogleSession('satellite');
     if (!session) {
       console.error('[MapEngine] No session token — cannot add Google satellite layer');
       return false;
@@ -780,6 +849,60 @@ class MapEngine {
     }
   }
 
+  async _ensureGoogleRoadmapLayer() {
+    if (this._googleRoadmapLayerAdded) return true;
+    if (!this._googleApiKey) {
+      console.warn('[MapEngine] Cannot add Google roadmap layer: no API key set');
+      return false;
+    }
+
+    const session = await this._createGoogleSession('roadmap');
+    if (!session) {
+      console.error('[MapEngine] No session token — cannot add Google roadmap layer');
+      return false;
+    }
+
+    this._googleRoadmapLayerAdded = true;
+
+    const tileUrl = `https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session=${session}&key=${this._googleApiKey}`;
+    console.log('[MapEngine] Adding Google roadmap source');
+
+    try {
+      this.map.addSource('google-roadmap', {
+        type: 'raster',
+        tiles: [tileUrl],
+        tileSize: 256,
+        minzoom: 0,
+        maxzoom: 22,
+        attribution: '&copy; Google Maps'
+      });
+
+      const firstLayerAfterBase = this._getFirstNonBaseLayer();
+      this.map.addLayer({
+        id: 'google-roadmap-layer',
+        type: 'raster',
+        source: 'google-roadmap',
+        minzoom: 0,
+        maxzoom: 22,
+        layout: { 'visibility': 'none' }
+      }, firstLayerAfterBase);
+
+      console.log('[MapEngine] Google roadmap layer added successfully');
+
+      this.map.on('error', (e) => {
+        if (e.sourceId === 'google-roadmap') {
+          console.error('[MapEngine] Google tile error:', e.error?.message || e);
+        }
+      });
+
+      return true;
+    } catch (err) {
+      console.error('[MapEngine] Failed to add Google roadmap layer:', err);
+      this._googleRoadmapLayerAdded = false;
+      return false;
+    }
+  }
+
   _ensureGistdaLayer() {
     if (this._gistdaLayerAdded) return true;
     if (!this._gistdaApiKey) return false;
@@ -818,7 +941,7 @@ class MapEngine {
   _getFirstNonBaseLayer() {
     const layers = this.map.getStyle().layers;
     for (const layer of layers) {
-      if (layer.id !== 'osm-layer' && layer.id !== 'google-satellite-layer' && layer.id !== 'gistda-satellite-layer') {
+      if (layer.id !== 'osm-layer' && layer.id !== 'google-satellite-layer' && layer.id !== 'gistda-satellite-layer' && layer.id !== 'google-roadmap-layer') {
         return layer.id;
       }
     }
@@ -834,6 +957,15 @@ class MapEngine {
     }
   }
 
+  _hideMapLayers() {
+    if (this.map.getLayer('osm-layer')) {
+      this.map.setLayoutProperty('osm-layer', 'visibility', 'none');
+    }
+    if (this.map.getLayer('google-roadmap-layer')) {
+      this.map.setLayoutProperty('google-roadmap-layer', 'visibility', 'none');
+    }
+  }
+
   async switchBaseLayer(layerType) {
     // layerType: 'osm' | 'satellite'
     console.log('[MapEngine] switchBaseLayer called:', layerType);
@@ -845,7 +977,7 @@ class MapEngine {
         if (this._googleApiKey) {
           const ready = await this._ensureGoogleSatelliteLayer();
           if (ready) {
-            if (this.map.getLayer('osm-layer')) this.map.setLayoutProperty('osm-layer', 'visibility', 'none');
+            this._hideMapLayers();
             this._hideSatelliteLayers();
             this.map.setLayoutProperty('google-satellite-layer', 'visibility', 'visible');
             return true;
@@ -858,7 +990,7 @@ class MapEngine {
         if (this._gistdaApiKey) {
           const ready = this._ensureGistdaLayer();
           if (ready) {
-            if (this.map.getLayer('osm-layer')) this.map.setLayoutProperty('osm-layer', 'visibility', 'none');
+            this._hideMapLayers();
             this._hideSatelliteLayers();
             this.map.setLayoutProperty('gistda-satellite-layer', 'visibility', 'visible');
             return true;
@@ -883,18 +1015,29 @@ class MapEngine {
       }
 
       if (!satelliteReady) {
-        console.error('[MapEngine] No satellite layer available. Keeping OSM visible.');
+        console.error('[MapEngine] No satellite layer available. Keeping Map visible.');
         return;
       }
     } else {
-      // Default: OSM
-      if (this.map.getLayer('osm-layer')) {
-        this.map.setLayoutProperty('osm-layer', 'visibility', 'visible');
-      }
+      // Default: 'osm' (Map view)
       this._hideSatelliteLayers();
+      this._hideMapLayers(); // Hide both OSM and Google Roadmap first
+      
+      if (this._mapProvider === 'google' && this._googleApiKey) {
+        const ready = await this._ensureGoogleRoadmapLayer();
+        if (ready) {
+          this.map.setLayoutProperty('google-roadmap-layer', 'visibility', 'visible');
+        } else {
+          console.log('[MapEngine] Google roadmap unavailable, falling back to OSM');
+          if (this.map.getLayer('osm-layer')) this.map.setLayoutProperty('osm-layer', 'visibility', 'visible');
+        }
+      } else {
+        if (this.map.getLayer('osm-layer')) this.map.setLayoutProperty('osm-layer', 'visibility', 'visible');
+      }
     }
 
     this._currentBaseLayer = layerType;
+    localStorage.setItem('baseMapType', layerType);
   }
 
   getCurrentBaseLayer() {

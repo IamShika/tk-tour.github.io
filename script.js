@@ -1,5 +1,5 @@
 // =================== CONFIG ===================
-const APP_VERSION = 'BETA Aug1.0';
+const APP_VERSION = 'BETA Aug1.5H';
 // version identifer [release] {month Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec}{howmanyversionnow}{is "H"alf a month}
 const CENTER = [14.085933, 100.608844];
 const FLOORS = [
@@ -610,19 +610,42 @@ fetch('config.json')
     } else {
       console.warn('[Config] No gistdaApiKey found in config.json');
     }
-    
+
     if (cfg.googleMapsApiKey) {
       mapEngine.setGoogleMapsApiKey(cfg.googleMapsApiKey);
     }
-    
+
     if (cfg.satelliteProvider) {
       mapEngine.setSatelliteProvider(cfg.satelliteProvider);
     }
-    
+
     // User's localStorage preference overrides config.json default
     const savedProvider = localStorage.getItem('satelliteProvider');
     if (savedProvider) {
       mapEngine.setSatelliteProvider(savedProvider);
+    }
+
+    const savedMapProvider = localStorage.getItem('mapProvider');
+    if (savedMapProvider) {
+      mapEngine.setMapProvider(savedMapProvider);
+    }
+
+    // Restore saved base layer state
+    const savedBaseLayer = localStorage.getItem('baseMapType');
+    if (savedBaseLayer) {
+      mapEngine.switchBaseLayer(savedBaseLayer);
+
+      // Update UI active states for layer switcher panel
+      if (layerSwitcherPanel) {
+        layerSwitcherPanel.querySelectorAll('.layer-option').forEach(opt => {
+          opt.classList.remove('active');
+          opt.setAttribute('aria-selected', 'false');
+          if (opt.getAttribute('data-layer') === savedBaseLayer) {
+            opt.classList.add('active');
+            opt.setAttribute('aria-selected', 'true');
+          }
+        });
+      }
     }
   })
   .catch(err => {
@@ -760,6 +783,15 @@ function generateSettingsHTML() {
         </select>
       </div>
 
+      <!-- Map Provider Setting -->
+      <div class="settings-row">
+        <span class="settings-label"><b>${t('mapProvider')}</b></span>
+        <select class="settings-select" id="mapProviderSelect">
+          <option value="osm" ${(localStorage.getItem('mapProvider') || mapEngine._mapProvider || 'osm') === 'osm' ? 'selected' : ''}>${t('osm')}</option>
+          <option value="google" ${(localStorage.getItem('mapProvider') || mapEngine._mapProvider || 'osm') === 'google' ? 'selected' : ''}>${t('google')}</option>
+        </select>
+      </div>
+
       <!-- Satellite Provider Setting -->
       <div class="settings-row">
         <span class="settings-label"><b>${t('satelliteProvider')}</b></span>
@@ -880,6 +912,24 @@ function openModal(modalId) {
         displayModeSelect.addEventListener('change', (e) => {
           applyDisplayMode(e.target.value);
           showToast(t('displayMode') + ': ' + t(e.target.value), 'success');
+        });
+      }
+
+      // Map Provider selector
+      const mapProviderSelect = document.getElementById('mapProviderSelect');
+      if (mapProviderSelect) {
+        mapProviderSelect.addEventListener('change', (e) => {
+          const provider = e.target.value;
+          localStorage.setItem('mapProvider', provider);
+          mapEngine.setMapProvider(provider);
+
+          // If map view is currently active, re-switch to apply the new provider
+          if (mapEngine.getCurrentBaseLayer() === 'osm') {
+            mapEngine._hideMapLayers();
+            mapEngine.switchBaseLayer('osm');
+          }
+
+          showToast(t('mapProvider') + ': ' + t(provider), 'success');
         });
       }
 
@@ -1012,23 +1062,36 @@ function loadPins() {
 
       allPins.forEach(pin => {
         const pinFloor = pin.floor !== undefined ? pin.floor : 0;
-        const markerId = mapEngine.addMarker([pin.lat, pin.lng], {
-          id: `pin_marker_${pin.id}`,
-          floor: pinFloor,
-          className: 'custom-pin-icon',
-          html: '<i class="fa-solid fa-map-pin" style="font-size:32px;color:#0a84ff;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));"></i>',
-          popup: `<div style="text-align:center;">
-            <strong>${pin.name}</strong><br>
-            <button onclick='openViewer("${pin.id}")'
-                    style="margin-top:10px;padding:8px 16px;background:#0a84ff;color:white;border:none;border-radius:8px;cursor:pointer;font-family:Kanit,sans-serif;">
-              ดูสตรีทวิว 360°
-            </button>
-          </div>`,
-          onClick: () => mapEngine.panTo([pin.lat, pin.lng])
-        });
-        markers.push(markerId);
+
+        // Only draw text pins if Developer Tools are active
+        if (window.devMode) {
+          const markerId = mapEngine.addMarker([pin.lat, pin.lng], {
+            id: `pin_marker_${pin.id}`,
+            floor: pinFloor,
+            className: 'custom-pin-text',
+            html: `<div style="
+              font-family: 'Kanit', sans-serif;
+              font-weight: 600;
+              font-size: 14px;
+              color: #0a84ff;
+              text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+              white-space: nowrap;
+              transform: translate(-50%, -50%);
+            ">${pin.name}</div>`,
+            popup: `<div style="text-align:center;">
+              <strong>${pin.name}</strong><br>
+              <button onclick='openViewer("${pin.id}")'
+                      style="margin-top:10px;padding:8px 16px;background:#0a84ff;color:white;border:none;border-radius:8px;cursor:pointer;font-family:Kanit,sans-serif;">
+                ดูสตรีทวิว 360°
+              </button>
+            </div>`,
+            onClick: () => mapEngine.panTo([pin.lat, pin.lng])
+          });
+          markers.push(markerId);
+        }
       });
       mapEngine.updateMarkerVisibility(currentFloor);
+      drawStreetViewPaths();
     })
     .catch(err => {
       allPins = [];
@@ -1202,6 +1265,52 @@ function hideViewerLoading() {
   if (loader) loader.remove();
 }
 
+function drawStreetViewPaths() {
+  if (!allPins || allPins.length === 0) return;
+
+  const floorPins = allPins.filter(p => (p.floor || 0) === currentFloor && !p.local);
+
+  if (floorPins.length === 0) {
+    if (window.mapEngine && typeof window.mapEngine.addStreetViewLayer === 'function') {
+      window.mapEngine.addStreetViewLayer({ type: 'FeatureCollection', features: [] }, window.openViewer);
+    }
+    return;
+  }
+
+  // Sort pins logically to form a continuous path
+  const sortedPins = [...floorPins].sort((a, b) => {
+    const numA = parseInt(a.name.replace(/\D/g, '')) || 0;
+    const numB = parseInt(b.name.replace(/\D/g, '')) || 0;
+    if (numA && numB) return numA - numB;
+    return a.name.localeCompare(b.name);
+  });
+
+  const features = [];
+  const coords = [];
+
+  sortedPins.forEach(p => {
+    coords.push([p.lng, p.lat]);
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+      properties: { id: p.id, name: p.name }
+    });
+  });
+
+  if (coords.length > 1) {
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'LineString', coordinates: coords },
+      properties: {}
+    });
+  }
+
+  const geojson = { type: 'FeatureCollection', features };
+  if (window.mapEngine && typeof window.mapEngine.addStreetViewLayer === 'function') {
+    window.mapEngine.addStreetViewLayer(geojson, (id) => window.openViewer(id));
+  }
+}
+
 function openViewer(idOrName) {
   // Try finding by ID first, then fallback to name
   const pin = allPins.find(p => p.id === idOrName) || allPins.find(p => p.name === idOrName);
@@ -1252,17 +1361,53 @@ function openViewer(idOrName) {
         if (p.connections && Object.keys(p.connections).length > 0) {
           links = Object.keys(p.connections).map(targetId => ({ nodeId: targetId }));
         } else {
-          // Auto-link logic: find closest pins on same floor
-          const sameFloorPins = allPins.filter(other => other.floor === p.floor && other.id !== p.id && !other.local);
-          const distances = sameFloorPins.map(other => {
-            // Rough distance in meters
-            const dx = (other.lng - p.lng) * 111320 * Math.cos(p.lat * Math.PI / 180);
-            const dy = (other.lat - p.lat) * 111320;
-            return { id: other.id, dist: Math.sqrt(dx * dx + dy * dy) };
+          // Smart sequential auto-link logic
+          const sameFloorPins = allPins.filter(other => other.floor === p.floor && !other.local);
+
+          const sortedPins = [...sameFloorPins].sort((a, b) => {
+            const numA = parseInt(a.name.replace(/\D/g, '')) || 0;
+            const numB = parseInt(b.name.replace(/\D/g, '')) || 0;
+            if (numA && numB) return numA - numB;
+            return a.name.localeCompare(b.name);
           });
-          distances.sort((a, b) => a.dist - b.dist);
-          // Connect to closest pins within 20 meters, max 3 links
-          links = distances.filter(d => d.dist < 20).slice(0, 3).map(d => ({ nodeId: d.id }));
+
+          const myIndex = sortedPins.findIndex(other => other.id === p.id);
+          const myNum = parseInt(p.name.replace(/\D/g, '')) || 0;
+
+          if (myIndex !== -1) {
+            if (myNum > 0) {
+              // I am a numbered room, link to previous and next in sorted list
+              if (myIndex > 0) links.push({ nodeId: sortedPins[myIndex - 1].id });
+              if (myIndex < sortedPins.length - 1) links.push({ nodeId: sortedPins[myIndex + 1].id });
+
+              // Also link back to any unnumbered rooms that consider ME their closest node
+              const unnumberedPins = sortedPins.filter(other => (parseInt(other.name.replace(/\D/g, '')) || 0) === 0);
+              unnumberedPins.forEach(unnum => {
+                const numberedPins = sortedPins.filter(other => (parseInt(other.name.replace(/\D/g, '')) || 0) > 0);
+                const distances = numberedPins.map(other => {
+                  const dx = (other.lng - unnum.lng) * 111320 * Math.cos(unnum.lat * Math.PI / 180);
+                  const dy = (other.lat - unnum.lat) * 111320;
+                  return { id: other.id, dist: Math.sqrt(dx * dx + dy * dy) };
+                });
+                distances.sort((a, b) => a.dist - b.dist);
+                if (distances.length > 0 && distances[0].id === p.id) {
+                  links.push({ nodeId: unnum.id });
+                }
+              });
+            } else {
+              // I am an unnumbered room, link me to my closest geographic numbered node
+              const numberedPins = sortedPins.filter(other => (parseInt(other.name.replace(/\D/g, '')) || 0) > 0);
+              const distances = numberedPins.map(other => {
+                const dx = (other.lng - p.lng) * 111320 * Math.cos(p.lat * Math.PI / 180);
+                const dy = (other.lat - p.lat) * 111320;
+                return { id: other.id, dist: Math.sqrt(dx * dx + dy * dy) };
+              });
+              distances.sort((a, b) => a.dist - b.dist);
+              if (distances.length > 0) {
+                links.push({ nodeId: distances[0].id });
+              }
+            }
+          }
         }
 
         return {
@@ -1468,6 +1613,9 @@ function switchFloor(floorIndex) {
 
   // Update pin visibility based on floor
   mapEngine.updateMarkerVisibility(floorIndex);
+
+  // Update street view paths
+  drawStreetViewPaths();
 
   // Update overlay via MapEngine
   const overlayBounds = {

@@ -16,6 +16,10 @@ class MapEngine {
     this._buildingsLoaded = false;
     this._eventHandlers = {};
     this._currentBaseLayer = 'osm';
+    this._satelliteProvider = 'google'; // 'google' or 'gistda'
+    this._googleApiKey = null;
+    this._googleLayerAdded = false;
+    this._googleSessionToken = null;
     this._gistdaApiKey = null;
     this._gistdaLayerAdded = false;
 
@@ -675,25 +679,114 @@ class MapEngine {
     this.map.off(event, handler);
   }
 
-  // ---- Base Layer Switching (GISTDA Satellite) ----
+  // ---- Base Layer Switching (Google Maps Satellite + GISTDA fallback) ----
+
+  setGoogleMapsApiKey(apiKey) {
+    this._googleApiKey = apiKey;
+    console.log('[MapEngine] Google Maps API key set:', apiKey ? apiKey.substring(0, 12) + '...' : 'null');
+  }
+
   setGistdaApiKey(apiKey) {
     this._gistdaApiKey = apiKey;
     console.log('[MapEngine] GISTDA API key set:', apiKey ? apiKey.substring(0, 8) + '...' : 'null');
   }
 
-  _ensureGistdaLayer() {
-    if (this._gistdaLayerAdded) return;
-    if (!this._gistdaApiKey) {
-      console.warn('[MapEngine] Cannot add GISTDA layer: no API key set');
-      return false;
-    }
-    this._gistdaLayerAdded = true;
+  setSatelliteProvider(provider) {
+    this._satelliteProvider = provider;
+    console.log('[MapEngine] Satellite provider set to:', provider);
+  }
 
-    const tileUrl = `https://basemap.sphere.gistda.or.th/tiles/thailand_images/EPSG3857/{z}/{x}/{y}.jpeg?key=${this._gistdaApiKey}`;
-    console.log('[MapEngine] Adding GISTDA satellite source with URL:', tileUrl.replace(this._gistdaApiKey, '***'));
+  async _createGoogleSession() {
+    if (this._googleSessionToken) return this._googleSessionToken;
 
     try {
-      // Add GISTDA satellite imagery (thaichote) raster tile source
+      console.log('[MapEngine] Creating Google Maps tile session...');
+      const res = await fetch(`https://tile.googleapis.com/v1/createSession?key=${this._googleApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mapType: 'satellite',
+          language: 'th',
+          region: 'TH'
+        })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Session API returned ${res.status}: ${errText}`);
+      }
+
+      const data = await res.json();
+      this._googleSessionToken = data.session;
+      console.log('[MapEngine] Google Maps session created successfully');
+      return data.session;
+    } catch (err) {
+      console.error('[MapEngine] Failed to create Google Maps session:', err);
+      return null;
+    }
+  }
+
+  async _ensureGoogleSatelliteLayer() {
+    if (this._googleLayerAdded) return true;
+    if (!this._googleApiKey) {
+      console.warn('[MapEngine] Cannot add Google satellite layer: no API key set');
+      return false;
+    }
+
+    const session = await this._createGoogleSession();
+    if (!session) {
+      console.error('[MapEngine] No session token — cannot add Google satellite layer');
+      return false;
+    }
+
+    this._googleLayerAdded = true;
+
+    const tileUrl = `https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session=${session}&key=${this._googleApiKey}`;
+    console.log('[MapEngine] Adding Google satellite source');
+
+    try {
+      this.map.addSource('google-satellite', {
+        type: 'raster',
+        tiles: [tileUrl],
+        tileSize: 256,
+        minzoom: 0,
+        maxzoom: 22,
+        attribution: '&copy; Google Maps'
+      });
+
+      const firstLayerAfterBase = this._getFirstNonBaseLayer();
+      this.map.addLayer({
+        id: 'google-satellite-layer',
+        type: 'raster',
+        source: 'google-satellite',
+        minzoom: 0,
+        maxzoom: 22,
+        layout: { 'visibility': 'none' }
+      }, firstLayerAfterBase);
+
+      console.log('[MapEngine] Google satellite layer added successfully');
+
+      this.map.on('error', (e) => {
+        if (e.sourceId === 'google-satellite') {
+          console.error('[MapEngine] Google tile error:', e.error?.message || e);
+        }
+      });
+
+      return true;
+    } catch (err) {
+      console.error('[MapEngine] Failed to add Google satellite layer:', err);
+      this._googleLayerAdded = false;
+      return false;
+    }
+  }
+
+  _ensureGistdaLayer() {
+    if (this._gistdaLayerAdded) return true;
+    if (!this._gistdaApiKey) return false;
+    this._gistdaLayerAdded = true;
+
+    try {
+      const tileUrl = `https://basemap.sphere.gistda.or.th/tiles/thailand_images/EPSG3857/{z}/{x}/{y}.jpeg?key=${this._gistdaApiKey}`;
       this.map.addSource('gistda-satellite', {
         type: 'raster',
         tiles: [tileUrl],
@@ -703,7 +796,6 @@ class MapEngine {
         attribution: '&copy; <a href="https://sphere.gistda.or.th">GISTDA</a>'
       });
 
-      // Insert satellite layer BELOW the floor overlay but above nothing
       const firstLayerAfterBase = this._getFirstNonBaseLayer();
       this.map.addLayer({
         id: 'gistda-satellite-layer',
@@ -711,18 +803,10 @@ class MapEngine {
         source: 'gistda-satellite',
         minzoom: 0,
         maxzoom: 22,
-        layout: { 'visibility': 'none' } // Hidden by default
+        layout: { 'visibility': 'none' }
       }, firstLayerAfterBase);
 
-      console.log('[MapEngine] GISTDA satellite layer added successfully');
-
-      // Listen for tile errors
-      this.map.on('error', (e) => {
-        if (e.sourceId === 'gistda-satellite') {
-          console.error('[MapEngine] GISTDA tile error:', e.error?.message || e);
-        }
-      });
-
+      console.log('[MapEngine] GISTDA satellite layer added as fallback');
       return true;
     } catch (err) {
       console.error('[MapEngine] Failed to add GISTDA layer:', err);
@@ -732,43 +816,82 @@ class MapEngine {
   }
 
   _getFirstNonBaseLayer() {
-    // Find the first layer that isn't a base map layer
     const layers = this.map.getStyle().layers;
     for (const layer of layers) {
-      if (layer.id !== 'osm-layer' && layer.id !== 'gistda-satellite-layer') {
+      if (layer.id !== 'osm-layer' && layer.id !== 'google-satellite-layer' && layer.id !== 'gistda-satellite-layer') {
         return layer.id;
       }
     }
     return undefined;
   }
 
-  switchBaseLayer(layerType) {
+  _hideSatelliteLayers() {
+    if (this.map.getLayer('google-satellite-layer')) {
+      this.map.setLayoutProperty('google-satellite-layer', 'visibility', 'none');
+    }
+    if (this.map.getLayer('gistda-satellite-layer')) {
+      this.map.setLayoutProperty('gistda-satellite-layer', 'visibility', 'none');
+    }
+  }
+
+  async switchBaseLayer(layerType) {
     // layerType: 'osm' | 'satellite'
-    console.log('[MapEngine] switchBaseLayer called:', layerType, '| API key set:', !!this._gistdaApiKey);
+    console.log('[MapEngine] switchBaseLayer called:', layerType);
 
     if (layerType === 'satellite') {
-      const layerReady = this._ensureGistdaLayer();
+      let satelliteReady = false;
 
-      // Guard: if GISTDA layer couldn't be added, don't hide OSM (prevents blank map)
-      if (!this.map.getLayer('gistda-satellite-layer')) {
-        console.error('[MapEngine] GISTDA satellite layer not available. Keeping OSM visible.');
+      const tryGoogle = async () => {
+        if (this._googleApiKey) {
+          const ready = await this._ensureGoogleSatelliteLayer();
+          if (ready) {
+            if (this.map.getLayer('osm-layer')) this.map.setLayoutProperty('osm-layer', 'visibility', 'none');
+            this._hideSatelliteLayers();
+            this.map.setLayoutProperty('google-satellite-layer', 'visibility', 'visible');
+            return true;
+          }
+        }
+        return false;
+      };
+
+      const tryGistda = () => {
+        if (this._gistdaApiKey) {
+          const ready = this._ensureGistdaLayer();
+          if (ready) {
+            if (this.map.getLayer('osm-layer')) this.map.setLayoutProperty('osm-layer', 'visibility', 'none');
+            this._hideSatelliteLayers();
+            this.map.setLayoutProperty('gistda-satellite-layer', 'visibility', 'visible');
+            return true;
+          }
+        }
+        return false;
+      };
+
+      if (this._satelliteProvider === 'gistda') {
+        satelliteReady = tryGistda();
+        if (!satelliteReady) {
+          console.log('[MapEngine] Falling back to Google satellite...');
+          satelliteReady = await tryGoogle();
+        }
+      } else {
+        // Default to Google
+        satelliteReady = await tryGoogle();
+        if (!satelliteReady) {
+          console.log('[MapEngine] Falling back to GISTDA satellite...');
+          satelliteReady = tryGistda();
+        }
+      }
+
+      if (!satelliteReady) {
+        console.error('[MapEngine] No satellite layer available. Keeping OSM visible.');
         return;
-      }
-
-      if (this.map.getLayer('osm-layer')) {
-        this.map.setLayoutProperty('osm-layer', 'visibility', 'none');
-      }
-      if (this.map.getLayer('gistda-satellite-layer')) {
-        this.map.setLayoutProperty('gistda-satellite-layer', 'visibility', 'visible');
       }
     } else {
       // Default: OSM
       if (this.map.getLayer('osm-layer')) {
         this.map.setLayoutProperty('osm-layer', 'visibility', 'visible');
       }
-      if (this.map.getLayer('gistda-satellite-layer')) {
-        this.map.setLayoutProperty('gistda-satellite-layer', 'visibility', 'none');
-      }
+      this._hideSatelliteLayers();
     }
 
     this._currentBaseLayer = layerType;

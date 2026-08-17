@@ -593,18 +593,41 @@ window.devMode = false;
 
 // Re-fetch config.json to populate devMode and GISTDA API key
 fetch('config.json')
-  .then(r => r.json())
+  .then(r => {
+    console.log('[Config] config.json fetch status:', r.status, r.ok ? 'OK' : 'FAILED');
+    if (!r.ok) throw new Error(`config.json returned ${r.status}`);
+    return r.json();
+  })
   .then(cfg => {
+    console.log('[Config] config.json loaded:', JSON.stringify(cfg));
     window.devMode = !!cfg.devMode;
     // Initialize GISTDA satellite layer if API key is available
+    // Note: By the time config.json loads, the map is already ready,
+    // so we set the key directly without waiting for _ready
     if (cfg.gistdaApiKey) {
-      mapEngine._ready.then(() => {
-        mapEngine.setGistdaApiKey(cfg.gistdaApiKey);
-        console.log('GISTDA satellite layer initialized');
-      });
+      mapEngine.setGistdaApiKey(cfg.gistdaApiKey);
+      console.log('[Config] GISTDA API key set successfully');
+    } else {
+      console.warn('[Config] No gistdaApiKey found in config.json');
+    }
+    
+    if (cfg.googleMapsApiKey) {
+      mapEngine.setGoogleMapsApiKey(cfg.googleMapsApiKey);
+    }
+    
+    if (cfg.satelliteProvider) {
+      mapEngine.setSatelliteProvider(cfg.satelliteProvider);
+    }
+    
+    // User's localStorage preference overrides config.json default
+    const savedProvider = localStorage.getItem('satelliteProvider');
+    if (savedProvider) {
+      mapEngine.setSatelliteProvider(savedProvider);
     }
   })
-  .catch(() => { });
+  .catch(err => {
+    console.error('[Config] Failed to load config.json:', err);
+  });
 
 function closeAllSidebars() {
   if (mainSidebar) mainSidebar.classList.remove('open');
@@ -736,6 +759,15 @@ function generateSettingsHTML() {
           <option value="desktop" ${displayMode === 'desktop' ? 'selected' : ''}>${t('desktop')}</option>
         </select>
       </div>
+
+      <!-- Satellite Provider Setting -->
+      <div class="settings-row">
+        <span class="settings-label"><b>${t('satelliteProvider')}</b></span>
+        <select class="settings-select" id="satelliteProviderSelect">
+          <option value="google" ${(localStorage.getItem('satelliteProvider') || mapEngine._satelliteProvider || 'google') === 'google' ? 'selected' : ''}>${t('google')}</option>
+          <option value="gistda" ${(localStorage.getItem('satelliteProvider') || mapEngine._satelliteProvider || 'google') === 'gistda' ? 'selected' : ''}>${t('gistda')}</option>
+        </select>
+      </div>
     </div>
   `;
 }
@@ -848,6 +880,25 @@ function openModal(modalId) {
         displayModeSelect.addEventListener('change', (e) => {
           applyDisplayMode(e.target.value);
           showToast(t('displayMode') + ': ' + t(e.target.value), 'success');
+        });
+      }
+
+      // Satellite Provider selector
+      const satelliteProviderSelect = document.getElementById('satelliteProviderSelect');
+      if (satelliteProviderSelect) {
+        satelliteProviderSelect.addEventListener('change', (e) => {
+          const provider = e.target.value;
+          localStorage.setItem('satelliteProvider', provider);
+          mapEngine.setSatelliteProvider(provider);
+
+          // If satellite view is currently active, re-switch to apply the new provider
+          if (mapEngine.getCurrentBaseLayer() === 'satellite') {
+            // Reset layer state so it re-creates with the new provider
+            mapEngine._hideSatelliteLayers();
+            mapEngine.switchBaseLayer('satellite');
+          }
+
+          showToast(t('satelliteProvider') + ': ' + t(provider), 'success');
         });
       }
     } else {

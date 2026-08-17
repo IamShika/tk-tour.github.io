@@ -1,4 +1,4 @@
-﻿{
+{
   "th": {
     "searchPlaceholder": "ค้นหาชื่อห้องหรือเลขห้อง...",
     "menu": "เมนู",
@@ -64,6 +64,9 @@
     "soundOff": "ปิดเสียง",
     "traditionalThaiSounds": "เสียงเอฟเฟกต์ภาษาไทยเดิม",
     "soundsTooltip": "นี่เป็นความสนุกสนาน!",
+    "satelliteProvider": "ภาพดาวเทียม",
+    "google": "Google",
+    "gistda": "GISTDA",
     "myLocation": "ตำแหน่งของฉัน",
     "gpsUnavailable": "GPS ไม่พร้อมใช้งานบนอุปกรณ์นี้",
     "gpsOutOfBounds": "คุณอยู่นอกพื้นที่แผนที่",
@@ -180,6 +183,9 @@
     "soundOff": "ปิดสนิท",
     "traditionalThaiSounds": "เสียงมหัศจรรย์แห่งภาษาไทยโบราณ",
     "soundsTooltip": "ไทยนี้รักสงบ แต่ถึงขลาดความสุขมิได้.. ;)",
+    "satelliteProvider": "ภาพจากฟ้า",
+    "google": "Google",
+    "gistda": "GISTDA",
     "myLocation": "ที่ตั้งแห่งตัวท่าน",
     "gpsUnavailable": "เครื่องหาที่ตั้งมิอาจใช้การบนสิ่งนี้",
     "gpsOutOfBounds": "ท่านอยู่นอกอาณาเขตผังที่",
@@ -296,6 +302,9 @@
     "soundOff": "Sound Off",
     "traditionalThaiSounds": "Traditional Thai Sound Effects",
     "soundsTooltip": "This is for fun!",
+    "satelliteProvider": "Satellite Provider",
+    "google": "Google",
+    "gistda": "GISTDA",
     "myLocation": "My Location",
     "gpsUnavailable": "GPS is not available on this device",
     "gpsOutOfBounds": "You are outside the map area",

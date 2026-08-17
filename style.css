@@ -883,8 +883,8 @@ body.dark-theme .maplibregl-ctrl-attrib {
 
 .layer-switcher {
   position: fixed;
-  left: 15px;
-  bottom: 40px;
+  right: 17px;
+  bottom: 215px;
   z-index: 1100;
 }
 
@@ -925,7 +925,7 @@ body.dark-theme .maplibregl-ctrl-attrib {
 .layer-switcher-panel {
   position: absolute;
   bottom: calc(100% + 10px);
-  left: 0;
+  right: 0;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: 14px;

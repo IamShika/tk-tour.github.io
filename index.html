@@ -129,6 +129,59 @@
     </div>
   </div>
 
+  <!-- PLACE INFO SIDEBAR (left) -->
+  <aside id="placeSidebar" class="sidebar-panel left place-sidebar" aria-label="Place Information" aria-hidden="true">
+    <button id="closePlaceSidebarBtn" class="close-btn overlay-close" title="Close" aria-label="Close place info">×</button>
+    <div class="place-header-image" id="placeHeaderImage"></div>
+    <div class="place-body">
+      <h2 class="place-title" id="placeTitle">Name</h2>
+      <div class="place-subtitle">
+        <span class="place-rating">4.5 <span class="stars">★★★★<span class="star-half">★</span></span></span>
+        <span class="place-category" id="placeCategory">Category</span>
+      </div>
+      
+      <div class="place-tabs">
+        <div class="place-tab active">ภาพรวม</div>
+        <div class="place-tab">รีวิว</div>
+        <div class="place-tab">เกี่ยวกับ</div>
+      </div>
+      
+      <div class="place-actions">
+        <button class="place-action-btn" id="placeNavBtn">
+          <div class="action-icon primary"><span class="material-symbols-rounded">directions</span></div>
+          <span>เส้นทาง</span>
+        </button>
+        <button class="place-action-btn" id="placeSaveBtn">
+          <div class="action-icon"><span class="material-symbols-rounded">bookmark_border</span></div>
+          <span>บันทึก</span>
+        </button>
+        <button class="place-action-btn" id="placeView360Btn" style="display:none;">
+          <div class="action-icon"><span class="material-symbols-rounded">360</span></div>
+          <span>สตรีทวิว 360°</span>
+        </button>
+        <button class="place-action-btn" id="placeShareBtn">
+          <div class="action-icon"><span class="material-symbols-rounded">share</span></div>
+          <span>แชร์</span>
+        </button>
+      </div>
+      
+      <div class="place-details">
+        <div class="detail-row">
+          <span class="material-symbols-rounded">location_on</span>
+          <span id="placeLocationText">Building / Floor info</span>
+        </div>
+        <div class="detail-row">
+          <span class="material-symbols-rounded">schedule</span>
+          <span><span style="color:#d93025">ปิดอยู่</span> · เปิดเวลา 08:00 </span>
+        </div>
+        <div class="detail-row edit-hint">
+          <span class="material-symbols-rounded">edit</span>
+          <span>แนะนำให้แก้ไข (ผ่าน DevTools)</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
   <!-- MAIN MENU SIDEBAR (right) -->
   <aside id="mainSidebar" class="sidebar-panel right" aria-label="Main menu" aria-hidden="true">
     <div class="sidebar-header">

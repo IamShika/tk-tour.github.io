@@ -360,7 +360,8 @@ body.dark-theme .maplibregl-ctrl-attrib {
 .custom-pin-icon svg,
 .map-marker svg {
   transition: transform 0.15s ease;
-  display: block; /* ensure transform works */
+  display: block;
+  /* ensure transform works */
 }
 
 .compat-marker:hover i,
@@ -2393,7 +2394,9 @@ body.dark-theme .route-step {
 }
 
 @keyframes viewerSpin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .viewer-card {
@@ -4006,6 +4009,58 @@ body[data-display="tablet"] .sidebar-title {
   color: #ff4757;
 }
 
+.dev-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dev-3d-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dev-3d-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.5);
+  min-width: 20px;
+  text-align: right;
+}
+
+.dev-3d-switch {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative;
+  transition: background 0.25s;
+}
+
+.dev-3d-switch.active {
+  background: #0a84ff;
+}
+
+.dev-3d-switch-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.dev-3d-switch.active .dev-3d-switch-thumb {
+  transform: translateX(16px);
+}
+
 /* ---- Content Area ---- */
 .dev-content {
   padding: 16px 18px;
@@ -4554,7 +4609,8 @@ body[data-display="tablet"] .sidebar-title {
   font-size: 10px;
   opacity: 0;
   transition: opacity 0.2s;
-  pointer-events: none; /* Let clicks pass through to the image */
+  pointer-events: none;
+  /* Let clicks pass through to the image */
 }
 
 .queue-img-wrap:hover .queue-preview-badge {
@@ -4649,4 +4705,311 @@ body[data-display="tablet"] .sidebar-title {
 
 .dev-preview-line {
   pointer-events: none;
+}
+
+/* ==========================================================================
+   PLACE INFO SIDEBAR (Google Maps Style)
+   ========================================================================== */
+.sidebar-panel.left {
+  left: 0;
+  right: auto;
+  transform: translateX(-100%);
+  border-left: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0 16px 16px 0;
+  width: 380px;
+  max-width: 90vw;
+  background: var(--surface-light);
+  color: var(--text-dark);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dark-theme .sidebar-panel.left {
+  background: var(--surface-dark);
+  color: var(--text-light);
+}
+
+.sidebar-panel.left.active {
+  transform: translateX(0);
+}
+
+.overlay-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border: none;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s;
+}
+
+.overlay-close:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.place-header-image {
+  width: 100%;
+  height: 220px;
+  background-color: #e0e0e0;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.dark-theme .place-header-image {
+  background-color: #333;
+}
+
+.place-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.place-title {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+  font-family: 'Kanit', sans-serif;
+}
+
+.place-subtitle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: #70757a;
+  margin-bottom: 16px;
+}
+
+.dark-theme .place-subtitle {
+  color: #9aa0a6;
+}
+
+.place-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stars {
+  color: #fbbc04;
+  letter-spacing: 2px;
+}
+
+.place-tabs {
+  display: flex;
+  border-bottom: 1px solid #e8eaed;
+  margin-bottom: 16px;
+}
+
+.dark-theme .place-tabs {
+  border-bottom-color: #3c4043;
+}
+
+.place-tab {
+  padding: 12px 16px;
+  font-weight: 500;
+  color: #5f6368;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.dark-theme .place-tab {
+  color: #9aa0a6;
+}
+
+.place-tab.active {
+  color: #1a73e8;
+  border-bottom-color: #1a73e8;
+}
+
+.dark-theme .place-tab.active {
+  color: #8ab4f8;
+  border-bottom-color: #8ab4f8;
+}
+
+.place-tab:hover:not(.active) {
+  color: #202124;
+}
+
+.dark-theme .place-tab:hover:not(.active) {
+  color: #e8eaed;
+}
+
+.place-actions {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 24px;
+  padding: 0 10px;
+}
+
+.place-action-btn {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #1a73e8;
+  font-family: 'Kanit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.dark-theme .place-action-btn {
+  color: #8ab4f8;
+}
+
+.action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #dadce0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.dark-theme .action-icon {
+  border-color: #5f6368;
+}
+
+.action-icon.primary {
+  background-color: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
+}
+
+.dark-theme .action-icon.primary {
+  background-color: #8ab4f8;
+  color: #202124;
+  border-color: #8ab4f8;
+}
+
+.place-action-btn:hover .action-icon:not(.primary) {
+  background-color: #f1f3f4;
+}
+
+.dark-theme .place-action-btn:hover .action-icon:not(.primary) {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.place-action-btn:hover .action-icon.primary {
+  background-color: #1557b0;
+}
+
+.dark-theme .place-action-btn:hover .action-icon.primary {
+  background-color: #aecbfa;
+}
+
+.place-details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e8eaed;
+}
+
+.dark-theme .place-details {
+  border-top-color: #3c4043;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  color: #3c4043;
+  font-size: 14px;
+}
+
+.dark-theme .detail-row {
+  color: #e8eaed;
+}
+
+.detail-row .material-symbols-rounded {
+  color: #1a73e8;
+  font-size: 20px;
+}
+
+.dark-theme .detail-row .material-symbols-rounded {
+  color: #8ab4f8;
+}
+
+.detail-row.edit-hint {
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.detail-row.edit-hint .material-symbols-rounded,
+.detail-row.edit-hint span {
+  color: #5f6368;
+}
+
+.dark-theme .detail-row.edit-hint .material-symbols-rounded,
+.dark-theme .detail-row.edit-hint span {
+  color: #9aa0a6;
+}
+
+/* ==========================================================================
+   PLACE MAP MARKERS (POI Labels)
+   ========================================================================== */
+.place-poi-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Kanit', sans-serif;
+  color: #1a73e8;
+  font-size: 13px;
+  font-weight: 500;
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 2px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.1s;
+}
+
+.dark-theme .place-poi-label {
+  color: #aecbfa;
+  text-shadow: -1px -1px 0 #202124, 1px -1px 0 #202124, -1px 1px 0 #202124, 1px 1px 0 #202124, 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.place-poi-label:hover {
+  transform: scale(1.1);
+  z-index: 100;
+}
+
+.place-poi-icon {
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+
+/* DevTools Polygon fill styles */
+.place-polygon-dev {
+  fill: #1a73e8;
+  fill-opacity: 0.3;
+  stroke: #1a73e8;
+  stroke-width: 2;
+}
+
+.place-polygon-nav {
+  fill: transparent;
+  stroke: #1a73e8;
+  stroke-width: 3;
+  stroke-dasharray: 5, 5;
 }

@@ -542,46 +542,54 @@ const L = {
 // ---- Patch map methods to handle Leaflet-style calls ----
 // These run after map is created in script.js, so we patch in DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
-  if (typeof map !== 'undefined' && map) {
-    // map.removeLayer compatibility (for L.marker/polyline/polygon .remove())
-    const _originalRemoveLayer = map.removeLayer;
-    map.removeLayer = function(layer) {
-      if (layer && typeof layer.remove === 'function') {
-        layer.remove();
-      } else if (_originalRemoveLayer) {
-        _originalRemoveLayer.call(map, layer);
-      }
-    };
+  // Use mapEngine.map directly, because 'map' might refer to the HTMLDivElement
+  setTimeout(() => {
+    const actualMap = window.mapEngine ? window.mapEngine.map : null;
+    if (actualMap) {
+      // map.removeLayer compatibility (for L.marker/polyline/polygon .remove())
+      const _originalRemoveLayer = actualMap.removeLayer;
+      actualMap.removeLayer = function(layer) {
+        if (layer && typeof layer.remove === 'function') {
+          layer.remove();
+        } else if (_originalRemoveLayer) {
+          _originalRemoveLayer.call(actualMap, layer);
+        }
+      };
 
-    // map.hasLayer compatibility
-    map.hasLayer = function(layer) {
-      if (layer && layer._id) {
-        return mapEngine._markers.has(layer._id) || !!mapEngine.map.getSource(`line-src-${layer._id}`);
-      }
-      return false;
-    };
+      // map.hasLayer compatibility
+      actualMap.hasLayer = function(layer) {
+        if (layer && layer._id) {
+          return mapEngine._markers.has(layer._id) || !!mapEngine.map.getSource(`line-src-${layer._id}`);
+        }
+        return false;
+      };
 
-    // map.closePopup compatibility
-    const _origClosePopup = map.closePopup;
-    map.closePopup = function() {
-      mapEngine.closePopup();
-    };
+      // map.closePopup compatibility
+      const _origClosePopup = actualMap.closePopup;
+      actualMap.closePopup = function() {
+        mapEngine.closePopup();
+      };
 
-    // map.fitBounds with L.latLngBounds compatibility
-    const _origFitBounds = map.fitBounds.bind(map);
-    map.fitBounds = function(bounds, options = {}) {
-      if (bounds._sw) {
-        // L.latLngBounds object
-        const sw = [bounds._sw.lng, bounds._sw.lat];
-        const ne = [bounds._ne.lng, bounds._ne.lat];
-        _origFitBounds([sw, ne], { padding: options.padding ? { top: options.padding[0], bottom: options.padding[0], left: options.padding[1], right: options.padding[1] } : 50 });
-      } else if (Array.isArray(bounds)) {
-        // [[lat,lng],[lat,lng]]
-        mapEngine.fitBounds(bounds, options);
-      } else {
-        _origFitBounds(bounds, options);
+      // map.fitBounds with L.latLngBounds compatibility
+      if (actualMap.fitBounds) {
+        const _origFitBounds = actualMap.fitBounds.bind(actualMap);
+        actualMap.fitBounds = function(bounds, options = {}) {
+          if (bounds._sw) {
+            // L.latLngBounds object
+            const sw = [bounds._sw.lng, bounds._sw.lat];
+            const ne = [bounds._ne.lng, bounds._ne.lat];
+            _origFitBounds([sw, ne], { padding: options.padding ? { top: options.padding[0], bottom: options.padding[0], left: options.padding[1], right: options.padding[1] } : 50 });
+          } else if (Array.isArray(bounds)) {
+            // [[lat,lng],[lat,lng]]
+            mapEngine.fitBounds(bounds, options);
+          } else {
+            _origFitBounds(bounds, options);
+          }
+        };
       }
-    };
+    }
+  }, 100);
+});
 
     // NOTE: map.on wrapping is handled by patchMapCompat() in script.js
     // Do NOT re-wrap here or map.off() will break due to mismatched handler references

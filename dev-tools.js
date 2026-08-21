@@ -52,7 +52,13 @@ class DevTools {
       pathPoints: [],
       pathMarkers: [],
       pathPolylineId: null,
-      savedPaths: safeParse('dev_paths')
+      savedPaths: safeParse('dev_paths'),
+      
+      // Places
+      placePoints: [],
+      placeMarkers: [],
+      placePolylineId: null,
+      placePreviewId: null
     };
 
     this.initUI();
@@ -62,6 +68,7 @@ class DevTools {
     this.renderSavedBuildings();
     this.loadPinsFromServer(); // Load pins from server instead of localStorage
     this.renderSavedPaths();
+    this.renderSavedPlaces();
     this.updateTabBadges();
   }
 
@@ -97,6 +104,10 @@ class DevTools {
               <i class="fa-solid fa-route"></i>
               <span class="dev-rail-badge" id="railBadgePaths"></span>
             </button>
+            <button class="dev-rail-btn" data-tab="places" title="Places">
+              <i class="fa-solid fa-map-location-dot"></i>
+              <span class="dev-rail-badge" id="railBadgePlaces"></span>
+            </button>
           </div>
 
           <div class="dev-rail-bottom">
@@ -120,9 +131,17 @@ class DevTools {
               <span class="dev-header-label" id="devHeaderLabel">BUILDINGS</span>
               <span class="dev-shortcut-hint">Ctrl+Shift+X</span>
             </div>
-            <button class="dev-close-btn" id="closeDevPanelBtn">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
+            <div class="dev-header-actions">
+              <div class="dev-3d-toggle" id="dev3dToggle" title="Toggle 2D/3D mode">
+                <span class="dev-3d-label" id="dev3dLabel">3D</span>
+                <div class="dev-3d-switch active" id="dev3dSwitch">
+                  <div class="dev-3d-switch-thumb"></div>
+                </div>
+              </div>
+              <button class="dev-close-btn" id="closeDevPanelBtn">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
           </div>
           
           <!-- Content Area -->
@@ -268,6 +287,72 @@ class DevTools {
               </div>
               <div class="dev-saved-list" id="listPath"></div>
             </div>
+            
+            <!-- Places Tab -->
+            <div class="dev-section" id="tab-places" style="display:none;">
+              <div class="dev-card dev-step-guide">
+                <div class="step-indicator">
+                  <div class="step-dot active" data-step="1">1</div>
+                  <div class="step-line"></div>
+                  <div class="step-dot" data-step="2">2</div>
+                </div>
+                <p class="step-text" id="placeStepText">Fill details and draw area</p>
+              </div>
+
+              <div class="dev-card">
+                <div class="dev-card-row">
+                  <label>Place Name</label>
+                  <input type="text" id="placeName" class="dev-input" placeholder="e.g. Main Library">
+                </div>
+                <div class="dev-card-row">
+                  <label>Category</label>
+                  <select id="placeCategory" class="dev-input" style="background:#2d2d2d;border:none;padding:8px;border-radius:4px;color:white;width:100%;font-size:13px;margin-bottom:8px;">
+                    <option value="library">Library (ห้องสมุด)</option>
+                    <option value="cafeteria">Cafeteria (โรงอาหาร)</option>
+                    <option value="restroom">Restroom (ห้องน้ำ)</option>
+                    <option value="lab">Laboratory (ห้องปฏิบัติการ)</option>
+                    <option value="academic">Academic (อาคารเรียน)</option>
+                    <option value="other">Other / Custom</option>
+                  </select>
+                  <input type="text" id="placeCustomCategory" class="dev-input" placeholder="Custom category..." style="display:none;">
+                </div>
+                <div class="dev-card-row">
+                  <label>Floor</label>
+                  <input type="number" id="placeFloor" class="dev-input" value="1">
+                </div>
+                <div class="dev-card-row">
+                  <label>Image Upload</label>
+                  <input type="file" id="placeImage" accept="image/*" class="dev-input" style="font-size:11px;background:#2d2d2d;color:white;padding:5px;">
+                </div>
+                <div class="dev-card-row">
+                  <label>Linked 360° (Optional)</label>
+                  <select id="placePanoramaId" class="dev-input" style="background:#2d2d2d;border:none;padding:8px;border-radius:4px;color:white;width:100%;font-size:13px;">
+                    <option value="">-- None --</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="dev-action-bar">
+                <button class="dev-btn primary" id="btnDrawPlace">
+                  <i class="fa-solid fa-draw-polygon"></i> Draw Box
+                </button>
+                <button class="dev-btn ghost" id="btnUndoPlace" disabled>
+                  <i class="fa-solid fa-rotate-left"></i> Undo
+                </button>
+              </div>
+
+              <div class="dev-status" id="statusPlace">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Ready</span>
+              </div>
+
+              <div class="dev-section-label">
+                <span>SAVED PLACES</span>
+                <span class="dev-count-badge" id="countPlaces">0</span>
+              </div>
+              <div class="dev-saved-list" id="listPlaces"></div>
+            </div>
+
           </div>
           
           <!-- Footer (modal-style action tray) -->
@@ -356,9 +441,49 @@ class DevTools {
     // --- Paths ---
     document.getElementById('btnDrawPath').addEventListener('click', () => this.startDrawingPath());
     document.getElementById('btnUndoPath').addEventListener('click', () => this.undoPathPoint());
+
+    // --- Places ---
+    document.getElementById('btnDrawPlace').addEventListener('click', () => this.startDrawingPlace());
+
+    // --- 2D/3D Toggle ---
+    const dev3dSwitch = document.getElementById('dev3dSwitch');
+    if (dev3dSwitch) {
+      dev3dSwitch.addEventListener('click', () => {
+        const is3D = this.mapEngine.is3DMode();
+        this.mapEngine.set3DMode(!is3D);
+        this._update3DToggleUI(!is3D);
+      });
+    }
+    document.getElementById('btnUndoPlace').addEventListener('click', () => this.undoPlacePoint());
     
     // Map Click Intercept
     this.map.on('click', (e) => this.handleMapClick(e));
+    
+    // Map Right-Click (Context Menu) for undoing points
+    this.map.on('contextmenu', (e) => {
+      if (!this.isVisible || !this.state.drawingMode) return;
+      e.originalEvent.preventDefault();
+      if (this.activeTab === 'buildings') this.undoBuildingPoint();
+      else if (this.activeTab === 'paths') this.undoPathPoint();
+      else if (this.activeTab === 'places') this.undoPlacePoint();
+    });
+
+    // Keyboard Shortcuts for drawing
+    document.addEventListener('keydown', (e) => {
+      if (!this.isVisible || !this.state.drawingMode) return;
+      if (e.key === 'Escape') {
+        this.cancelAllActions();
+      } else if (e.key === 'Enter') {
+        const saveBtn = document.getElementById('btnSaveAction');
+        if (saveBtn && !saveBtn.disabled) {
+          this._handleSave();
+        }
+      } else if (e.key === 'z' && e.ctrlKey) {
+        if (this.activeTab === 'buildings') this.undoBuildingPoint();
+        else if (this.activeTab === 'paths') this.undoPathPoint();
+        else if (this.activeTab === 'places') this.undoPlacePoint();
+      }
+    });
 
     // --- Footer Save/Cancel (modal-style) ---
     document.getElementById('btnSaveAction').addEventListener('click', () => this._handleSave());
@@ -381,6 +506,7 @@ class DevTools {
   _handleSave() {
     if (this.activeTab === 'buildings') this.saveBuilding();
     else if (this.activeTab === 'paths') this.savePath();
+    else if (this.activeTab === 'places') this.savePlace();
   }
 
   // =================== PANEL & TABS ===================
@@ -401,11 +527,12 @@ class DevTools {
     document.getElementById('tab-buildings').style.display = tabId === 'buildings' ? 'block' : 'none';
     document.getElementById('tab-pins').style.display = tabId === 'pins' ? 'block' : 'none';
     document.getElementById('tab-paths').style.display = tabId === 'paths' ? 'block' : 'none';
+    document.getElementById('tab-places').style.display = tabId === 'places' ? 'block' : 'none';
     
     // Update header label
     const label = document.getElementById('devHeaderLabel');
     if (label) {
-      const labels = { buildings: 'BUILDINGS', pins: '360° PINS', paths: 'PATHWAYS' };
+      const labels = { buildings: 'BUILDINGS', pins: '360° PINS', paths: 'PATHWAYS', places: 'PLACES / POIS' };
       label.textContent = labels[tabId] || tabId.toUpperCase();
     }
     
@@ -416,7 +543,7 @@ class DevTools {
         saveBtn.style.display = 'none'; // Pins auto-save on click
       } else {
         saveBtn.style.display = '';
-        saveBtn.innerHTML = `<i class="fa-solid fa-check"></i> Save ${tabId === 'buildings' ? 'Building' : 'Route'}`;
+        saveBtn.innerHTML = `<i class="fa-solid fa-check"></i> Save ${tabId === 'buildings' ? 'Building' : tabId === 'places' ? 'Place' : 'Route'}`;
       }
     }
   }
@@ -489,12 +616,45 @@ class DevTools {
     const saveBtn = document.getElementById('btnSaveAction');
     if (saveBtn) saveBtn.disabled = true;
     
+    // Reset Places
+    this.state.placePoints = [];
+    if (this.state.placePolylineId) this.mapEngine.removeLine(this.state.placePolylineId);
+    if (this.state.placePreviewId) {
+      if (this.mapEngine.removePolygon) this.mapEngine.removePolygon(this.state.placePreviewId);
+    }
+    this.state.placePolylineId = null;
+    this.state.placePreviewId = null;
+    this._clearDrawingMarkers('place');
+    const btnDrawPlace = document.getElementById('btnDrawPlace');
+    if (btnDrawPlace) {
+      btnDrawPlace.classList.remove('active-tool');
+      btnDrawPlace.innerHTML = '<i class="fa-solid fa-draw-polygon"></i> Draw Box';
+    }
+    const btnUndoPlace = document.getElementById('btnUndoPlace');
+    if (btnUndoPlace) btnUndoPlace.disabled = true;
+    const statusPlace = document.getElementById('statusPlace');
+    if (statusPlace) statusPlace.innerHTML = '<i class="fa-solid fa-circle-info"></i><span>Ready</span>';
+
     // Reset panel state
     const panel = document.getElementById('devPanel');
     if (panel) panel.classList.remove('drawing-active');
     
     // Reset map cursor
     this.map.getCanvas().style.cursor = '';
+
+    // Restore 3D mode after drawing
+    this.mapEngine.exitDrawingMode();
+    this._update3DToggleUI(this.mapEngine.is3DMode());
+  }
+
+  _update3DToggleUI(is3D) {
+    const label = document.getElementById('dev3dLabel');
+    const switchEl = document.getElementById('dev3dSwitch');
+    if (label) label.textContent = is3D ? '3D' : '2D';
+    if (switchEl) {
+      if (is3D) switchEl.classList.add('active');
+      else switchEl.classList.remove('active');
+    }
   }
 
   handleMapClick(e) {
@@ -523,6 +683,17 @@ class DevTools {
       document.getElementById('statusPath').innerHTML = `<i class="fa-solid fa-crosshairs"></i><span>Waypoint ${n} placed${n >= 2 ? ' — ready to save!' : ''}</span>`;
       this._updateStepGuide('paths', 2, `Drawing route — <b>${n} waypoint${n !== 1 ? 's' : ''}</b>`);
     }
+    else if (this.activeTab === 'places' && this.state.drawingMode) {
+      this.state.placePoints.push(latlng);
+      this._addDrawingMarker('place', latlng, this.state.placePoints.length);
+      this.updatePlaceLine();
+      document.getElementById('btnUndoPlace').disabled = false;
+      document.getElementById('btnSaveAction').disabled = this.state.placePoints.length < 3;
+      
+      const n = this.state.placePoints.length;
+      document.getElementById('statusPlace').innerHTML = `<i class="fa-solid fa-crosshairs"></i><span>Point ${n} placed${n >= 3 ? ' — ready to save!' : ' — need ' + (3 - n) + ' more'}</span>`;
+      this._updateStepGuide('places', 2, `Drawing area — <b>${n} point${n !== 1 ? 's' : ''}</b> placed`);
+    }
     else if (this.activeTab === 'pins' && this.state.placingPinMode) {
       this.placeCurrentPin(latlng);
     }
@@ -533,6 +704,10 @@ class DevTools {
     this.cancelAllActions();
     this.activeTab = 'buildings';
     this.state.drawingMode = true;
+
+    // Force 2D for accurate polygon drawing
+    this.mapEngine.enterDrawingMode();
+    this._update3DToggleUI(false);
     
     const btn = document.getElementById('btnDrawBldg');
     btn.classList.add('active-tool');
@@ -1239,11 +1414,225 @@ class DevTools {
     }
   }
 
+  // =================== PLACES ===================
+  startDrawingPlace() {
+    this.cancelAllActions();
+    this.activeTab = 'places';
+    this.state.drawingMode = true;
+
+    // Force 2D for accurate polygon drawing
+    this.mapEngine.enterDrawingMode();
+    this._update3DToggleUI(false);
+    
+    const btn = document.getElementById('btnDrawPlace');
+    btn.classList.add('active-tool');
+    btn.innerHTML = '<i class="fa-solid fa-pen-ruler"></i> Drawing...';
+    document.getElementById('statusPlace').innerHTML = '<i class="fa-solid fa-hand-pointer"></i> Click on map to place corners';
+    document.getElementById('devPanel').classList.add('drawing-active');
+    this.map.getCanvas().style.cursor = 'crosshair';
+    
+    this._updateStepGuide('places', 2, 'Click on the map to draw place corners');
+  }
+
+  undoPlacePoint() {
+    if (this.state.placePoints.length > 0) {
+      this.state.placePoints.pop();
+      this._removeLastDrawingMarker('place');
+      this.updatePlaceLine();
+      if (this.state.placePoints.length === 0) {
+        document.getElementById('btnUndoPlace').disabled = true;
+      }
+      document.getElementById('btnSaveAction').disabled = this.state.placePoints.length < 3;
+    }
+  }
+
+  updatePlaceLine() {
+    if (this.state.placePolylineId) this.mapEngine.removeLine(this.state.placePolylineId);
+    if (this.state.placePreviewId) {
+      if (this.mapEngine.removePolygon) this.mapEngine.removePolygon(this.state.placePreviewId);
+    }
+    
+    if (this.state.placePoints.length > 0) {
+      const coords = [...this.state.placePoints];
+      if (coords.length > 1) coords.push(coords[0]); // close preview ring
+      
+      this.state.placePolylineId = this.mapEngine.addLine('dev-place-line', coords, {
+        color: '#1a73e8', weight: 3, dashArray: '5,5'
+      });
+      
+      if (coords.length > 3) {
+        // Show fill preview
+        this.state.placePreviewId = 'dev-place-preview';
+        if (this.mapEngine.addPolygon) {
+          this.mapEngine.addPolygon(this.state.placePreviewId, coords, {
+            color: '#1a73e8', fillOpacity: 0.3, opacity: 0
+          });
+        }
+      }
+    }
+  }
+
+  async savePlace() {
+    if (this.state.placePoints.length < 3) {
+      this._toast('Draw at least 3 points for a place area', 'warning');
+      return;
+    }
+    
+    const nameEl = document.getElementById('placeName');
+    const name = nameEl.value.trim();
+    if (!name) {
+      this._toast('Please enter a place name', 'warning');
+      nameEl.focus();
+      return;
+    }
+    
+    const catEl = document.getElementById('placeCategory');
+    const customCatEl = document.getElementById('placeCustomCategory');
+    const category = catEl.value === 'other' ? customCatEl.value.trim() : catEl.value;
+    
+    if (!category) {
+      this._toast('Please provide a category', 'warning');
+      return;
+    }
+    
+    const floor = parseInt(document.getElementById('placeFloor').value) || (typeof currentFloor !== 'undefined' ? currentFloor : 1);
+    const panoramaId = document.getElementById('placePanoramaId').value;
+    
+    const place = {
+      name: name,
+      category: category,
+      floor: floor,
+      coords: this.state.placePoints.map(p => [p[0], p[1]])
+    };
+    if (panoramaId) place.panoramaId = panoramaId;
+
+    // Handle Image Upload
+    const imageInput = document.getElementById('placeImage');
+    if (imageInput.files && imageInput.files[0]) {
+      const file = imageInput.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      try {
+        const response = await fetch('/upload_image', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await response.json();
+        if (response.ok && result.filename) {
+          place.image = result.filename;
+        } else {
+          this._toast('Image upload failed: ' + (result.error || 'Unknown error'), 'warning');
+        }
+      } catch (err) {
+        this._toast('Error uploading image', 'error');
+        console.error(err);
+      }
+    }
+
+    try {
+      const res = await fetch('/save_place', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(place)
+      });
+      const result = await res.json();
+      
+      if (res.ok) {
+        this._toast('Place saved to server!', 'success');
+        this.cancelAllActions();
+        
+        nameEl.value = '';
+        customCatEl.value = '';
+        imageInput.value = '';
+        
+        if (typeof loadPlaces === 'function') {
+          loadPlaces(); // Reload data from server
+        }
+        
+        // Wait a bit, then render our saved places list
+        setTimeout(() => this.renderSavedPlaces(), 500);
+      } else {
+        this._toast('Failed to save place: ' + (result.error || 'Server error'), 'error');
+      }
+    } catch (err) {
+      this._toast('Cannot reach server', 'error');
+      console.error(err);
+    }
+  }
+  
+  async renderSavedPlaces() {
+    try {
+      const res = await fetch('/get_places');
+      const places = await res.json();
+      
+      const countEl = document.getElementById('countPlaces');
+      const listEl = document.getElementById('listPlaces');
+      if (!listEl) return;
+      
+      if (countEl) countEl.textContent = places.length;
+      listEl.innerHTML = '';
+      
+      if (places.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">No places saved yet</div>';
+        return;
+      }
+      
+      places.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'dev-saved-item';
+        
+        const catStr = p.category ? ` • ${p.category}` : '';
+        item.innerHTML = `
+          <div class="dev-saved-info">
+            <div class="dev-saved-title">${p.name}</div>
+            <div class="dev-saved-meta">Floor: ${p.floor}${catStr}</div>
+          </div>
+          <div class="dev-saved-actions">
+            <button class="icon-btn danger" title="Delete Place">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        `;
+        
+        item.querySelector('.danger').onclick = (e) => {
+          e.stopPropagation();
+          if (confirm(`Delete place "${p.name}"?`)) {
+            this.deletePlace(p.id);
+          }
+        };
+        
+        listEl.appendChild(item);
+      });
+    } catch (e) {
+      console.error("Failed to render places", e);
+    }
+  }
+  
+  async deletePlace(id) {
+    try {
+      const res = await fetch('/delete_place/' + id, { method: 'DELETE' });
+      if (res.ok) {
+        this._toast('Place deleted', 'success');
+        if (typeof loadPlaces === 'function') loadPlaces();
+        this.renderSavedPlaces();
+      } else {
+        this._toast('Failed to delete place', 'error');
+      }
+    } catch(e) {
+      this._toast('Cannot reach server', 'error');
+    }
+  }
+
   // =================== PATHWAYS ===================
   startDrawingPath() {
     this.cancelAllActions();
     this.activeTab = 'paths';
     this.state.drawingMode = true;
+
+    // Force 2D for accurate path drawing
+    this.mapEngine.enterDrawingMode();
+    this._update3DToggleUI(false);
     
     const btn = document.getElementById('btnDrawPath');
     btn.classList.add('active-tool');
@@ -1437,18 +1826,18 @@ class DevTools {
 
   // =================== DRAWING MARKERS ===================
   _addDrawingMarker(type, latlng, index) {
-    const color = type === 'building' ? '#ff4757' : '#0a84ff';
+    const color = type === 'building' ? '#ff4757' : type === 'place' ? '#1a73e8' : '#0a84ff';
     const markerId = this.mapEngine.addMarker(latlng, {
       id: `dev_draw_${type}_${index}_${Date.now()}`,
       html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;font-size:8px;color:white;font-weight:bold;">${index}</div>`,
       anchor: 'center'
     });
-    const markers = type === 'building' ? this.state.buildingMarkers : this.state.pathMarkers;
+    const markers = type === 'building' ? this.state.buildingMarkers : type === 'place' ? this.state.placeMarkers : this.state.pathMarkers;
     markers.push(markerId);
   }
 
   _removeLastDrawingMarker(type) {
-    const markers = type === 'building' ? this.state.buildingMarkers : this.state.pathMarkers;
+    const markers = type === 'building' ? this.state.buildingMarkers : type === 'place' ? this.state.placeMarkers : this.state.pathMarkers;
     if (markers.length > 0) {
       const id = markers.pop();
       this.mapEngine.removeMarker(id);
@@ -1456,7 +1845,7 @@ class DevTools {
   }
 
   _clearDrawingMarkers(type) {
-    const markers = type === 'building' ? this.state.buildingMarkers : this.state.pathMarkers;
+    const markers = type === 'building' ? this.state.buildingMarkers : type === 'place' ? this.state.placeMarkers : this.state.pathMarkers;
     markers.forEach(id => this.mapEngine.removeMarker(id));
     markers.length = 0;
   }

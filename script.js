@@ -557,8 +557,7 @@ window.addEventListener('resize', () => {
     }
   };
 
-  // map.panTo compat (accept [lat,lng] array)
-  map.panTo = function (latLng) { mapEngine.panTo(latLng); };
+  // map.panTo compat removed to prevent infinite recursion
 
   // map.getZoom is native to MapLibre, no patch needed
   // map.dragging compat
@@ -582,7 +581,13 @@ let savedPaths = [];
 let drawnPathLayers = [];
 
 // Enhanced pathmaker globals
+// Enhanced pathmaker globals
 let pathPointMarkers = []; // Visual markers at each waypoint
+
+// =================== PLACES ===================
+let allPlaces = [];
+let placeMarkers = [];
+let savedPlaces = JSON.parse(localStorage.getItem('saved_places') || '[]');
 
 // =================== SIDEBAR LOGIC ===================
 const menuToggle = document.getElementById('menuToggle');
@@ -590,8 +595,7 @@ const mainSidebar = document.getElementById('mainSidebar');
 const closeMainBtn = document.getElementById('closeSidebarBtn');
 
 window.devMode = false;
-
-// Re-fetch config.json to populate devMode and GISTDA API key
+// Re-fetch config.json to populate devMode and API proxy settings
 fetch('config.json')
   .then(r => {
     console.log('[Config] config.json fetch status:', r.status, r.ok ? 'OK' : 'FAILED');
@@ -599,20 +603,23 @@ fetch('config.json')
     return r.json();
   })
   .then(cfg => {
-    console.log('[Config] config.json loaded:', JSON.stringify(cfg));
     window.devMode = !!cfg.devMode;
-    // Initialize GISTDA satellite layer if API key is available
-    // Note: By the time config.json loads, the map is already ready,
-    // so we set the key directly without waiting for _ready
+
+    // Cloudflare Worker proxy URL (preferred — keeps API keys server-side)
+    if (cfg.workerUrl) {
+      mapEngine.setWorkerUrl(cfg.workerUrl);
+      console.log('[Config] Worker proxy URL set successfully');
+    }
+
+    // Legacy fallback: direct API keys (local dev with server.py only)
     if (cfg.gistdaApiKey) {
       mapEngine.setGistdaApiKey(cfg.gistdaApiKey);
-      console.log('[Config] GISTDA API key set successfully');
-    } else {
-      console.warn('[Config] No gistdaApiKey found in config.json');
+      console.log('[Config] GISTDA API key set (direct/legacy)');
     }
 
     if (cfg.googleMapsApiKey) {
       mapEngine.setGoogleMapsApiKey(cfg.googleMapsApiKey);
+      console.log('[Config] Google Maps API key set (direct/legacy)');
     }
 
     if (cfg.satelliteProvider) {
@@ -654,13 +661,23 @@ fetch('config.json')
 
 function closeAllSidebars() {
   if (mainSidebar) mainSidebar.classList.remove('open');
+  if (mainSidebar) {
+    mainSidebar.classList.remove('active');
+    mainSidebar.setAttribute('aria-hidden', 'true');
+    if (mainSidebar.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+  }
+  if (menuToggle) {
+    menuToggle.setAttribute('aria-expanded', 'false');
+  }
+  const placeSidebar = document.getElementById('placeSidebar');
+  if (placeSidebar) placeSidebar.classList.remove('active');
   // Accessibility: release focus trap and restore focus
   if (window._sidebarFocusTrap) {
     window._sidebarFocusTrap();
     window._sidebarFocusTrap = null;
   }
-  if (mainSidebar) mainSidebar.setAttribute('aria-hidden', 'true');
-  if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
   if (window._sidebarPreviousFocus) {
     window._sidebarPreviousFocus.focus();
     window._sidebarPreviousFocus = null;
@@ -1099,29 +1116,391 @@ function loadPins() {
       allPins = [];
     })
     .finally(() => {
-      const all = allPins.map(p => [p.lat, p.lng]);
-      if (all.length > 1) {
-        mapEngine._ready.then(() => {
-          mapEngine.addLine('main-path', all, {
-            color: '#0a84ff',
-            weight: 6,
-            onClick: (ev) => {
-              const clickPos = MapEngine.eventLatLng(ev);
-              let nearest = null, minD = Infinity;
-              allPins.forEach(p => {
-                const d = MapEngine.distance(clickPos.lat, clickPos.lng, p.lat, p.lng);
-                if (d < minD) { minD = d; nearest = p; }
-              });
-              if (nearest) openViewer(nearest.name);
-            }
-          });
-          mainPathPolyline = true;
-        });
-      }
+      // Optional: do something after load
     });
 }
 
+function getPolygonCenter(coords) {
+  if (!coords || coords.length === 0) return [0, 0];
+  let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+  for (let c of coords) {
+    if (c[0] < minLat) minLat = c[0];
+    if (c[0] > maxLat) maxLat = c[0];
+    if (c[1] < minLng) minLng = c[1];
+    if (c[1] > maxLng) maxLng = c[1];
+  }
+  return [(minLat + maxLat) / 2, (minLng + maxLng) / 2];
+}
+
+function loadPlaces() {
+  fetch('/get_places')
+    .then(r => { if (!r.ok) throw new Error('API not available'); return r.json(); })
+    .catch(() => fetch('data/places.json').then(r => r.json()))
+    .then(places => {
+      allPlaces = places || [];
+      renderPlaces();
+    })
+    .catch(err => {
+      console.log('No places data found');
+      allPlaces = [];
+    });
+}
+
+function renderPlaces() {
+  // Clear old markers
+  placeMarkers.forEach(m => m.remove());
+  placeMarkers = [];
+
+  allPlaces.forEach(p => {
+    // Clear old polygons
+    mapEngine.removePolygon(p.id);
+
+    // Only show if floor matches or is ground (0), adjust logic as needed
+    if (p.floor !== currentFloor && p.floor !== 0) return;
+
+    let fillOpacity = 0;
+    let strokeOpacity = 0;
+    let dashArray = undefined;
+
+    // Visibility logic
+    if (window.devMode) {
+      fillOpacity = 0.3;
+      strokeOpacity = 1;
+    } else if (navigationController && navigationController.isNavigating && navigationController.currentDestinationId === p.id) {
+      strokeOpacity = 1;
+      dashArray = '5,5';
+    }
+
+    if (p.coords && p.coords.length > 2) {
+      mapEngine.addPolygon(p.id, p.coords, {
+        color: '#1a73e8',
+        fillOpacity: fillOpacity,
+        opacity: strokeOpacity,
+        dashArray: dashArray,
+        onClick: () => openPlaceSidebar(p)
+      });
+
+      // Draw Marker if not navigating (navigating implies you already know the place, but maybe we should still show it)
+      if (!window.devMode && strokeOpacity === 0) {
+        const center = getPolygonCenter(p.coords);
+        const el = document.createElement('div');
+        el.className = 'place-poi-label';
+        // Find icon based on category or default
+        let icon = '📍';
+        if (p.category === 'library') icon = '📚';
+        if (p.category === 'cafeteria') icon = '🍽️';
+        if (p.category === 'restroom' || p.category === 'bathroom') icon = '🚻';
+        if (p.category === 'lab') icon = '🔬';
+
+        el.innerHTML = `<div class="place-poi-icon">${icon}</div><div class="place-poi-text">${p.name}</div>`;
+        el.addEventListener('click', () => openPlaceSidebar(p));
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([center[1], center[0]])
+          .addTo(mapEngine.map);
+        placeMarkers.push(marker);
+      }
+    }
+  });
+}
+
+// MapEngine might need a quick addPolygon/removePolygon helper since map-engine.js's native removeLine/Polygon is messy.
+// Actually mapEngine.addPolygon exists. 
+// For removing:
+if (!mapEngine.removePolygon) {
+  mapEngine.removePolygon = function (id) {
+    const layerIdFill = `poly-fill-${id}`;
+    const layerIdOutline = `poly-outline-${id}`;
+    const sourceId = `poly-src-${id}`;
+    if (this.map.getLayer(layerIdFill)) this.map.removeLayer(layerIdFill);
+    if (this.map.getLayer(layerIdOutline)) this.map.removeLayer(layerIdOutline);
+    if (this.map.getSource(sourceId)) this.map.removeSource(sourceId);
+  }
+}
+
+function openPlaceSidebar(place) {
+  closeAllSidebars(); // Helper to close others
+  const sidebar = document.getElementById('placeSidebar');
+  if (!sidebar) return;
+
+  // Set content
+  document.getElementById('placeTitle').textContent = place.name;
+
+  const catTrans = t(place.category) || place.category;
+  document.getElementById('placeCategory').textContent = catTrans;
+
+  document.getElementById('placeLocationText').textContent = `ชั้น ${place.floor || 'G'}`;
+
+  const imgEl = document.getElementById('placeHeaderImage');
+  if (place.image) {
+    imgEl.style.backgroundImage = `url('images/streetview/${place.image}')`;
+  } else {
+    imgEl.style.backgroundImage = `url('https://via.placeholder.com/380x220?text=No+Image')`;
+  }
+
+  // 360 View Button
+  const view360Btn = document.getElementById('placeView360Btn');
+  if (place.panoramaId) {
+    view360Btn.style.display = 'flex';
+    view360Btn.onclick = () => {
+      sidebar.classList.remove('active');
+      openViewer(place.panoramaId);
+    };
+  } else {
+    view360Btn.style.display = 'none';
+  }
+
+  // Save button
+  const saveBtn = document.getElementById('placeSaveBtn');
+  const updateSaveIcon = () => {
+    const isSaved = savedPlaces.includes(place.id);
+    saveBtn.innerHTML = `<div class="action-icon ${isSaved ? 'primary' : ''}"><span class="material-symbols-rounded">${isSaved ? 'bookmark' : 'bookmark_border'}</span></div><span>บันทึก</span>`;
+  };
+  updateSaveIcon();
+
+  saveBtn.onclick = () => {
+    if (savedPlaces.includes(place.id)) {
+      savedPlaces = savedPlaces.filter(id => id !== place.id);
+    } else {
+      savedPlaces.push(place.id);
+    }
+    localStorage.setItem('saved_places', JSON.stringify(savedPlaces));
+    updateSaveIcon();
+  };
+
+  // Nav button
+  const navBtn = document.getElementById('placeNavBtn');
+  navBtn.onclick = () => {
+    sidebar.classList.remove('active');
+    const center = getPolygonCenter(place.coords);
+    if (navigationController) {
+      // Simulate a search result to pass to navigateToLocation
+      navigationController.currentDestinationId = place.id;
+      navigationController.navigateToLocation({
+        name: place.name,
+        lat: center[0],
+        lng: center[1],
+        floor: place.floor
+      });
+      renderPlaces(); // re-render to show stroke
+    }
+  };
+
+  // Close btn
+  document.getElementById('closePlaceSidebarBtn').onclick = () => {
+    sidebar.classList.remove('active');
+  };
+
+  // Slide in
+  sidebar.classList.add('active');
+
+  // Pan map
+  const center = getPolygonCenter(place.coords);
+  mapEngine.panTo([center[0], center[1]]);
+}
+const all = allPins.map(p => [p.lat, p.lng]);
+if (all.length > 1) {
+  mapEngine._ready.then(() => {
+    mapEngine.addLine('main-path', all, {
+      color: '#0a84ff',
+      weight: 6,
+      onClick: (ev) => {
+        const clickPos = MapEngine.eventLatLng(ev);
+        let nearest = null, minD = Infinity;
+        allPins.forEach(p => {
+          const d = MapEngine.distance(clickPos.lat, clickPos.lng, p.lat, p.lng);
+          if (d < minD) { minD = d; nearest = p; }
+        });
+        if (nearest) openViewer(nearest.name);
+      }
+    });
+    mainPathPolyline = true;
+  });
+}
+
 loadPins();
+loadPlaces();
+
+function getPolygonCenter(coords) {
+  if (!coords || coords.length === 0) return [0, 0];
+  let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+  for (let c of coords) {
+    if (c[0] < minLat) minLat = c[0];
+    if (c[0] > maxLat) maxLat = c[0];
+    if (c[1] < minLng) minLng = c[1];
+    if (c[1] > maxLng) maxLng = c[1];
+  }
+  return [(minLat + maxLat) / 2, (minLng + maxLng) / 2];
+}
+
+function loadPlaces() {
+  fetch('/get_places')
+    .then(r => { if (!r.ok) throw new Error('API not available'); return r.json(); })
+    .catch(() => fetch('data/places.json').then(r => r.json()))
+    .then(places => {
+      allPlaces = places || [];
+      renderPlaces();
+    })
+    .catch(err => {
+      console.log('No places data found');
+      allPlaces = [];
+    });
+}
+
+function renderPlaces() {
+  // Clear old markers
+  placeMarkers.forEach(m => m.remove());
+  placeMarkers = [];
+
+  allPlaces.forEach(p => {
+    // Clear old polygons
+    if (mapEngine.removePolygon) {
+      mapEngine.removePolygon(p.id);
+    }
+
+    // Only show if floor matches or is ground (0), adjust logic as needed
+    if (p.floor !== currentFloor && p.floor !== 0) return;
+
+    let fillOpacity = 0;
+    let strokeOpacity = 0;
+    let dashArray = undefined;
+
+    // Visibility logic
+    if (window.devMode) {
+      fillOpacity = 0.3;
+      strokeOpacity = 1;
+    } else if (navigationController && navigationController.isNavigating && navigationController.currentDestinationId === p.id) {
+      strokeOpacity = 1;
+      dashArray = '5,5';
+    }
+
+    if (p.coords && p.coords.length > 2) {
+      mapEngine.addPolygon(p.id, p.coords, {
+        color: '#1a73e8',
+        fillOpacity: fillOpacity,
+        opacity: strokeOpacity,
+        dashArray: dashArray,
+        onClick: () => openPlaceSidebar(p)
+      });
+
+      // Draw Marker if not navigating (navigating implies you already know the place, but maybe we should still show it)
+      if (!window.devMode && strokeOpacity === 0) {
+        const center = getPolygonCenter(p.coords);
+        const el = document.createElement('div');
+        el.className = 'place-poi-label';
+        // Find icon based on category or default
+        let icon = '📍';
+        if (p.category === 'library') icon = '📚';
+        if (p.category === 'cafeteria') icon = '🍽️';
+        if (p.category === 'restroom' || p.category === 'bathroom') icon = '🚻';
+        if (p.category === 'lab') icon = '🔬';
+
+        el.innerHTML = `<div class="place-poi-icon">${icon}</div><div class="place-poi-text">${p.name}</div>`;
+        el.addEventListener('click', () => openPlaceSidebar(p));
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([center[1], center[0]])
+          .addTo(mapEngine.map);
+        placeMarkers.push(marker);
+      }
+    }
+  });
+}
+
+// MapEngine might need a quick addPolygon/removePolygon helper since map-engine.js's native removeLine/Polygon is messy.
+// Actually mapEngine.addPolygon exists. 
+// For removing:
+if (!mapEngine.removePolygon) {
+  mapEngine.removePolygon = function (id) {
+    const layerIdFill = `poly-fill-${id}`;
+    const layerIdOutline = `poly-outline-${id}`;
+    const sourceId = `poly-src-${id}`;
+    if (this.map.getLayer(layerIdFill)) this.map.removeLayer(layerIdFill);
+    if (this.map.getLayer(layerIdOutline)) this.map.removeLayer(layerIdOutline);
+    if (this.map.getSource(sourceId)) this.map.removeSource(sourceId);
+  }
+}
+
+function openPlaceSidebar(place) {
+  closeAllSidebars(); // Helper to close others
+  const sidebar = document.getElementById('placeSidebar');
+  if (!sidebar) return;
+
+  // Set content
+  document.getElementById('placeTitle').textContent = place.name;
+
+  const catTrans = t(place.category) || place.category;
+  document.getElementById('placeCategory').textContent = catTrans;
+
+  document.getElementById('placeLocationText').textContent = `ชั้น ${place.floor || 'G'}`;
+
+  const imgEl = document.getElementById('placeHeaderImage');
+  if (place.image) {
+    imgEl.style.backgroundImage = `url('images/streetview/${place.image}')`;
+  } else {
+    imgEl.style.backgroundImage = `url('https://via.placeholder.com/380x220?text=No+Image')`;
+  }
+
+  // 360 View Button
+  const view360Btn = document.getElementById('placeView360Btn');
+  if (place.panoramaId) {
+    view360Btn.style.display = 'flex';
+    view360Btn.onclick = () => {
+      sidebar.classList.remove('active');
+      openViewer(place.panoramaId);
+    };
+  } else {
+    view360Btn.style.display = 'none';
+  }
+
+  // Save button
+  const saveBtn = document.getElementById('placeSaveBtn');
+  const updateSaveIcon = () => {
+    const isSaved = savedPlaces.includes(place.id);
+    saveBtn.innerHTML = `<div class="action-icon ${isSaved ? 'primary' : ''}"><span class="material-symbols-rounded">${isSaved ? 'bookmark' : 'bookmark_border'}</span></div><span>บันทึก</span>`;
+  };
+  updateSaveIcon();
+
+  saveBtn.onclick = () => {
+    if (savedPlaces.includes(place.id)) {
+      savedPlaces = savedPlaces.filter(id => id !== place.id);
+    } else {
+      savedPlaces.push(place.id);
+    }
+    localStorage.setItem('saved_places', JSON.stringify(savedPlaces));
+    updateSaveIcon();
+  };
+
+  // Nav button
+  const navBtn = document.getElementById('placeNavBtn');
+  navBtn.onclick = () => {
+    sidebar.classList.remove('active');
+    const center = getPolygonCenter(place.coords);
+    if (navigationController) {
+      // Simulate a search result to pass to navigateToLocation
+      navigationController.currentDestinationId = place.id;
+      navigationController.navigateToLocation({
+        name: place.name,
+        lat: center[0],
+        lng: center[1],
+        floor: place.floor
+      });
+      renderPlaces(); // re-render to show stroke
+    }
+  };
+
+  // Close btn
+  document.getElementById('closePlaceSidebarBtn').onclick = () => {
+    sidebar.classList.remove('active');
+  };
+
+  // Slide in
+  sidebar.classList.add('active');
+
+  // Pan map
+  const center = getPolygonCenter(place.coords);
+  mapEngine.panTo([center[0], center[1]]);
+}
 
 function loadSavedPaths() {
   fetch('data/paths.json')
@@ -1148,7 +1527,7 @@ function loadSavedPaths() {
 
               openPanoramaViewer(nearest);
             } else {
-              map.panTo(poly.getBounds().getCenter());
+              mapEngine.panTo(poly.getBounds().getCenter());
               showToast(`Path: ${p.name}`, 'info');
             }
           });
@@ -1206,7 +1585,7 @@ function loadSavedPaths() {
 
               openPanoramaViewer(nearest);
             } else {
-              map.panTo(poly.getBounds().getCenter());
+              mapEngine.panTo(poly.getBounds().getCenter());
               showToast(`Local: ${p.name}`, 'info');
             }
           });
@@ -1819,6 +2198,27 @@ function searchLocations(query) {
     }));
 
     results = results.concat(pinResults);
+  }
+
+  // Search in places (new feature)
+  if (allPlaces && allPlaces.length > 0) {
+    const placeResults = allPlaces.filter(place => {
+      const matchName = place.name && place.name.toLowerCase().includes(query);
+      const matchCategory = place.category && (t(place.category).toLowerCase().includes(query) || place.category.toLowerCase().includes(query));
+      return matchName || matchCategory;
+    }).map(place => {
+      const center = getPolygonCenter(place.coords);
+      return {
+        id: place.id,
+        name: place.name,
+        floor: place.floor !== undefined ? place.floor : 0,
+        lat: center[0],
+        lng: center[1],
+        type: 'place',
+        category: place.category
+      };
+    });
+    results = results.concat(placeResults);
   }
 
   // Search in buildings
@@ -3222,6 +3622,7 @@ const initNavigation = () => {
         if (navigationController) {
           navigationController.onFloorChange(floorIndex);
         }
+        if (typeof renderPlaces === 'function') renderPlaces();
       };
     }
 

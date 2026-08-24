@@ -591,9 +591,4 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 100);
 });
 
-    // NOTE: map.on wrapping is handled by patchMapCompat() in script.js
-    // Do NOT re-wrap here or map.off() will break due to mismatched handler references
-  }
-});
-
 window.L = L;

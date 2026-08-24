@@ -1067,6 +1067,42 @@ body.dark-theme .maplibregl-ctrl-attrib {
   background: linear-gradient(135deg, #0d1f15 0%, #1a2e22 25%, #0f2118 50%, #223a2a 75%, #182e20 100%);
 }
 
+/* 3D toggle preview thumbnail */
+.layer-preview-3d {
+  background: linear-gradient(160deg, #0f1923 0%, #1a2d40 50%, #112230 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.layer-preview-3d::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Perspective grid lines to suggest 3D tilt */
+  background:
+    linear-gradient(rgba(0, 150, 255, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 150, 255, 0.18) 1px, transparent 1px);
+  background-size: 14px 14px;
+  transform: perspective(60px) rotateX(38deg) scaleY(1.5);
+  transform-origin: center bottom;
+}
+
+.layer-preview-3d::after {
+  content: '🏙️';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+/* Active 3D option uses accent ring + slightly brighter thumbnail */
+.layer-option.active .layer-preview-3d {
+  background: linear-gradient(160deg, #0a2040 0%, #1a3a60 50%, #0d2a4a 100%);
+}
+
 /* Responsive - Mobile */
 @media (max-width: 768px) {
   .layer-switcher {

@@ -50,6 +50,10 @@
         <div class="layer-option-preview layer-preview-satellite"></div>
         <span class="layer-option-label">Satellite</span>
       </div>
+      <div class="layer-option" id="toggle3dOption" data-layer="3d" role="option" aria-selected="false" tabindex="0" style="display:none;">
+        <div class="layer-option-preview layer-preview-3d"></div>
+        <span class="layer-option-label" id="toggle3dLabel">3D</span>
+      </div>
     </div>
   </div>
 
@@ -191,6 +195,8 @@
 
     <nav class="sidebar-body">
       <ul class="sidebar-menu">
+        <li class="menu-item" data-modal="saved" role="button" tabindex="0"><span
+            class="material-symbols-rounded">bookmark</span> <span class="menu-text">Saved Places</span></li>
         <li class="menu-item" data-modal="about" role="button" tabindex="0"><span
             class="material-symbols-rounded">info</span> <span class="menu-text">About / Credits</span></li>
         <li class="menu-item" data-modal="howto" role="button" tabindex="0"><span
@@ -245,11 +251,11 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- App -->
-  <script src="map-engine.js"></script>
-  <script src="leaflet-compat.js"></script>
-  <script src="script.js"></script>
+  <script src="map-engine.js?v=1.2"></script>
+  <script src="leaflet-compat.js?v=1.2"></script>
+  <script src="script.js?v=1.2"></script>
   <!-- New Dev Tools -->
-  <script src="dev-tools.js"></script>
+  <script src="dev-tools.js?v=1.2"></script>
 </body>
 
 </html>

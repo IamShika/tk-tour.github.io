@@ -506,25 +506,59 @@ window.addEventListener('resize', () => {
   const _origOn = map.on.bind(map);
   const _origOff = map.off.bind(map);
 
-  map.on = function (event, handler) {
+  map.on = function (event, arg1, arg2) {
+    let layerId = null;
+    let handler = null;
+    
+    if (typeof arg1 === 'function') {
+      handler = arg1;
+    } else {
+      layerId = arg1;
+      handler = arg2;
+    }
+
+    if (typeof handler !== 'function') {
+      return _origOn.apply(map, arguments); // fallback just in case
+    }
+
     const wrappedHandler = (e) => {
       if (e && e.lngLat) {
         e.latlng = { lat: e.lngLat.lat, lng: e.lngLat.lng };
       }
       handler(e);
     };
-    const key = event + '_' + (handler.name || '') + '_' + handler.toString().slice(0, 50);
+    
+    const key = event + '_' + (layerId || '') + '_' + (handler.name || '') + '_' + handler.toString().slice(0, 50);
     _handlerMap.set(key, wrappedHandler);
     handler._wrappedCompat = wrappedHandler;
-    _origOn(event, wrappedHandler);
+    
+    if (layerId) {
+      _origOn(event, layerId, wrappedHandler);
+    } else {
+      _origOn(event, wrappedHandler);
+    }
     return map;
   };
 
-  map.off = function (event, handler) {
-    if (handler && handler._wrappedCompat) {
-      _origOff(event, handler._wrappedCompat);
+  map.off = function (event, arg1, arg2) {
+    let layerId = null;
+    let handler = null;
+    
+    if (typeof arg1 === 'function') {
+      handler = arg1;
     } else {
-      try { _origOff(event, handler); } catch (e) { }
+      layerId = arg1;
+      handler = arg2;
+    }
+
+    if (handler && handler._wrappedCompat) {
+      if (layerId) {
+        _origOff(event, layerId, handler._wrappedCompat);
+      } else {
+        _origOff(event, handler._wrappedCompat);
+      }
+    } else {
+      try { _origOff.apply(map, arguments); } catch (e) { }
     }
     return map;
   };
@@ -570,7 +604,13 @@ window.addEventListener('resize', () => {
   map.invalidateSize = function () { mapEngine.resize(); };
 })();
 
-// =================== GLOBALS ===================
+// =================== GLOBAL CONFIG & STATE ===================
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+  alert('JS Error: ' + msg + '\nLine: ' + lineNo + '\nFile: ' + url);
+  return false;
+};
+
+// State variables
 let allPins = [];
 let markers = [];
 let viewerInstance = null;
@@ -604,6 +644,10 @@ fetch('config.json')
   })
   .then(cfg => {
     window.devMode = !!cfg.devMode;
+
+    // Show 3D toggle only in dev mode
+    const toggle3dEl = document.getElementById('toggle3dOption');
+    if (toggle3dEl) toggle3dEl.style.display = window.devMode ? '' : 'none';
 
     // Cloudflare Worker proxy URL (preferred — keeps API keys server-side)
     if (cfg.workerUrl) {
@@ -837,6 +881,10 @@ const modalContent = {
   donate: {
     get title() { return t('donateTitle'); },
     get body() { return t('donateContent'); }
+  },
+  saved: {
+    get title() { return 'Saved Places'; },
+    get body() { return '<div id="savedPlacesList">Loading...</div>'; }
   }
 };
 
@@ -966,6 +1014,38 @@ function openModal(modalId) {
           }
 
           showToast(t('satelliteProvider') + ': ' + t(provider), 'success');
+        });
+      }
+    } else if (modalId === 'saved') {
+      modalBody.innerHTML = modalContent[modalId].body;
+      const container = document.getElementById('savedPlacesList');
+      const savedPlaces = JSON.parse(localStorage.getItem('saved_places') || '[]');
+      if (savedPlaces.length === 0) {
+        container.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px;">No places saved yet.</p>';
+      } else {
+        container.innerHTML = '';
+        savedPlaces.forEach(id => {
+          const place = allPlaces.find(p => p.id === id);
+          if (place) {
+            const item = document.createElement('div');
+            item.style.cssText = 'padding:12px; border-bottom:1px solid #333; cursor:pointer; display:flex; align-items:center; gap:10px;';
+            
+            const floorStr = Array.isArray(place.floor) ? (place.floor.includes('all') ? 'All floors' : `Floor ${place.floor.join(',')}`) : `Floor ${place.floor || 'G'}`;
+            
+            item.innerHTML = `
+              <div style="width:40px;height:40px;border-radius:8px;background:#333;background-image:url('images/streetview/${place.image || ''}');background-size:cover;background-position:center;"></div>
+              <div style="flex:1;">
+                <div style="font-weight:600;">${place.name}</div>
+                <div style="font-size:12px;color:var(--muted);">${t(place.category) || place.category} • ${floorStr}</div>
+              </div>
+              <span class="material-symbols-rounded" style="color:var(--primary);">chevron_right</span>
+            `;
+            item.onclick = () => {
+              closeModal();
+              openPlaceSidebar(place);
+            };
+            container.appendChild(item);
+          }
         });
       }
     } else {
@@ -1152,15 +1232,28 @@ function renderPlaces() {
   placeMarkers = [];
 
   allPlaces.forEach(p => {
-    // Clear old polygons
-    mapEngine.removePolygon(p.id);
-
-    // Only show if floor matches or is ground (0), adjust logic as needed
-    if (p.floor !== currentFloor && p.floor !== 0) return;
+    // Support p.floor being a single number, 'all', or an array
+    const floorMatch = Array.isArray(p.floor) 
+      ? (p.floor.includes('all') || p.floor.includes(currentFloor) || p.floor.includes(0))
+      : (p.floor === 'all' || p.floor === currentFloor || p.floor === 0);
+      
+    if (!floorMatch) return;
 
     let fillOpacity = 0;
     let strokeOpacity = 0;
     let dashArray = undefined;
+
+    // Use interactive hover
+    mapEngine.addPolygon(p.id, p.coords, {
+      color: '#1a73e8', 
+      fillColor: '#1a73e8',
+      weight: 2,
+      label: p.name,
+      interactiveHover: true,
+      onClick: (e) => {
+        openPlaceSidebar(p);
+      }
+    });
 
     // Visibility logic
     if (window.devMode) {
@@ -1229,7 +1322,10 @@ function openPlaceSidebar(place) {
   const catTrans = t(place.category) || place.category;
   document.getElementById('placeCategory').textContent = catTrans;
 
-  document.getElementById('placeLocationText').textContent = `ชั้น ${place.floor || 'G'}`;
+  const floorDisplay = Array.isArray(place.floor) 
+    ? (place.floor.includes('all') ? 'ชั้นทั้งหมด' : `ชั้น ${place.floor.join(', ')}`)
+    : `ชั้น ${place.floor || 'G'}`;
+  document.getElementById('placeLocationText').textContent = floorDisplay;
 
   const imgEl = document.getElementById('placeHeaderImage');
   if (place.image) {
@@ -1333,174 +1429,8 @@ function getPolygonCenter(coords) {
   return [(minLat + maxLat) / 2, (minLng + maxLng) / 2];
 }
 
-function loadPlaces() {
-  fetch('/get_places')
-    .then(r => { if (!r.ok) throw new Error('API not available'); return r.json(); })
-    .catch(() => fetch('data/places.json').then(r => r.json()))
-    .then(places => {
-      allPlaces = places || [];
-      renderPlaces();
-    })
-    .catch(err => {
-      console.log('No places data found');
-      allPlaces = [];
-    });
-}
 
-function renderPlaces() {
-  // Clear old markers
-  placeMarkers.forEach(m => m.remove());
-  placeMarkers = [];
 
-  allPlaces.forEach(p => {
-    // Clear old polygons
-    if (mapEngine.removePolygon) {
-      mapEngine.removePolygon(p.id);
-    }
-
-    // Only show if floor matches or is ground (0), adjust logic as needed
-    if (p.floor !== currentFloor && p.floor !== 0) return;
-
-    let fillOpacity = 0;
-    let strokeOpacity = 0;
-    let dashArray = undefined;
-
-    // Visibility logic
-    if (window.devMode) {
-      fillOpacity = 0.3;
-      strokeOpacity = 1;
-    } else if (navigationController && navigationController.isNavigating && navigationController.currentDestinationId === p.id) {
-      strokeOpacity = 1;
-      dashArray = '5,5';
-    }
-
-    if (p.coords && p.coords.length > 2) {
-      mapEngine.addPolygon(p.id, p.coords, {
-        color: '#1a73e8',
-        fillOpacity: fillOpacity,
-        opacity: strokeOpacity,
-        dashArray: dashArray,
-        onClick: () => openPlaceSidebar(p)
-      });
-
-      // Draw Marker if not navigating (navigating implies you already know the place, but maybe we should still show it)
-      if (!window.devMode && strokeOpacity === 0) {
-        const center = getPolygonCenter(p.coords);
-        const el = document.createElement('div');
-        el.className = 'place-poi-label';
-        // Find icon based on category or default
-        let icon = '📍';
-        if (p.category === 'library') icon = '📚';
-        if (p.category === 'cafeteria') icon = '🍽️';
-        if (p.category === 'restroom' || p.category === 'bathroom') icon = '🚻';
-        if (p.category === 'lab') icon = '🔬';
-
-        el.innerHTML = `<div class="place-poi-icon">${icon}</div><div class="place-poi-text">${p.name}</div>`;
-        el.addEventListener('click', () => openPlaceSidebar(p));
-
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([center[1], center[0]])
-          .addTo(mapEngine.map);
-        placeMarkers.push(marker);
-      }
-    }
-  });
-}
-
-// MapEngine might need a quick addPolygon/removePolygon helper since map-engine.js's native removeLine/Polygon is messy.
-// Actually mapEngine.addPolygon exists. 
-// For removing:
-if (!mapEngine.removePolygon) {
-  mapEngine.removePolygon = function (id) {
-    const layerIdFill = `poly-fill-${id}`;
-    const layerIdOutline = `poly-outline-${id}`;
-    const sourceId = `poly-src-${id}`;
-    if (this.map.getLayer(layerIdFill)) this.map.removeLayer(layerIdFill);
-    if (this.map.getLayer(layerIdOutline)) this.map.removeLayer(layerIdOutline);
-    if (this.map.getSource(sourceId)) this.map.removeSource(sourceId);
-  }
-}
-
-function openPlaceSidebar(place) {
-  closeAllSidebars(); // Helper to close others
-  const sidebar = document.getElementById('placeSidebar');
-  if (!sidebar) return;
-
-  // Set content
-  document.getElementById('placeTitle').textContent = place.name;
-
-  const catTrans = t(place.category) || place.category;
-  document.getElementById('placeCategory').textContent = catTrans;
-
-  document.getElementById('placeLocationText').textContent = `ชั้น ${place.floor || 'G'}`;
-
-  const imgEl = document.getElementById('placeHeaderImage');
-  if (place.image) {
-    imgEl.style.backgroundImage = `url('images/streetview/${place.image}')`;
-  } else {
-    imgEl.style.backgroundImage = `url('https://via.placeholder.com/380x220?text=No+Image')`;
-  }
-
-  // 360 View Button
-  const view360Btn = document.getElementById('placeView360Btn');
-  if (place.panoramaId) {
-    view360Btn.style.display = 'flex';
-    view360Btn.onclick = () => {
-      sidebar.classList.remove('active');
-      openViewer(place.panoramaId);
-    };
-  } else {
-    view360Btn.style.display = 'none';
-  }
-
-  // Save button
-  const saveBtn = document.getElementById('placeSaveBtn');
-  const updateSaveIcon = () => {
-    const isSaved = savedPlaces.includes(place.id);
-    saveBtn.innerHTML = `<div class="action-icon ${isSaved ? 'primary' : ''}"><span class="material-symbols-rounded">${isSaved ? 'bookmark' : 'bookmark_border'}</span></div><span>บันทึก</span>`;
-  };
-  updateSaveIcon();
-
-  saveBtn.onclick = () => {
-    if (savedPlaces.includes(place.id)) {
-      savedPlaces = savedPlaces.filter(id => id !== place.id);
-    } else {
-      savedPlaces.push(place.id);
-    }
-    localStorage.setItem('saved_places', JSON.stringify(savedPlaces));
-    updateSaveIcon();
-  };
-
-  // Nav button
-  const navBtn = document.getElementById('placeNavBtn');
-  navBtn.onclick = () => {
-    sidebar.classList.remove('active');
-    const center = getPolygonCenter(place.coords);
-    if (navigationController) {
-      // Simulate a search result to pass to navigateToLocation
-      navigationController.currentDestinationId = place.id;
-      navigationController.navigateToLocation({
-        name: place.name,
-        lat: center[0],
-        lng: center[1],
-        floor: place.floor
-      });
-      renderPlaces(); // re-render to show stroke
-    }
-  };
-
-  // Close btn
-  document.getElementById('closePlaceSidebarBtn').onclick = () => {
-    sidebar.classList.remove('active');
-  };
-
-  // Slide in
-  sidebar.classList.add('active');
-
-  // Pan map
-  const center = getPolygonCenter(place.coords);
-  mapEngine.panTo([center[0], center[1]]);
-}
 
 function loadSavedPaths() {
   fetch('data/paths.json')
@@ -2121,11 +2051,39 @@ if (layerSwitcherBtn && layerSwitcherPanel) {
       e.stopPropagation();
       const layerType = option.getAttribute('data-layer');
 
-      // Switch the map base layer
+      // ── 3D toggle (independent of base layer) ──
+      if (layerType === '3d') {
+        const is3D = mapEngine.is3DMode();
+        mapEngine.set3DMode(!is3D); // handles pitch lock + gesture enable/disable
+
+        if (!is3D) {
+          // Entering 3D: tilt map
+          mapEngine.map.easeTo({ pitch: 60, duration: 600 });
+          option.classList.add('active');
+          option.setAttribute('aria-selected', 'true');
+          const lbl = document.getElementById('toggle3dLabel');
+          if (lbl) lbl.textContent = '2D';
+          showToast(t('view3DEnabled') || 'View: 3D', 'info');
+        } else {
+          // Returning to 2D: set3DMode already snaps pitch + locks gestures
+          option.classList.remove('active');
+          option.setAttribute('aria-selected', 'false');
+          const lbl = document.getElementById('toggle3dLabel');
+          if (lbl) lbl.textContent = '3D';
+          showToast(t('view2DEnabled') || 'View: 2D', 'info');
+        }
+
+        // Close panel
+        layerSwitcherPanel.classList.remove('open');
+        layerSwitcherBtn.setAttribute('aria-expanded', 'false');
+        return; // Don't touch base layer active states
+      }
+
+      // ── Base layer switch (osm / satellite) ──
       mapEngine.switchBaseLayer(layerType);
 
-      // Update UI active states
-      layerSwitcherPanel.querySelectorAll('.layer-option').forEach(opt => {
+      // Update UI active states (only among non-3D options)
+      layerSwitcherPanel.querySelectorAll('.layer-option:not([data-layer="3d"])').forEach(opt => {
         opt.classList.remove('active');
         opt.setAttribute('aria-selected', 'false');
       });
@@ -2275,8 +2233,12 @@ function displaySearchResults(results) {
       if (result.type === 'building') {
         icon = '🏢';
         infoText = `${result.floors} floor${result.floors > 1 ? 's' : ''} • ${result.buildingType}`;
-      } else if (result.floor) {
-        infoText = `${t('floor')} ${result.floor}`;
+      } else if (result.floor !== undefined) {
+        if (Array.isArray(result.floor)) {
+            infoText = result.floor.includes('all') ? 'ชั้นทั้งหมด' : `${t('floor')} ${result.floor.join(', ')}`;
+        } else {
+            infoText = `${t('floor')} ${result.floor}`;
+        }
       }
 
       resultDiv.innerHTML = `
@@ -2293,8 +2255,16 @@ function displaySearchResults(results) {
           mapEngine.setView([result.lat, result.lng], 19, { animate: true });
         } else {
           // For regular locations, switch floor if needed
-          if (result.floor !== undefined && result.floor !== currentFloor) {
-            switchFloor(result.floor);
+          let targetFloor = result.floor;
+          if (Array.isArray(result.floor)) {
+            if (!result.floor.includes('all') && !result.floor.includes(currentFloor)) {
+                targetFloor = result.floor[0];
+            } else {
+                targetFloor = currentFloor; // Stay on current floor if applicable
+            }
+          }
+          if (targetFloor !== undefined && targetFloor !== currentFloor) {
+            switchFloor(targetFloor);
           }
           mapEngine.setView([result.lat, result.lng], 19, { animate: true });
 
@@ -2303,6 +2273,9 @@ function displaySearchResults(results) {
             setTimeout(() => {
               mapEngine.openMarkerPopup(`pin_marker_${result.id}`);
             }, 100);
+          } else if (result.type === 'place' && result.id) {
+            const p = allPlaces.find(x => x.id === result.id);
+            if (p) openPlaceSidebar(p);
           }
         }
 

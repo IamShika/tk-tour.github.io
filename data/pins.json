@@ -56,7 +56,8 @@
     "lng": 100.60891818102226,
     "floor": 2,
     "image": "134.jpg",
-    "connections": {}
+    "connections": {},
+    "yawOffset": 5.951572749300663
   },
   {
     "id": "pin_1785735421862",
@@ -65,7 +66,8 @@
     "lng": 100.60891818102226,
     "floor": 2,
     "image": "135.jpg",
-    "connections": {}
+    "connections": {},
+    "yawOffset": 6.178465552059927
   },
   {
     "id": "pin_1785735435639",
@@ -74,7 +76,8 @@
     "lng": 100.60892168153316,
     "floor": 2,
     "image": "136.jpg",
-    "connections": {}
+    "connections": {},
+    "yawOffset": 6.230825429619756
   },
   {
     "id": "pin_1785735461446",

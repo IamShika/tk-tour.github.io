@@ -306,7 +306,7 @@ class DevTools {
                 </div>
                 <div class="dev-card-row">
                   <label>Category</label>
-                  <select id="placeCategory" class="dev-input" style="background:#2d2d2d;border:none;padding:8px;border-radius:4px;color:white;width:100%;font-size:13px;margin-bottom:8px;">
+                  <select id="devPlaceCategory" class="dev-input" style="background:#2d2d2d;border:none;padding:8px;border-radius:4px;color:white;width:100%;font-size:13px;margin-bottom:8px;">
                     <option value="library">Library (ห้องสมุด)</option>
                     <option value="cafeteria">Cafeteria (โรงอาหาร)</option>
                     <option value="restroom">Restroom (ห้องน้ำ)</option>
@@ -317,8 +317,15 @@ class DevTools {
                   <input type="text" id="placeCustomCategory" class="dev-input" placeholder="Custom category..." style="display:none;">
                 </div>
                 <div class="dev-card-row">
-                  <label>Floor</label>
-                  <input type="number" id="placeFloor" class="dev-input" value="1">
+                  <label>Floors</label>
+                  <div id="placeFloorContainer" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <label><input type="checkbox" name="placeFloor" value="all"> All Floors</label>
+                    <label><input type="checkbox" name="placeFloor" value="1" checked> 1</label>
+                    <label><input type="checkbox" name="placeFloor" value="2"> 2</label>
+                    <label><input type="checkbox" name="placeFloor" value="3"> 3</label>
+                    <label><input type="checkbox" name="placeFloor" value="4"> 4</label>
+                    <label><input type="checkbox" name="placeFloor" value="5"> 5</label>
+                  </div>
                 </div>
                 <div class="dev-card-row">
                   <label>Image Upload</label>
@@ -444,6 +451,13 @@ class DevTools {
 
     // --- Places ---
     document.getElementById('btnDrawPlace').addEventListener('click', () => this.startDrawingPlace());
+    
+    const catSelect = document.getElementById('devPlaceCategory');
+    if (catSelect) {
+      catSelect.addEventListener('change', (e) => {
+        document.getElementById('placeCustomCategory').style.display = e.target.value === 'other' ? 'block' : 'none';
+      });
+    }
 
     // --- 2D/3D Toggle ---
     const dev3dSwitch = document.getElementById('dev3dSwitch');
@@ -1486,7 +1500,7 @@ class DevTools {
       return;
     }
     
-    const catEl = document.getElementById('placeCategory');
+    const catEl = document.getElementById('devPlaceCategory');
     const customCatEl = document.getElementById('placeCustomCategory');
     const category = catEl.value === 'other' ? customCatEl.value.trim() : catEl.value;
     
@@ -1495,7 +1509,12 @@ class DevTools {
       return;
     }
     
-    const floor = parseInt(document.getElementById('placeFloor').value) || (typeof currentFloor !== 'undefined' ? currentFloor : 1);
+    const floorCheckboxes = document.querySelectorAll('input[name="placeFloor"]:checked');
+    const floor = Array.from(floorCheckboxes).map(cb => cb.value === 'all' ? 'all' : parseInt(cb.value));
+    if (floor.length === 0) {
+      this._toast('Please select at least one floor', 'warning');
+      return;
+    }
     const panoramaId = document.getElementById('placePanoramaId').value;
     
     const place = {

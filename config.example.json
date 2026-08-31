@@ -1,0 +1,10 @@
+{
+  "devMode": false,
+  "workerUrl": "https://thk-map-proxy.YOUR-USERNAME.workers.dev",
+  "satelliteProvider": "google",
+
+  "_comment_workerUrl": "Your Cloudflare Worker proxy URL. Deploy the worker/ directory first.",
+  "_comment_localDev": "For local development without the proxy, you can add these keys directly:",
+  "_comment_localDev2": "  \"gistdaApiKey\": \"YOUR_GISTDA_KEY\",",
+  "_comment_localDev3": "  \"googleMapsApiKey\": \"YOUR_GOOGLE_KEY\""
+}

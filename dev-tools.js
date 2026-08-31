@@ -337,6 +337,30 @@ class DevTools {
                     <option value="">-- None --</option>
                   </select>
                 </div>
+                <div class="dev-card-row">
+                  <label>Operating Hours</label>
+                  <div style="background:#2d2d2d; padding:10px; border-radius:4px;">
+                    <div style="display:flex; gap:12px; margin-bottom:10px;">
+                      <label><input type="checkbox" name="placeDays" value="Mon-Fri"> Mon-Fri</label>
+                      <label><input type="checkbox" name="placeDays" value="Sat-Sun"> Sat-Sun</label>
+                      <label><input type="checkbox" name="placeDays" value="Everyday"> Everyday</label>
+                    </div>
+                    <div style="display:flex; gap:12px;">
+                      <div style="flex:1;">
+                        <label style="font-size:11px; color:#aaa; margin-bottom:4px; display:block;">Open Time</label>
+                        <input type="time" id="placeOpenTime" class="dev-input" style="background:#1e1e1e; border:1px solid #444;">
+                      </div>
+                      <div style="flex:1;">
+                        <label style="font-size:11px; color:#aaa; margin-bottom:4px; display:block;">Close Time</label>
+                        <input type="time" id="placeCloseTime" class="dev-input" style="background:#1e1e1e; border:1px solid #444;">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="dev-card-row">
+                  <label>About Text</label>
+                  <textarea id="placeAbout" class="dev-input" rows="3" placeholder="Enter additional information here..."></textarea>
+                </div>
               </div>
 
               <div class="dev-action-bar">
@@ -456,6 +480,19 @@ class DevTools {
     if (catSelect) {
       catSelect.addEventListener('change', (e) => {
         document.getElementById('placeCustomCategory').style.display = e.target.value === 'other' ? 'block' : 'none';
+      });
+    }
+
+    // Floor Checkbox Logic
+    const allFloorCheckbox = document.querySelector('input[name="placeFloor"][value="all"]');
+    if (allFloorCheckbox) {
+      allFloorCheckbox.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        const individualCheckboxes = document.querySelectorAll('input[name="placeFloor"]:not([value="all"])');
+        individualCheckboxes.forEach(cb => {
+          cb.checked = isChecked;
+          cb.disabled = isChecked;
+        });
       });
     }
 
@@ -1516,14 +1553,27 @@ class DevTools {
       return;
     }
     const panoramaId = document.getElementById('placePanoramaId').value;
+    const about = document.getElementById('placeAbout').value;
+    
+    const checkedDays = Array.from(document.querySelectorAll('input[name="placeDays"]:checked')).map(cb => cb.value);
+    const openTime = document.getElementById('placeOpenTime').value;
+    const closeTime = document.getElementById('placeCloseTime').value;
+    const hours = {
+      days: checkedDays,
+      open: openTime,
+      close: closeTime
+    };
     
     const place = {
       name: name,
       category: category,
       floor: floor,
-      coords: this.state.placePoints.map(p => [p[0], p[1]])
+      coords: this.state.placePoints.map(p => [p[0], p[1]]),
+      hours: hours,
+      about: about
     };
     if (panoramaId) place.panoramaId = panoramaId;
+    if (this.state.editingPlaceId) place.id = this.state.editingPlaceId;
 
     // Handle Image Upload
     const imageInput = document.getElementById('placeImage');
@@ -1565,6 +1615,16 @@ class DevTools {
         customCatEl.value = '';
         imageInput.value = '';
         
+        document.querySelectorAll('input[name="placeDays"]').forEach(cb => cb.checked = false);
+        document.getElementById('placeOpenTime').value = '';
+        document.getElementById('placeCloseTime').value = '';
+        
+        document.getElementById('placeAbout').value = '';
+        this.state.editingPlaceId = null;
+        document.getElementById('statusPlace').innerHTML = '<i class="fa-solid fa-circle-info"></i><span>Ready — draw at least 3 points</span>';
+        document.getElementById('btnDrawPlace').innerHTML = '<i class="fa-solid fa-draw-polygon"></i> Draw Box';
+        document.getElementById('btnDrawPlace').classList.replace('warning', 'primary');
+        
         if (typeof loadPlaces === 'function') {
           loadPlaces(); // Reload data from server
         }
@@ -1585,8 +1645,8 @@ class DevTools {
       const res = await fetch('/get_places');
       const places = await res.json();
       
-      const countEl = document.getElementById('countPlaces');
       const listEl = document.getElementById('listPlaces');
+      const countEl = document.getElementById('countPlaces');
       if (!listEl) return;
       
       if (countEl) countEl.textContent = places.length;
@@ -1607,12 +1667,20 @@ class DevTools {
             <div class="dev-saved-title">${p.name}</div>
             <div class="dev-saved-meta">Floor: ${p.floor}${catStr}</div>
           </div>
-          <div class="dev-saved-actions">
+          <div class="dev-saved-actions" style="display:flex; gap: 4px;">
+            <button class="icon-btn edit" title="Edit Place">
+              <i class="fa-solid fa-pen"></i>
+            </button>
             <button class="icon-btn danger" title="Delete Place">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
         `;
+        
+        item.querySelector('.edit').onclick = (e) => {
+          e.stopPropagation();
+          this.editPlace(p.id);
+        };
         
         item.querySelector('.danger').onclick = (e) => {
           e.stopPropagation();
@@ -1623,14 +1691,113 @@ class DevTools {
         
         listEl.appendChild(item);
       });
-    } catch (e) {
-      console.error("Failed to render places", e);
+    } catch (err) {
+      console.error('Error fetching places:', err);
     }
+  }
+
+  editPlace(id) {
+    this.switchTab('places');
+    fetch('/get_places')
+      .then(res => res.json())
+      .then(places => {
+        const p = places.find(x => x.id === id);
+        if (!p) return;
+        
+        this.state.editingPlaceId = id;
+        
+        document.getElementById('placeName').value = p.name || '';
+        document.getElementById('placeAbout').value = p.about || '';
+        
+        // Reset Hours UI
+        document.querySelectorAll('input[name="placeDays"]').forEach(cb => cb.checked = false);
+        document.getElementById('placeOpenTime').value = '';
+        document.getElementById('placeCloseTime').value = '';
+        
+        if (p.hours) {
+          if (typeof p.hours === 'object') {
+             if (p.hours.days && Array.isArray(p.hours.days)) {
+                p.hours.days.forEach(d => {
+                   const cb = document.querySelector(`input[name="placeDays"][value="${d}"]`);
+                   if (cb) cb.checked = true;
+                });
+             }
+             document.getElementById('placeOpenTime').value = p.hours.open || '';
+             document.getElementById('placeCloseTime').value = p.hours.close || '';
+          }
+        }
+        
+        const catEl = document.getElementById('devPlaceCategory');
+        const customCatEl = document.getElementById('placeCustomCategory');
+        const knownCats = Array.from(catEl.options).map(o => o.value);
+        if (knownCats.includes(p.category)) {
+          catEl.value = p.category;
+          customCatEl.style.display = 'none';
+        } else {
+          catEl.value = 'other';
+          customCatEl.style.display = 'block';
+          customCatEl.value = p.category || '';
+        }
+        
+        // Floors
+        const floorCheckboxes = document.querySelectorAll('input[name="placeFloor"]');
+        floorCheckboxes.forEach(cb => cb.checked = false);
+        if (p.floor) {
+          if (Array.isArray(p.floor)) {
+            p.floor.forEach(f => {
+              const cb = document.querySelector(`input[name="placeFloor"][value="${f}"]`);
+              if (cb) cb.checked = true;
+            });
+          } else {
+            const cb = document.querySelector(`input[name="placeFloor"][value="${p.floor}"]`);
+            if (cb) cb.checked = true;
+          }
+        }
+        
+        if (p.panoramaId) {
+          const panoEl = document.getElementById('placePanoramaId');
+          // Add option if not exists
+          if (!Array.from(panoEl.options).some(o => o.value === p.panoramaId)) {
+             const opt = document.createElement('option');
+             opt.value = p.panoramaId;
+             opt.textContent = `Pin ${p.panoramaId}`;
+             panoEl.appendChild(opt);
+          }
+          panoEl.value = p.panoramaId;
+        }
+        
+        // Retain coordinates so user doesn't have to redraw unless they want to
+        if (p.coords && p.coords.length >= 3) {
+           this.cancelAllActions();
+           this.state.placePoints = p.coords.map(c => [c[0], c[1]]);
+           // Draw a preview
+           const previewId = 'poly-preview-place-edit';
+           this.state.placePreviewId = previewId;
+           this.mapEngine.addPolygon(previewId, this.state.placePoints, {
+              color: '#34C759',
+              fillOpacity: 0.3,
+              outlineColor: '#fff',
+              outlineWidth: 2
+           });
+           
+           this.placeMarkers = [];
+           document.getElementById('statusPlace').innerHTML = '<i class="fa-solid fa-check"></i><span>Editing existing place. (Draw to replace footprint)</span>';
+           document.getElementById('btnDrawPlace').innerHTML = '<i class="fa-solid fa-draw-polygon"></i> Redraw Footprint';
+           document.getElementById('btnDrawPlace').classList.replace('primary', 'warning');
+           document.getElementById('btnSaveAction').disabled = false;
+        }
+        
+        this._toast(`Editing: ${p.name}`, 'info');
+      });
   }
   
   async deletePlace(id) {
     try {
-      const res = await fetch('/delete_place/' + id, { method: 'DELETE' });
+      const res = await fetch('/delete_place', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
       if (res.ok) {
         this._toast('Place deleted', 'success');
         if (typeof loadPlaces === 'function') loadPlaces();

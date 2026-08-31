@@ -716,7 +716,7 @@ function closeAllSidebars() {
     menuToggle.setAttribute('aria-expanded', 'false');
   }
   const placeSidebar = document.getElementById('placeSidebar');
-  if (placeSidebar) placeSidebar.classList.remove('active');
+  if (placeSidebar) placeSidebar.classList.remove('open');
   // Accessibility: release focus trap and restore focus
   if (window._sidebarFocusTrap) {
     window._sidebarFocusTrap();
@@ -779,9 +779,25 @@ document.addEventListener('click', (e) => {
   const clickedToggle = menuToggle && menuToggle.contains(e.target);
 
   if (!clickedInMain && !clickedToggle) {
-    closeAllSidebars();
+    // Only close main sidebar, don't use closeAllSidebars() which aggressively closes placeSidebar too
+    if (mainSidebar) mainSidebar.classList.remove('open');
+    if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
   }
 });
+
+// Close place sidebar when clicking empty map space
+if (mapEngine && mapEngine._ready) {
+  mapEngine._ready.then(() => {
+    mapEngine.map.on('click', (e) => {
+      const features = mapEngine.map.queryRenderedFeatures(e.point);
+      const clickedPlace = features.some(f => f.layer.id.startsWith('poly-fill-'));
+      if (!clickedPlace) {
+        const placeSidebar = document.getElementById('placeSidebar');
+        if (placeSidebar) placeSidebar.classList.remove('open');
+      }
+    });
+  });
+}
 
 // =================== MODAL SYSTEM ===================
 const modalOverlay = document.getElementById('modalOverlay');
@@ -1238,15 +1254,24 @@ function renderPlaces() {
       : (p.floor === 'all' || p.floor === currentFloor || p.floor === 0);
       
     if (!floorMatch) return;
+    if (!p.coords || p.coords.length < 3) return;
 
+    // Visibility logic
     let fillOpacity = 0;
     let strokeOpacity = 0;
-    let dashArray = undefined;
+    if (window.devMode) {
+      fillOpacity = 0.3;
+      strokeOpacity = 1;
+    } else if (navigationController && navigationController.isNavigating && navigationController.currentDestinationId === p.id) {
+      strokeOpacity = 1;
+    }
 
-    // Use interactive hover
+    // Single addPolygon call — includes label, hover, visibility, and click handler
     mapEngine.addPolygon(p.id, p.coords, {
-      color: '#1a73e8', 
+      color: '#1a73e8',
       fillColor: '#1a73e8',
+      fillOpacity: fillOpacity,
+      opacity: strokeOpacity,
       weight: 2,
       label: p.name,
       interactiveHover: true,
@@ -1255,44 +1280,24 @@ function renderPlaces() {
       }
     });
 
-    // Visibility logic
-    if (window.devMode) {
-      fillOpacity = 0.3;
-      strokeOpacity = 1;
-    } else if (navigationController && navigationController.isNavigating && navigationController.currentDestinationId === p.id) {
-      strokeOpacity = 1;
-      dashArray = '5,5';
-    }
+    // Draw POI marker label for non-dev users
+    if (!window.devMode && strokeOpacity === 0) {
+      const center = getPolygonCenter(p.coords);
+      const el = document.createElement('div');
+      el.className = 'place-poi-label';
+      let icon = '📍';
+      if (p.category === 'library') icon = '📚';
+      if (p.category === 'cafeteria') icon = '🍽️';
+      if (p.category === 'restroom' || p.category === 'bathroom') icon = '🚻';
+      if (p.category === 'lab') icon = '🔬';
 
-    if (p.coords && p.coords.length > 2) {
-      mapEngine.addPolygon(p.id, p.coords, {
-        color: '#1a73e8',
-        fillOpacity: fillOpacity,
-        opacity: strokeOpacity,
-        dashArray: dashArray,
-        onClick: () => openPlaceSidebar(p)
-      });
+      el.innerHTML = `<div class="place-poi-icon">${icon}</div><div class="place-poi-text">${p.name}</div>`;
+      el.addEventListener('click', () => openPlaceSidebar(p));
 
-      // Draw Marker if not navigating (navigating implies you already know the place, but maybe we should still show it)
-      if (!window.devMode && strokeOpacity === 0) {
-        const center = getPolygonCenter(p.coords);
-        const el = document.createElement('div');
-        el.className = 'place-poi-label';
-        // Find icon based on category or default
-        let icon = '📍';
-        if (p.category === 'library') icon = '📚';
-        if (p.category === 'cafeteria') icon = '🍽️';
-        if (p.category === 'restroom' || p.category === 'bathroom') icon = '🚻';
-        if (p.category === 'lab') icon = '🔬';
-
-        el.innerHTML = `<div class="place-poi-icon">${icon}</div><div class="place-poi-text">${p.name}</div>`;
-        el.addEventListener('click', () => openPlaceSidebar(p));
-
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([center[1], center[0]])
-          .addTo(mapEngine.map);
-        placeMarkers.push(marker);
-      }
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([center[1], center[0]])
+        .addTo(mapEngine.map);
+      placeMarkers.push(marker);
     }
   });
 }
@@ -1334,12 +1339,66 @@ function openPlaceSidebar(place) {
     imgEl.style.backgroundImage = `url('https://via.placeholder.com/380x220?text=No+Image')`;
   }
 
+  // Populate Hours
+  const hoursRow = document.getElementById('placeHoursRow');
+  const hoursText = document.getElementById('placeHoursText');
+  if (place.hours) {
+    let text = '';
+    if (typeof place.hours === 'string' && place.hours.trim() !== '') {
+      text = place.hours;
+    } else if (typeof place.hours === 'object') {
+      const days = (place.hours.days && place.hours.days.length > 0) ? place.hours.days.join(', ') : '';
+      const open = place.hours.open || '';
+      const close = place.hours.close || '';
+      
+      if (days || open || close) {
+        text = days;
+        if (open && close) {
+           text += text ? ` ${open} - ${close}` : `${open} - ${close}`;
+        } else if (open) {
+           text += text ? ` เปิด (Open) ${open}` : `เปิด (Open) ${open}`;
+        } else if (close) {
+           text += text ? ` ปิด (Close) ${close}` : `ปิด (Close) ${close}`;
+        }
+      }
+    }
+    
+    if (text.trim() !== '') {
+      hoursText.textContent = text.trim();
+      hoursRow.style.display = 'flex';
+    } else {
+      hoursRow.style.display = 'none';
+    }
+  } else {
+    hoursRow.style.display = 'none';
+  }
+
+  // Populate About Text
+  const aboutText = document.getElementById('placeAboutText');
+  aboutText.textContent = place.about || 'ไม่มีข้อมูลเพิ่มเติม (No additional info)';
+
+  // Setup Tabs
+  const tabs = document.querySelectorAll('.place-tab');
+  const contents = document.querySelectorAll('.place-tab-content');
+  tabs.forEach(tab => {
+    tab.onclick = () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.style.display = 'none');
+      tab.classList.add('active');
+      const targetId = 'placeTab' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1);
+      const targetContent = document.getElementById(targetId);
+      if (targetContent) targetContent.style.display = 'block';
+    };
+  });
+  // Reset to first tab
+  if (tabs.length > 0) tabs[0].click();
+
   // 360 View Button
   const view360Btn = document.getElementById('placeView360Btn');
   if (place.panoramaId) {
     view360Btn.style.display = 'flex';
     view360Btn.onclick = () => {
-      sidebar.classList.remove('active');
+      sidebar.classList.remove('open');
       openViewer(place.panoramaId);
     };
   } else {
@@ -1367,7 +1426,7 @@ function openPlaceSidebar(place) {
   // Nav button
   const navBtn = document.getElementById('placeNavBtn');
   navBtn.onclick = () => {
-    sidebar.classList.remove('active');
+    sidebar.classList.remove('open');
     const center = getPolygonCenter(place.coords);
     if (navigationController) {
       // Simulate a search result to pass to navigateToLocation
@@ -1384,11 +1443,23 @@ function openPlaceSidebar(place) {
 
   // Close btn
   document.getElementById('closePlaceSidebarBtn').onclick = () => {
-    sidebar.classList.remove('active');
+    sidebar.classList.remove('open');
   };
 
+  // DevTools Edit Button
+  const editBtn = document.getElementById('placeEditDevBtn');
+  if (window.devTools && window.devTools.isVisible) {
+    editBtn.style.display = 'flex';
+    editBtn.onclick = () => {
+      sidebar.classList.remove('open');
+      window.devTools.editPlace(place.id);
+    };
+  } else {
+    editBtn.style.display = 'none';
+  }
+
   // Slide in
-  sidebar.classList.add('active');
+  sidebar.classList.add('open');
 
   // Pan map
   const center = getPolygonCenter(place.coords);
@@ -1417,17 +1488,7 @@ if (all.length > 1) {
 loadPins();
 loadPlaces();
 
-function getPolygonCenter(coords) {
-  if (!coords || coords.length === 0) return [0, 0];
-  let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
-  for (let c of coords) {
-    if (c[0] < minLat) minLat = c[0];
-    if (c[0] > maxLat) maxLat = c[0];
-    if (c[1] < minLng) minLng = c[1];
-    if (c[1] > maxLng) maxLng = c[1];
-  }
-  return [(minLat + maxLat) / 2, (minLng + maxLng) / 2];
-}
+// getPolygonCenter is defined above (near loadPlaces) — removed duplicate here
 
 
 
@@ -2120,6 +2181,7 @@ if (layerSwitcherBtn && layerSwitcherPanel) {
 // =================== SEARCH FUNCTIONALITY ===================
 const searchInput = document.getElementById('searchInput');
 const searchRecommendations = document.getElementById('searchRecommendations');
+const searchEmptyState = document.getElementById('searchEmptyState');
 
 function searchLocations(query) {
   if (!query || query.trim() === '') return [];
@@ -2312,9 +2374,11 @@ if (searchInput) {
     if (query.trim() === '') {
       searchRecommendations.classList.remove('active');
       searchInput.setAttribute('aria-expanded', 'false');
+      if (searchEmptyState) searchEmptyState.style.display = 'block';
       return;
     }
 
+    if (searchEmptyState) searchEmptyState.style.display = 'none';
     const results = searchLocations(query);
     (window.displaySearchResults || displaySearchResults)(results);
     searchInput.setAttribute('aria-expanded', searchRecommendations.classList.contains('active') ? 'true' : 'false');
@@ -2322,6 +2386,12 @@ if (searchInput) {
 
   searchInput.addEventListener('input', (e) => {
     updateClearButton();
+    if (e.target.value.trim() === '') {
+      searchRecommendations.classList.remove('active');
+      if (searchEmptyState) searchEmptyState.style.display = 'block';
+    } else {
+      if (searchEmptyState) searchEmptyState.style.display = 'none';
+    }
     debouncedSearch(e.target.value);
   });
 
@@ -2438,6 +2508,7 @@ if (searchInput) {
 
       searchInput.value = '';
       searchRecommendations.classList.remove('active');
+      if (searchEmptyState) searchEmptyState.style.display = 'block';
       updateClearButton();
       searchInput.focus();
     });
@@ -2447,6 +2518,10 @@ if (searchInput) {
   const topbar = document.getElementById('topbar');
   if (topbar) {
     searchInput.addEventListener('focus', () => {
+      if (searchInput.value.trim() === '') {
+        if (searchEmptyState) searchEmptyState.style.display = 'block';
+      }
+      
       // Check for phone display mode OR actual small screen width
       const isPhoneMode = document.body.getAttribute('data-display') === 'phone';
       const isSmallScreen = window.innerWidth <= 768;
@@ -2475,9 +2550,11 @@ if (searchInput) {
     if (searchRecommendations && searchInput) {
       const clickedInSearch = searchInput.contains(e.target);
       const clickedInResults = searchRecommendations.contains(e.target);
+      const clickedInEmptyState = searchEmptyState && searchEmptyState.contains(e.target);
 
-      if (!clickedInSearch && !clickedInResults) {
+      if (!clickedInSearch && !clickedInResults && !clickedInEmptyState) {
         searchRecommendations.classList.remove('active');
+        if (searchEmptyState) searchEmptyState.style.display = 'none';
       }
     }
   });
@@ -3645,3 +3722,25 @@ if (typeof displaySearchResults === 'function') {
 console.log('App loaded!');
 console.log('Sound effects:', soundEffectsEnabled ? 'enabled' : 'disabled');
 
+
+// Directions and Empty State Click Handlers
+document.addEventListener('DOMContentLoaded', () => {
+  const dirBtn = document.querySelector('.gm-search-directions');
+  if (dirBtn) {
+    dirBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (typeof showToast === 'function') showToast('การนำทางยังไม่เปิดให้บริการ', 'info');
+    });
+  }
+
+  const recentItems = document.querySelectorAll('.gm-recent-item, .gm-recent-more-link');
+  recentItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof showToast === 'function') showToast('ฟีเจอร์ประวัติการค้นหายังไม่พร้อมใช้งาน', 'info');
+      const searchEmptyState = document.getElementById('searchEmptyState');
+      if (searchEmptyState) searchEmptyState.style.display = 'none';
+    });
+  });
+});

@@ -1,5 +1,5 @@
 {
-  "devMode": true,
+  "devMode": false,
   "workerUrl": "https://thk-map-proxy.doramongameing.workers.dev",
   "satelliteProvider": "google"
 }

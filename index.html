@@ -95,13 +95,69 @@
     </div>
   </div>
 
-  <!-- Topbar -->
-  <div id="topbar">
-    <div class="search-container">
-      <input id="searchInput" placeholder="หาชื่อห้องหรือเลขห้อง..." aria-label="Search rooms" autocomplete="off"
+  <!-- Google Maps Style Search Bar -->
+  <div id="gmSearchBox" class="gm-search-box">
+    <div class="gm-search-input-wrapper">
+      <span class="material-symbols-rounded gm-search-icon">search</span>
+      <input id="searchInput" placeholder="ค้นหาสถานที่..." aria-label="Search places" autocomplete="off"
         role="combobox" aria-expanded="false" aria-controls="searchRecommendations" aria-autocomplete="list" />
       <button id="searchClear" class="search-clear" type="button" title="Clear" aria-label="Clear search">×</button>
     </div>
+    <div class="gm-search-divider"></div>
+    <button class="gm-search-directions" title="Directions" aria-label="Get directions">
+      <span class="material-symbols-rounded" style="color: white;">directions</span>
+    </button>
+  </div>
+
+  <!-- Empty State / Recent History Dropdown -->
+  <div id="searchEmptyState" class="gm-search-dropdown" style="display: none;" role="listbox">
+    <div class="gm-recent-item" role="option" tabindex="0">
+      <div class="gm-recent-icon"><span class="material-symbols-rounded">work</span></div>
+      <div class="gm-recent-text">
+        <div class="gm-recent-title">ที่ทำงาน</div>
+        <div class="gm-recent-subtitle"></div>
+      </div>
+      <div class="gm-recent-action">ตั้งสถานที่</div>
+    </div>
+    <div class="gm-recent-item" role="option" tabindex="0">
+      <div class="gm-recent-icon"><span class="material-symbols-rounded">home</span></div>
+      <div class="gm-recent-text">
+        <div class="gm-recent-title">บ้าน</div>
+        <div class="gm-recent-subtitle"></div>
+      </div>
+      <div class="gm-recent-action">แก้ไข</div>
+    </div>
+    <div class="gm-recent-item" role="option" tabindex="0">
+      <div class="gm-recent-icon"><span class="material-symbols-rounded">schedule</span></div>
+      <div class="gm-recent-text">
+        <div class="gm-recent-title">โลตัส นวนคร</div>
+        <div class="gm-recent-subtitle">98 ถนน พหลโยธิน ตำบล คลองหนึ่ง อำเภอคลอง...</div>
+        <div class="gm-recent-status"><span class="status-open">เปิดอยู่</span> · ปิดเวลา 21:00</div>
+      </div>
+    </div>
+    <div class="gm-recent-item" role="option" tabindex="0">
+      <div class="gm-recent-icon"><span class="material-symbols-rounded">schedule</span></div>
+      <div class="gm-recent-text">
+        <div class="gm-recent-title">คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยธรร...</div>
+        <div class="gm-recent-subtitle">อาคารวิทยาศาสตร์บร.5 ตำบล คลองหนึ่ง อำเภอค...</div>
+        <div class="gm-recent-status"><span class="status-open">เปิดอยู่</span> · ปิดเวลา 17:00</div>
+      </div>
+    </div>
+    <div class="gm-recent-item" role="option" tabindex="0">
+      <div class="gm-recent-icon"><span class="material-symbols-rounded">schedule</span></div>
+      <div class="gm-recent-text">
+        <div class="gm-recent-title">ร้านปิ่นแก้ว</div>
+        <div class="gm-recent-subtitle">13 ซอย คลองหลวง 15 ตำบล คลองหนึ่ง อำเภอคล...</div>
+        <div class="gm-recent-status"><span class="status-open">เปิดอยู่</span> · ปิดเวลา 20:00</div>
+      </div>
+    </div>
+    <div class="gm-recent-more">
+      <a href="#" class="gm-recent-more-link">เพิ่มเติมจากประวัติล่าสุด</a>
+    </div>
+  </div>
+
+  <!-- Topbar -->
+  <div id="topbar">
     <!-- Floor Pill - Unified Component -->
     <div id="floorPill" class="floor-pill" role="button" tabindex="0" aria-expanded="false"
       aria-label="Floor selector, current floor 1" aria-haspopup="listbox">
@@ -133,7 +189,7 @@
     </div>
   </div>
 
-  <!-- PLACE INFO SIDEBAR (left) -->
+  <!-- PLACE INFO SIDEBAR (left) - Google Maps Style -->
   <aside id="placeSidebar" class="sidebar-panel left place-sidebar" aria-label="Place Information" aria-hidden="true">
     <button id="closePlaceSidebarBtn" class="close-btn overlay-close" title="Close" aria-label="Close place info">×</button>
     <div class="place-header-image" id="placeHeaderImage"></div>
@@ -145,9 +201,9 @@
       </div>
       
       <div class="place-tabs">
-        <div class="place-tab active">ภาพรวม</div>
-        <div class="place-tab">รีวิว</div>
-        <div class="place-tab">เกี่ยวกับ</div>
+        <div class="place-tab active" data-tab="overview">ภาพรวม</div>
+        <div class="place-tab" data-tab="reviews">รีวิว</div>
+        <div class="place-tab" data-tab="about">เกี่ยวกับ</div>
       </div>
       
       <div class="place-actions">
@@ -159,9 +215,13 @@
           <div class="action-icon"><span class="material-symbols-rounded">bookmark_border</span></div>
           <span>บันทึก</span>
         </button>
+        <button class="place-action-btn" id="placeNearbyBtn">
+          <div class="action-icon"><span class="material-symbols-rounded">near_me</span></div>
+          <span>ใกล้เคียง</span>
+        </button>
         <button class="place-action-btn" id="placeView360Btn" style="display:none;">
           <div class="action-icon"><span class="material-symbols-rounded">360</span></div>
-          <span>สตรีทวิว 360°</span>
+          <span>สตรีทวิว</span>
         </button>
         <button class="place-action-btn" id="placeShareBtn">
           <div class="action-icon"><span class="material-symbols-rounded">share</span></div>
@@ -169,19 +229,48 @@
         </button>
       </div>
       
-      <div class="place-details">
-        <div class="detail-row">
-          <span class="material-symbols-rounded">location_on</span>
-          <span id="placeLocationText">Building / Floor info</span>
+      <div class="place-tab-content active" id="placeTabOverview">
+        <div class="place-details">
+          <div class="detail-row">
+            <span class="material-symbols-rounded">location_on</span>
+            <span id="placeLocationText">Building / Floor info</span>
+          </div>
+          <div class="detail-row">
+            <span class="material-symbols-rounded">pin_drop</span>
+            <span id="placeCoordsText">พิกัด</span>
+          </div>
+          <div class="detail-row" id="placeHoursRow">
+            <span class="material-symbols-rounded">schedule</span>
+            <span id="placeHoursText"></span>
+          </div>
+          <div class="detail-row">
+            <span class="material-symbols-rounded">history</span>
+            <span>ประวัติแผนที่ของคุณ</span>
+          </div>
+          <div class="detail-row">
+            <span class="material-symbols-rounded">label</span>
+            <span>เพิ่มป้ายกำกับ</span>
+          </div>
         </div>
-        <div class="detail-row">
-          <span class="material-symbols-rounded">schedule</span>
-          <span><span style="color:#d93025">ปิดอยู่</span> · เปิดเวลา 08:00 </span>
-        </div>
-        <div class="detail-row edit-hint">
+      </div>
+
+      <div class="place-tab-content" id="placeTabReviews" style="display:none; padding: 16px;">
+        <p style="color:var(--muted); font-size:14px; text-align:center;">ยังไม่มีรีวิว</p>
+      </div>
+
+      <div class="place-tab-content" id="placeTabAbout" style="display:none; padding: 16px;">
+        <p id="placeAboutText" style="color:var(--text); font-size:14px; line-height:1.5;"></p>
+      </div>
+
+      <div class="place-suggest-edit">
+        <button class="suggest-edit-btn" id="placeSuggestEditBtn">
           <span class="material-symbols-rounded">edit</span>
-          <span>แนะนำให้แก้ไข (ผ่าน DevTools)</span>
-        </div>
+          <span>แนะนำให้แก้ไข</span>
+        </button>
+        <button class="suggest-edit-btn" id="placeEditDevBtn" style="display:none; margin-top: 12px; color: var(--accent); border-color: var(--accent);">
+          <span class="material-symbols-rounded">build</span>
+          <span>Edit in DevTools (Admin)</span>
+        </button>
       </div>
     </div>
   </aside>
@@ -251,11 +340,11 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- App -->
-  <script src="map-engine.js?v=1.2"></script>
-  <script src="leaflet-compat.js?v=1.2"></script>
-  <script src="script.js?v=1.2"></script>
+  <script src="map-engine.js?v=1.6"></script>
+  <script src="leaflet-compat.js?v=1.6"></script>
+  <script src="script.js?v=1.6"></script>
   <!-- New Dev Tools -->
-  <script src="dev-tools.js?v=1.2"></script>
+  <script src="dev-tools.js?v=1.6"></script>
 </body>
 
 </html>

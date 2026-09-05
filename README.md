@@ -9,7 +9,7 @@ This is the map of my school, as a final project with limited budget. We used Ai
 - Viewing 360 images 
 - GPS navigation
 - Simple and easy to use UI
-- Info about that room/buliding (adding soon.)
+- Info about that room/buliding (WIP!!!)
 - Captions on 360 pins
 - Muti-floor switcher
 - Searchbar with reccommendations

@@ -1,1 +1,1546 @@
-[]
+{
+  "version": "2.0",
+  "autoFromPins": true,
+  "nodes": {
+    "nmwa682lk8h": {
+      "floor": 1,
+      "lat": 14.085302791888566,
+      "lng": 100.60764307080962,
+      "type": "corridor"
+    },
+    "nmwa682lkqm": {
+      "floor": 1,
+      "lat": 14.085989109561908,
+      "lng": 100.6076321003764,
+      "type": "corridor"
+    },
+    "nmwa682lkxw": {
+      "floor": 1,
+      "lat": 14.08529614153126,
+      "lng": 100.60885256102426,
+      "type": "corridor"
+    },
+    "nmwa682lkzg": {
+      "floor": 1,
+      "lat": 14.086037555102351,
+      "lng": 100.60886443983117,
+      "type": "corridor"
+    },
+    "nmwa68si01n": {
+      "floor": 1,
+      "lat": 14.085331617276012,
+      "lng": 100.60925843898758,
+      "type": "corridor"
+    },
+    "nmwa68si03m": {
+      "floor": 1,
+      "lat": 14.08426740586323,
+      "lng": 100.60918020569915,
+      "type": "corridor"
+    },
+    "nmwa68si0d2": {
+      "floor": 1,
+      "lat": 14.084256055947748,
+      "lng": 100.60884202691068,
+      "type": "corridor"
+    },
+    "nmwa68si0xc": {
+      "floor": 1,
+      "lat": 14.085326164176555,
+      "lng": 100.60885304204217,
+      "type": "corridor"
+    },
+    "nmwa68si0zx": {
+      "floor": 1,
+      "lat": 14.084281025725332,
+      "lng": 100.6092913717888,
+      "type": "corridor"
+    },
+    "nmwa69bm8eo": {
+      "floor": 1,
+      "lat": 14.084576994813432,
+      "lng": 100.60759184889281,
+      "type": "corridor"
+    },
+    "nmwa69bm8s7": {
+      "floor": 1,
+      "lat": 14.08457270120672,
+      "lng": 100.60884523393247,
+      "type": "corridor"
+    },
+    "nmwa69bm8su": {
+      "floor": 1,
+      "lat": 14.084255162984505,
+      "lng": 100.60758303939122,
+      "type": "corridor"
+    },
+    "nmwa69n897o": {
+      "floor": 1,
+      "lat": 14.084932927000153,
+      "lng": 100.60760164892366,
+      "type": "corridor"
+    },
+    "nmwa69n89p2": {
+      "floor": 1,
+      "lat": 14.084929041301436,
+      "lng": 100.6088488429884,
+      "type": "corridor"
+    },
+    "nmwa6c47k37": {
+      "floor": 1,
+      "lat": 14.085971241407833,
+      "lng": 100.60658150811025,
+      "type": "corridor"
+    },
+    "nmwa6c47k90": {
+      "floor": 1,
+      "lat": 14.08522568426676,
+      "lng": 100.60706897108275,
+      "type": "corridor"
+    },
+    "nmwa6c47kd0": {
+      "floor": 1,
+      "lat": 14.085088354382847,
+      "lng": 100.60707572552423,
+      "type": "corridor"
+    },
+    "nmwa6c47kr8": {
+      "floor": 1,
+      "lat": 14.085216803562874,
+      "lng": 100.6076334408103,
+      "type": "corridor"
+    },
+    "nmwa6c47kxq": {
+      "floor": 1,
+      "lat": 14.085092392163872,
+      "lng": 100.60661192944804,
+      "type": "corridor"
+    },
+    "nmwa6carkv5": {
+      "floor": 1,
+      "lat": 14.085417167153489,
+      "lng": 100.60764124258013,
+      "type": "corridor"
+    },
+    "nmwa6carkzg": {
+      "floor": 1,
+      "lat": 14.085432452574668,
+      "lng": 100.60660015826807,
+      "type": "corridor"
+    },
+    "nmwa6cmmofn": {
+      "floor": 1,
+      "lat": 14.085216871264777,
+      "lng": 100.6067693223161,
+      "type": "corridor"
+    },
+    "nmwa6cmmon9": {
+      "floor": 1,
+      "lat": 14.08543006238694,
+      "lng": 100.6067629530591,
+      "type": "corridor"
+    },
+    "nmwa6d5kgde": {
+      "floor": 1,
+      "lat": 14.084988083867358,
+      "lng": 100.60709136487253,
+      "type": "corridor"
+    },
+    "nmwa6d5kgru": {
+      "floor": 1,
+      "lat": 14.084863155745643,
+      "lng": 100.60759972788232,
+      "type": "corridor"
+    },
+    "nmwa6d5kguu": {
+      "floor": 1,
+      "lat": 14.084862401056597,
+      "lng": 100.60721042660737,
+      "type": "corridor"
+    },
+    "nmwa6dajsd": {
+      "floor": 1,
+      "lat": 14.08472922992027,
+      "lng": 100.60721085574659,
+      "type": "corridor"
+    },
+    "nmwa6dajsy4": {
+      "floor": 1,
+      "lat": 14.084722170579221,
+      "lng": 100.60759584607833,
+      "type": "corridor"
+    },
+    "nmwa6dna88m": {
+      "floor": 1,
+      "lat": 14.084591876511013,
+      "lng": 100.60699270746858,
+      "type": "corridor"
+    },
+    "nmwa6dsj4bo": {
+      "floor": 1,
+      "lat": 14.08450297821922,
+      "lng": 100.6066581975964,
+      "type": "corridor"
+    },
+    "nmwa6dsj4pa": {
+      "floor": 1,
+      "lat": 14.084507801976471,
+      "lng": 100.60692391246909,
+      "type": "corridor"
+    },
+    "nmwa6e3c8uv": {
+      "floor": 1,
+      "lat": 14.084506357535204,
+      "lng": 100.60693921650108,
+      "type": "corridor"
+    },
+    "nmwa6e3c8wc": {
+      "floor": 1,
+      "lat": 14.085089517450378,
+      "lng": 100.60694213082114,
+      "type": "corridor"
+    },
+    "nmwa6e7d4f7": {
+      "floor": 1,
+      "lat": 14.084593902413932,
+      "lng": 100.60693965400337,
+      "type": "corridor"
+    },
+    "nmwa6edrkak": {
+      "floor": 1,
+      "lat": 14.08454371766081,
+      "lng": 100.60693940320692,
+      "type": "corridor"
+    },
+    "nmwa6edrkrs": {
+      "floor": 1,
+      "lat": 14.08452216954153,
+      "lng": 100.60759034816083,
+      "type": "corridor"
+    },
+    "nmwa6evcg6l": {
+      "floor": 1,
+      "lat": 14.084507349096581,
+      "lng": 100.6068989657489,
+      "type": "corridor"
+    },
+    "nmwa6evcgen": {
+      "floor": 1,
+      "lat": 14.084232627145198,
+      "lng": 100.60690768165426,
+      "type": "corridor"
+    },
+    "nmwa6evcgl7": {
+      "floor": 1,
+      "lat": 14.0844037221826,
+      "lng": 100.60689711611184,
+      "type": "corridor"
+    },
+    "nmwa6evcgpd": {
+      "floor": 1,
+      "lat": 14.084265268889865,
+      "lng": 100.60690487733115,
+      "type": "corridor"
+    },
+    "nmwa6fg3c98": {
+      "floor": 1,
+      "lat": 14.084219399185756,
+      "lng": 100.6062116741366,
+      "type": "corridor"
+    },
+    "nmwa6fr7c1": {
+      "floor": 1,
+      "lat": 14.083976785765543,
+      "lng": 100.60658552487837,
+      "type": "corridor"
+    },
+    "nmwa6fr7cib": {
+      "floor": 1,
+      "lat": 14.083970634084395,
+      "lng": 100.60625995181039,
+      "type": "corridor"
+    },
+    "nmwa6fr7cs5": {
+      "floor": 1,
+      "lat": 14.084220225481872,
+      "lng": 100.60625515085806,
+      "type": "corridor"
+    },
+    "nmwa6g46w5r": {
+      "floor": 1,
+      "lat": 14.084227834517135,
+      "lng": 100.6066555108507,
+      "type": "corridor"
+    },
+    "nmwa6gu409i": {
+      "floor": 1,
+      "lat": 14.08509590704989,
+      "lng": 100.60612923795895,
+      "type": "corridor"
+    },
+    "nmwa6gu40j5": {
+      "floor": 1,
+      "lat": 14.08511368523371,
+      "lng": 100.60661119238912,
+      "type": "corridor"
+    },
+    "nmwa6h2xtz": {
+      "floor": 1,
+      "lat": 14.086004923454269,
+      "lng": 100.6061122624323,
+      "type": "corridor"
+    },
+    "nmwa6hejkoi": {
+      "floor": 1,
+      "lat": 14.084399585418993,
+      "lng": 100.60613209918063,
+      "type": "corridor"
+    },
+    "nmwa6iozk1j": {
+      "floor": 1,
+      "lat": 14.084183321739133,
+      "lng": 100.60942495496931,
+      "type": "corridor"
+    },
+    "nmwa6iozk1y": {
+      "floor": 1,
+      "lat": 14.084122674651638,
+      "lng": 100.61009335008578,
+      "type": "corridor"
+    },
+    "nmwa6iozk4": {
+      "floor": 1,
+      "lat": 14.085996445433977,
+      "lng": 100.60982212554586,
+      "type": "corridor"
+    },
+    "nmwa6iozk56": {
+      "floor": 1,
+      "lat": 14.084036071969265,
+      "lng": 100.60997352612344,
+      "type": "corridor"
+    },
+    "nmwa6iozka7": {
+      "floor": 1,
+      "lat": 14.085739184093015,
+      "lng": 100.60976877309787,
+      "type": "corridor"
+    },
+    "nmwa6iozkbe": {
+      "floor": 1,
+      "lat": 14.085523812561846,
+      "lng": 100.60929473853014,
+      "type": "corridor"
+    },
+    "nmwa6iozkcg": {
+      "floor": 1,
+      "lat": 14.085233124039178,
+      "lng": 100.6101933585926,
+      "type": "corridor"
+    },
+    "nmwa6iozkeu": {
+      "floor": 1,
+      "lat": 14.085480491907575,
+      "lng": 100.6099138200234,
+      "type": "corridor"
+    },
+    "nmwa6iozkg1": {
+      "floor": 1,
+      "lat": 14.085609804864362,
+      "lng": 100.60967153481062,
+      "type": "corridor"
+    },
+    "nmwa6iozkgx": {
+      "floor": 1,
+      "lat": 14.085388985281085,
+      "lng": 100.6100631422164,
+      "type": "corridor"
+    },
+    "nmwa6iozkn8": {
+      "floor": 1,
+      "lat": 14.08562055390098,
+      "lng": 100.60946651328908,
+      "type": "corridor"
+    },
+    "nmwa6iozkp5": {
+      "floor": 1,
+      "lat": 14.084035521544678,
+      "lng": 100.60962443537221,
+      "type": "corridor"
+    },
+    "nmwa6iozkr": {
+      "floor": 1,
+      "lat": 14.085991786145613,
+      "lng": 100.60981310204568,
+      "type": "corridor"
+    },
+    "nmwa6iozksd": {
+      "floor": 1,
+      "lat": 14.084297347592212,
+      "lng": 100.61020417255332,
+      "type": "corridor"
+    },
+    "nmwa6iozkum": {
+      "floor": 1,
+      "lat": 14.084008648788554,
+      "lng": 100.60981560412478,
+      "type": "corridor"
+    },
+    "nmwa6iozkx3": {
+      "floor": 1,
+      "lat": 14.085587982331617,
+      "lng": 100.60987780271955,
+      "type": "corridor"
+    },
+    "nmwa6j2lk8a": {
+      "floor": 1,
+      "lat": 14.085496358242892,
+      "lng": 100.60970834379975,
+      "type": "corridor"
+    },
+    "nmwa6j2lkea": {
+      "floor": 1,
+      "lat": 14.08427039519674,
+      "lng": 100.6094196188617,
+      "type": "corridor"
+    },
+    "nmwa6j2lkfd": {
+      "floor": 1,
+      "lat": 14.085189441391691,
+      "lng": 100.60941684833011,
+      "type": "corridor"
+    },
+    "nmwa6j2lky": {
+      "floor": 1,
+      "lat": 14.085388298866846,
+      "lng": 100.60950550628064,
+      "type": "corridor"
+    },
+    "nmwa6jis74p": {
+      "floor": 1,
+      "lat": 14.085359840888529,
+      "lng": 100.60926376952531,
+      "type": "corridor"
+    },
+    "nmwa6jis7vb": {
+      "floor": 1,
+      "lat": 14.08535775850643,
+      "lng": 100.60885354824136,
+      "type": "corridor"
+    },
+    "nmwa6khq1nb": {
+      "floor": 1,
+      "lat": 14.085427315551167,
+      "lng": 100.606950039015,
+      "type": "corridor"
+    },
+    "nmwa6khq1pe": {
+      "floor": 1,
+      "lat": 14.085623182065675,
+      "lng": 100.60748302109289,
+      "type": "corridor"
+    },
+    "nmwa6khq1tl": {
+      "floor": 1,
+      "lat": 14.085632939999613,
+      "lng": 100.60694612381144,
+      "type": "corridor"
+    },
+    "nmwa6kr2obe": {
+      "floor": 1,
+      "lat": 14.085856116980388,
+      "lng": 100.60763422619407,
+      "type": "corridor"
+    },
+    "nmwa6kr2oqm": {
+      "floor": 1,
+      "lat": 14.085861392336582,
+      "lng": 100.60695002566348,
+      "type": "corridor"
+    },
+    "nmwa6kuy839": {
+      "floor": 1,
+      "lat": 14.085856447837724,
+      "lng": 100.60658548168593,
+      "type": "corridor"
+    },
+    "nmwa6l6bk7y": {
+      "floor": 1,
+      "lat": 14.08577511325359,
+      "lng": 100.6068175646634,
+      "type": "corridor"
+    },
+    "nmwa6l6bkcu": {
+      "floor": 1,
+      "lat": 14.085714114227585,
+      "lng": 100.60678037600701,
+      "type": "corridor"
+    },
+    "nmwa6l6bktc": {
+      "floor": 1,
+      "lat": 14.085795462876437,
+      "lng": 100.60694889962116,
+      "type": "corridor"
+    },
+    "nmwa6l6bkyk": {
+      "floor": 1,
+      "lat": 14.085796515387315,
+      "lng": 100.6069028180666,
+      "type": "corridor"
+    },
+    "nmwa6lcjtyq": {
+      "floor": 1,
+      "lat": 14.085522337718615,
+      "lng": 100.60676240983355,
+      "type": "corridor"
+    },
+    "nmwa6n5gp3f": {
+      "floor": 1,
+      "lat": 14.084607641708345,
+      "lng": 100.60901932036825,
+      "type": "corridor"
+    },
+    "nmwa6n5gpaa": {
+      "floor": 1,
+      "lat": 14.085199616839219,
+      "lng": 100.6089037991319,
+      "type": "corridor"
+    },
+    "nmwa6n5gpe9": {
+      "floor": 1,
+      "lat": 14.085202988287065,
+      "lng": 100.60901097550209,
+      "type": "corridor"
+    },
+    "nmwa6nce0rg": {
+      "floor": 1,
+      "lat": 14.085201648236607,
+      "lng": 100.60926251311567,
+      "type": "corridor"
+    },
+    "nmwa6nishky": {
+      "floor": 1,
+      "lat": 14.085202533743916,
+      "lng": 100.60909629669152,
+      "type": "corridor"
+    },
+    "nmwa6nishmi": {
+      "floor": 1,
+      "lat": 14.08444109853778,
+      "lng": 100.60909667894515,
+      "type": "corridor"
+    },
+    "nmwa6npso8x": {
+      "floor": 1,
+      "lat": 14.084443150244923,
+      "lng": 100.60913954948535,
+      "type": "corridor"
+    },
+    "nmwa6npsoc6": {
+      "floor": 1,
+      "lat": 14.084383548801455,
+      "lng": 100.6091405106971,
+      "type": "door",
+      "name": "โรงยิม",
+      "placeId": "place_1794285035987"
+    },
+    "nmwa6pg343x": {
+      "floor": 1,
+      "lat": 14.08505638866143,
+      "lng": 100.60661475567129,
+      "name": "โรงอาหาร",
+      "placeId": "place_1788152204998",
+      "type": "entrance"
+    },
+    "nmwa6pg3464": {
+      "floor": 1,
+      "lat": 14.08505638866143,
+      "lng": 100.60661475567129,
+      "type": "corridor"
+    },
+    "nmwa6pi0o1y": {
+      "floor": 1,
+      "lat": 14.08493144149481,
+      "lng": 100.60662456384446,
+      "name": "โรงอาหาร",
+      "placeId": "place_1788152204998",
+      "type": "entrance"
+    },
+    "nmwa6pi0ogi": {
+      "floor": 1,
+      "lat": 14.08493144149481,
+      "lng": 100.60662456384446,
+      "type": "corridor"
+    },
+    "nmwa6pjrtat": {
+      "floor": 1,
+      "lat": 14.08478318137826,
+      "lng": 100.60663620205074,
+      "name": "โรงอาหาร",
+      "placeId": "place_1788152204998",
+      "type": "entrance"
+    },
+    "nmwa6pjrtvp": {
+      "floor": 1,
+      "lat": 14.08478318137826,
+      "lng": 100.60663620205074,
+      "type": "corridor"
+    },
+    "nmwa6plrc1p": {
+      "floor": 1,
+      "lat": 14.08461014263998,
+      "lng": 100.60664978534324,
+      "type": "corridor"
+    },
+    "nmwa6plrcfy": {
+      "floor": 1,
+      "lat": 14.08461014263998,
+      "lng": 100.60664978534324,
+      "name": "โรงอาหาร",
+      "placeId": "place_1788152204998",
+      "type": "entrance"
+    },
+    "nmwa6pnbc95": {
+      "floor": 1,
+      "lat": 14.084435338630941,
+      "lng": 100.60665753710383,
+      "type": "corridor"
+    },
+    "nmwa6pnbcfp": {
+      "floor": 1,
+      "lat": 14.084435859620612,
+      "lng": 100.60660082532797,
+      "name": "โรงอาหาร",
+      "placeId": "place_1788152204998",
+      "type": "entrance"
+    },
+    "nmwa6ponkv8": {
+      "floor": 1,
+      "lat": 14.084425140835862,
+      "lng": 100.60643264276081,
+      "name": "โรงอาหาร",
+      "placeId": "place_1788152204998",
+      "type": "entrance"
+    },
+    "nmwa6pqm0a5": {
+      "floor": 1,
+      "lat": 14.085101438646026,
+      "lng": 100.60627919575501,
+      "name": "โรงอาหาร",
+      "placeId": "place_1788152204998",
+      "type": "entrance"
+    },
+    "nmwa6pqm0f5": {
+      "floor": 1,
+      "lat": 14.085101438646026,
+      "lng": 100.60627919575501,
+      "type": "corridor"
+    },
+    "nmwa6pscgbf": {
+      "floor": 1,
+      "lat": 14.085106680420516,
+      "lng": 100.60642129668408,
+      "type": "corridor"
+    },
+    "nmwa6pscgjh": {
+      "floor": 1,
+      "lat": 14.085076426010119,
+      "lng": 100.60642248295682,
+      "name": "โรงอาหาร",
+      "placeId": "place_1788152204998",
+      "type": "entrance"
+    },
+    "nmwa6pttssl": {
+      "floor": 1,
+      "lat": 14.085084403987892,
+      "lng": 100.6065606675723,
+      "name": "โรงอาหาร",
+      "placeId": "place_1788152204998",
+      "type": "entrance"
+    },
+    "nmwa6pttsw5": {
+      "floor": 1,
+      "lat": 14.085111781891731,
+      "lng": 100.60655959408707,
+      "type": "corridor"
+    },
+    "nmwa6q28xa1": {
+      "floor": 1,
+      "lat": 14.084826074085044,
+      "lng": 100.60679251146922,
+      "name": "สวนบัวลี",
+      "placeId": "place_1788154584548",
+      "type": "entrance"
+    },
+    "nmwa6q28xtk": {
+      "floor": 1,
+      "lat": 14.084825376857813,
+      "lng": 100.60694081078832,
+      "type": "corridor"
+    },
+    "nmwa6qbk36j": {
+      "floor": 1,
+      "lat": 14.084505811696507,
+      "lng": 100.60681427863814,
+      "type": "corridor"
+    },
+    "nmwa6qbk3zo": {
+      "floor": 1,
+      "lat": 14.085090741163397,
+      "lng": 100.60680157012878,
+      "type": "corridor"
+    },
+    "nmwa6qijtpw": {
+      "floor": 1,
+      "lat": 14.084811690436466,
+      "lng": 100.60663396413061,
+      "type": "corridor"
+    },
+    "nmwa6qznse": {
+      "floor": 1,
+      "lat": 14.084228951942265,
+      "lng": 100.6067143057309,
+      "type": "corridor"
+    },
+    "nmwa6qznsp4": {
+      "floor": 1,
+      "lat": 14.084186523587377,
+      "lng": 100.60673346124338,
+      "type": "corridor"
+    },
+    "nmwa6qznsq6": {
+      "floor": 1,
+      "lat": 14.084016636275706,
+      "lng": 100.60674013924972,
+      "type": "corridor"
+    },
+    "nmwa6qznsyr": {
+      "floor": 1,
+      "lat": 14.083986470345053,
+      "lng": 100.60671095230339,
+      "type": "corridor"
+    },
+    "nmwa6ro4wfv": {
+      "floor": 1,
+      "lat": 14.08535801383307,
+      "lng": 100.6089038466097,
+      "type": "corridor"
+    },
+    "nmwa6ro4wm2": {
+      "floor": 1,
+      "lat": 14.08587273105853,
+      "lng": 100.60965411533999,
+      "type": "corridor"
+    },
+    "nmwa6ro4wpl": {
+      "floor": 1,
+      "lat": 14.085867520003973,
+      "lng": 100.60916592746833,
+      "type": "corridor"
+    },
+    "nmwa6ro4wul": {
+      "floor": 1,
+      "lat": 14.085859703937913,
+      "lng": 100.60920729377318,
+      "type": "corridor"
+    },
+    "nmwa6ro4wyw": {
+      "floor": 1,
+      "lat": 14.085861254278399,
+      "lng": 100.6089149905597,
+      "type": "corridor"
+    },
+    "nmwa6rzm8gs": {
+      "floor": 1,
+      "lat": 14.08598762928436,
+      "lng": 100.60889270385417,
+      "type": "corridor"
+    },
+    "nmwa6rzm8rx": {
+      "floor": 1,
+      "lat": 14.085924109681883,
+      "lng": 100.60890980601368,
+      "type": "corridor"
+    },
+    "nmwa73dw7ly": {
+      "floor": 1,
+      "lat": 14.08597307721408,
+      "lng": 100.60611285714842,
+      "type": "corridor"
+    },
+    "nmwa73dw7s9": {
+      "floor": 1,
+      "lat": 14.08602313791026,
+      "lng": 100.60658576029607,
+      "type": "corridor"
+    },
+    "nmwa74oy05i": {
+      "floor": 1,
+      "lat": 14.085529860397443,
+      "lng": 100.60763944123688,
+      "type": "corridor"
+    },
+    "nmwa74oy0zo": {
+      "floor": 1,
+      "lat": 14.085528465349256,
+      "lng": 100.60755692346055,
+      "type": "corridor"
+    },
+    "nmwa74rw8yy": {
+      "floor": 1,
+      "lat": 14.085534591227955,
+      "lng": 100.6074793027118,
+      "type": "corridor"
+    },
+    "nmwa74wlb5w": {
+      "floor": 1,
+      "lat": 14.08541922373542,
+      "lng": 100.60750116955506,
+      "type": "corridor"
+    },
+    "nmwa7544n8n": {
+      "floor": 1,
+      "lat": 14.08583149610161,
+      "lng": 100.60694951505069,
+      "type": "corridor"
+    },
+    "nmwa7544ne3": {
+      "floor": 1,
+      "lat": 14.085820655550503,
+      "lng": 100.60763479302669,
+      "type": "corridor"
+    },
+    "nmwa791eocz": {
+      "lat": 14.08508648837929,
+      "lng": 100.6075938443592,
+      "floor": 1,
+      "type": "entrance",
+      "name": "ประตูเข้าอาคาร 7"
+    },
+    "nmwa791eo1e": {
+      "lat": 14.085083884884043,
+      "lng": 100.60761855498976,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwa7984pyi": {
+      "lat": 14.08508328930806,
+      "lng": 100.60712034022964,
+      "floor": 1,
+      "type": "entrance",
+      "name": "ประตูเข้าอาคาร 7"
+    },
+    "nmwa8mim89x": {
+      "lat": 14.084378420917261,
+      "lng": 100.60919365801124,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwa8z5kgby": {
+      "lat": 14.08440568248271,
+      "lng": 100.6091153858469,
+      "floor": 1,
+      "type": "door",
+      "name": "สนามมวย",
+      "placeId": "place_1788702528160"
+    },
+    "nmwa8z5kghy": {
+      "lat": 14.084406058175766,
+      "lng": 100.60914014768115,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwa8za4666": {
+      "lat": 14.084299413143498,
+      "lng": 100.60889568066835,
+      "floor": 1,
+      "type": "door",
+      "name": "สนามมวย",
+      "placeId": "place_1788702528160"
+    },
+    "nmwa8za47ol": {
+      "lat": 14.084257906364815,
+      "lng": 100.6088971614007,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwa8zcxzqe": {
+      "lat": 14.084305591908404,
+      "lng": 100.60888897515247,
+      "floor": 1,
+      "type": "door",
+      "name": "สนามมวย",
+      "placeId": "place_1788702528160"
+    },
+    "nmwa94ibqsn": {
+      "lat": 14.084048571355709,
+      "lng": 100.61020763834205,
+      "floor": 1,
+      "type": "door",
+      "name": "โรงเผาขยะ"
+    }
+  },
+  "edges": [
+    {
+      "from": "nmwa682lk8h",
+      "to": "nmwa682lkxw"
+    },
+    {
+      "from": "nmwa682lkxw",
+      "to": "nmwa68si0xc"
+    },
+    {
+      "from": "nmwa68si0xc",
+      "to": "nmwa68si01n"
+    },
+    {
+      "from": "nmwa68si0zx",
+      "to": "nmwa68si03m"
+    },
+    {
+      "from": "nmwa68si0d2",
+      "to": "nmwa69bm8s7"
+    },
+    {
+      "from": "nmwa68si0d2",
+      "to": "nmwa69bm8su"
+    },
+    {
+      "from": "nmwa69bm8eo",
+      "to": "nmwa69bm8s7"
+    },
+    {
+      "from": "nmwa69bm8s7",
+      "to": "nmwa69n89p2"
+    },
+    {
+      "from": "nmwa69n89p2",
+      "to": "nmwa682lkxw"
+    },
+    {
+      "from": "nmwa69n89p2",
+      "to": "nmwa69n897o"
+    },
+    {
+      "from": "nmwa6c47kr8",
+      "to": "nmwa682lk8h"
+    },
+    {
+      "from": "nmwa6c47kr8",
+      "to": "nmwa6c47k90"
+    },
+    {
+      "from": "nmwa6c47k90",
+      "to": "nmwa6c47kd0"
+    },
+    {
+      "from": "nmwa6carkv5",
+      "to": "nmwa682lk8h"
+    },
+    {
+      "from": "nmwa6carkzg",
+      "to": "nmwa6cmmon9"
+    },
+    {
+      "from": "nmwa6c47k90",
+      "to": "nmwa6cmmofn"
+    },
+    {
+      "from": "nmwa6cmmofn",
+      "to": "nmwa6cmmon9"
+    },
+    {
+      "from": "nmwa69n897o",
+      "to": "nmwa6d5kgru"
+    },
+    {
+      "from": "nmwa6c47kd0",
+      "to": "nmwa6d5kgde"
+    },
+    {
+      "from": "nmwa6d5kgde",
+      "to": "nmwa6d5kguu"
+    },
+    {
+      "from": "nmwa6d5kguu",
+      "to": "nmwa6d5kgru"
+    },
+    {
+      "from": "nmwa6d5kgru",
+      "to": "nmwa6dajsy4"
+    },
+    {
+      "from": "nmwa6dajsy4",
+      "to": "nmwa69bm8eo"
+    },
+    {
+      "from": "nmwa6dajsy4",
+      "to": "nmwa6dajsd"
+    },
+    {
+      "from": "nmwa69bm8eo",
+      "to": "nmwa6dna88m"
+    },
+    {
+      "from": "nmwa6c47kd0",
+      "to": "nmwa6e3c8wc"
+    },
+    {
+      "from": "nmwa6e3c8uv",
+      "to": "nmwa6dsj4pa"
+    },
+    {
+      "from": "nmwa6dna88m",
+      "to": "nmwa6e7d4f7"
+    },
+    {
+      "from": "nmwa69bm8su",
+      "to": "nmwa6edrkrs"
+    },
+    {
+      "from": "nmwa6edrkrs",
+      "to": "nmwa69bm8eo"
+    },
+    {
+      "from": "nmwa6e7d4f7",
+      "to": "nmwa6edrkak"
+    },
+    {
+      "from": "nmwa6edrkak",
+      "to": "nmwa6e3c8uv"
+    },
+    {
+      "from": "nmwa6edrkrs",
+      "to": "nmwa6edrkak"
+    },
+    {
+      "from": "nmwa6evcg6l",
+      "to": "nmwa6dsj4pa"
+    },
+    {
+      "from": "nmwa6evcg6l",
+      "to": "nmwa6evcgl7"
+    },
+    {
+      "from": "nmwa6evcgl7",
+      "to": "nmwa6evcgpd"
+    },
+    {
+      "from": "nmwa6evcgpd",
+      "to": "nmwa6evcgen"
+    },
+    {
+      "from": "nmwa6evcgen",
+      "to": "nmwa69bm8su"
+    },
+    {
+      "from": "nmwa6fr7cs5",
+      "to": "nmwa6fg3c98"
+    },
+    {
+      "from": "nmwa6fr7cs5",
+      "to": "nmwa6fr7cib"
+    },
+    {
+      "from": "nmwa6fr7cib",
+      "to": "nmwa6fr7c1"
+    },
+    {
+      "from": "nmwa6g46w5r",
+      "to": "nmwa6fr7cs5"
+    },
+    {
+      "from": "nmwa6c47kxq",
+      "to": "nmwa6gu40j5"
+    },
+    {
+      "from": "nmwa6gu40j5",
+      "to": "nmwa6carkzg"
+    },
+    {
+      "from": "nmwa6gu409i",
+      "to": "nmwa6hejkoi"
+    },
+    {
+      "from": "nmwa6iozk4",
+      "to": "nmwa6iozkx3"
+    },
+    {
+      "from": "nmwa6iozkx3",
+      "to": "nmwa6iozkeu"
+    },
+    {
+      "from": "nmwa6iozkeu",
+      "to": "nmwa6iozkgx"
+    },
+    {
+      "from": "nmwa6iozkgx",
+      "to": "nmwa6iozkcg"
+    },
+    {
+      "from": "nmwa6iozkcg",
+      "to": "nmwa6iozksd"
+    },
+    {
+      "from": "nmwa6iozksd",
+      "to": "nmwa6iozk1y"
+    },
+    {
+      "from": "nmwa6iozk1y",
+      "to": "nmwa6iozk56"
+    },
+    {
+      "from": "nmwa6iozk56",
+      "to": "nmwa6iozkum"
+    },
+    {
+      "from": "nmwa6iozkum",
+      "to": "nmwa6iozkp5"
+    },
+    {
+      "from": "nmwa6iozkp5",
+      "to": "nmwa6iozk1j"
+    },
+    {
+      "from": "nmwa6iozk1j",
+      "to": "nmwa68si0zx"
+    },
+    {
+      "from": "nmwa6iozkbe",
+      "to": "nmwa6iozkn8"
+    },
+    {
+      "from": "nmwa6iozkn8",
+      "to": "nmwa6iozkg1"
+    },
+    {
+      "from": "nmwa6iozkg1",
+      "to": "nmwa6iozka7"
+    },
+    {
+      "from": "nmwa6iozka7",
+      "to": "nmwa6iozkr"
+    },
+    {
+      "from": "nmwa6iozkeu",
+      "to": "nmwa6j2lk8a"
+    },
+    {
+      "from": "nmwa6j2lk8a",
+      "to": "nmwa6j2lky"
+    },
+    {
+      "from": "nmwa6j2lky",
+      "to": "nmwa6j2lkfd"
+    },
+    {
+      "from": "nmwa6j2lkfd",
+      "to": "nmwa6j2lkea"
+    },
+    {
+      "from": "nmwa6j2lkea",
+      "to": "nmwa6iozk1j"
+    },
+    {
+      "from": "nmwa68si0xc",
+      "to": "nmwa6jis7vb"
+    },
+    {
+      "from": "nmwa6jis7vb",
+      "to": "nmwa682lkzg"
+    },
+    {
+      "from": "nmwa68si01n",
+      "to": "nmwa6jis74p"
+    },
+    {
+      "from": "nmwa6jis74p",
+      "to": "nmwa6iozkbe"
+    },
+    {
+      "from": "nmwa6cmmon9",
+      "to": "nmwa6khq1nb"
+    },
+    {
+      "from": "nmwa6khq1pe",
+      "to": "nmwa6khq1tl"
+    },
+    {
+      "from": "nmwa6khq1tl",
+      "to": "nmwa6khq1nb"
+    },
+    {
+      "from": "nmwa682lkqm",
+      "to": "nmwa6kr2obe"
+    },
+    {
+      "from": "nmwa6kr2oqm",
+      "to": "nmwa6kr2obe"
+    },
+    {
+      "from": "nmwa6carkzg",
+      "to": "nmwa6kuy839"
+    },
+    {
+      "from": "nmwa6kuy839",
+      "to": "nmwa6c47k37"
+    },
+    {
+      "from": "nmwa6kr2oqm",
+      "to": "nmwa6kuy839"
+    },
+    {
+      "from": "nmwa6khq1tl",
+      "to": "nmwa6l6bktc"
+    },
+    {
+      "from": "nmwa6l6bkcu",
+      "to": "nmwa6l6bk7y"
+    },
+    {
+      "from": "nmwa6l6bk7y",
+      "to": "nmwa6l6bkyk"
+    },
+    {
+      "from": "nmwa6l6bkyk",
+      "to": "nmwa6l6bktc"
+    },
+    {
+      "from": "nmwa6cmmon9",
+      "to": "nmwa6lcjtyq"
+    },
+    {
+      "from": "nmwa6n5gpaa",
+      "to": "nmwa6n5gpe9"
+    },
+    {
+      "from": "nmwa6n5gpe9",
+      "to": "nmwa6n5gp3f"
+    },
+    {
+      "from": "nmwa68si01n",
+      "to": "nmwa6nce0rg"
+    },
+    {
+      "from": "nmwa6nce0rg",
+      "to": "nmwa68si0zx"
+    },
+    {
+      "from": "nmwa6n5gpe9",
+      "to": "nmwa6nishky"
+    },
+    {
+      "from": "nmwa6nishky",
+      "to": "nmwa6nce0rg"
+    },
+    {
+      "from": "nmwa6nishky",
+      "to": "nmwa6nishmi"
+    },
+    {
+      "from": "nmwa6nishmi",
+      "to": "nmwa6npso8x"
+    },
+    {
+      "from": "nmwa6pg3464",
+      "to": "nmwa6c47kxq"
+    },
+    {
+      "from": "nmwa6pg343x",
+      "to": "nmwa6pg3464"
+    },
+    {
+      "from": "nmwa6pi0ogi",
+      "to": "nmwa6pg3464"
+    },
+    {
+      "from": "nmwa6pi0o1y",
+      "to": "nmwa6pi0ogi"
+    },
+    {
+      "from": "nmwa6pjrtat",
+      "to": "nmwa6pjrtvp"
+    },
+    {
+      "from": "nmwa6dsj4bo",
+      "to": "nmwa6plrc1p"
+    },
+    {
+      "from": "nmwa6plrc1p",
+      "to": "nmwa6pjrtvp"
+    },
+    {
+      "from": "nmwa6plrcfy",
+      "to": "nmwa6plrc1p"
+    },
+    {
+      "from": "nmwa6g46w5r",
+      "to": "nmwa6pnbc95"
+    },
+    {
+      "from": "nmwa6pnbc95",
+      "to": "nmwa6dsj4bo"
+    },
+    {
+      "from": "nmwa6pnbcfp",
+      "to": "nmwa6pnbc95"
+    },
+    {
+      "from": "nmwa6ponkv8",
+      "to": "nmwa6pnbcfp"
+    },
+    {
+      "from": "nmwa6gu409i",
+      "to": "nmwa6pqm0f5"
+    },
+    {
+      "from": "nmwa6pqm0a5",
+      "to": "nmwa6pqm0f5"
+    },
+    {
+      "from": "nmwa6pqm0f5",
+      "to": "nmwa6pscgbf"
+    },
+    {
+      "from": "nmwa6pscgjh",
+      "to": "nmwa6pscgbf"
+    },
+    {
+      "from": "nmwa6pscgbf",
+      "to": "nmwa6pttsw5"
+    },
+    {
+      "from": "nmwa6pttsw5",
+      "to": "nmwa6gu40j5"
+    },
+    {
+      "from": "nmwa6pttssl",
+      "to": "nmwa6pttsw5"
+    },
+    {
+      "from": "nmwa6e3c8wc",
+      "to": "nmwa6q28xtk"
+    },
+    {
+      "from": "nmwa6q28xtk",
+      "to": "nmwa6e7d4f7"
+    },
+    {
+      "from": "nmwa6q28xa1",
+      "to": "nmwa6q28xtk"
+    },
+    {
+      "from": "nmwa6e3c8wc",
+      "to": "nmwa6qbk3zo"
+    },
+    {
+      "from": "nmwa6qbk3zo",
+      "to": "nmwa6c47kxq"
+    },
+    {
+      "from": "nmwa6dsj4bo",
+      "to": "nmwa6qbk36j"
+    },
+    {
+      "from": "nmwa6qbk36j",
+      "to": "nmwa6evcg6l"
+    },
+    {
+      "from": "nmwa6qbk3zo",
+      "to": "nmwa6qbk36j"
+    },
+    {
+      "from": "nmwa6pjrtvp",
+      "to": "nmwa6qijtpw"
+    },
+    {
+      "from": "nmwa6qijtpw",
+      "to": "nmwa6pi0ogi"
+    },
+    {
+      "from": "nmwa6q28xtk",
+      "to": "nmwa6qijtpw"
+    },
+    {
+      "from": "nmwa6evcgen",
+      "to": "nmwa6qznse"
+    },
+    {
+      "from": "nmwa6qznse",
+      "to": "nmwa6g46w5r"
+    },
+    {
+      "from": "nmwa6qznse",
+      "to": "nmwa6qznsp4"
+    },
+    {
+      "from": "nmwa6qznsp4",
+      "to": "nmwa6qznsq6"
+    },
+    {
+      "from": "nmwa6qznsq6",
+      "to": "nmwa6qznsyr"
+    },
+    {
+      "from": "nmwa6qznsyr",
+      "to": "nmwa6fr7c1"
+    },
+    {
+      "from": "nmwa6jis7vb",
+      "to": "nmwa6ro4wfv"
+    },
+    {
+      "from": "nmwa6ro4wfv",
+      "to": "nmwa6jis74p"
+    },
+    {
+      "from": "nmwa6ro4wm2",
+      "to": "nmwa6ro4wul"
+    },
+    {
+      "from": "nmwa6ro4wul",
+      "to": "nmwa6ro4wpl"
+    },
+    {
+      "from": "nmwa6ro4wpl",
+      "to": "nmwa6ro4wyw"
+    },
+    {
+      "from": "nmwa6ro4wyw",
+      "to": "nmwa6ro4wfv"
+    },
+    {
+      "from": "nmwa6ro4wyw",
+      "to": "nmwa6rzm8rx"
+    },
+    {
+      "from": "nmwa6rzm8rx",
+      "to": "nmwa6rzm8gs"
+    },
+    {
+      "from": "nmwa6rzm8gs",
+      "to": "nmwa682lkzg"
+    },
+    {
+      "from": "nmwa6gu409i",
+      "to": "nmwa73dw7ly"
+    },
+    {
+      "from": "nmwa73dw7ly",
+      "to": "nmwa6h2xtz"
+    },
+    {
+      "from": "nmwa73dw7ly",
+      "to": "nmwa6c47k37"
+    },
+    {
+      "from": "nmwa6c47k37",
+      "to": "nmwa73dw7s9"
+    },
+    {
+      "from": "nmwa74oy05i",
+      "to": "nmwa6carkv5"
+    },
+    {
+      "from": "nmwa6khq1pe",
+      "to": "nmwa74oy0zo"
+    },
+    {
+      "from": "nmwa74oy0zo",
+      "to": "nmwa74oy05i"
+    },
+    {
+      "from": "nmwa74oy0zo",
+      "to": "nmwa74rw8yy"
+    },
+    {
+      "from": "nmwa6khq1nb",
+      "to": "nmwa74wlb5w"
+    },
+    {
+      "from": "nmwa74wlb5w",
+      "to": "nmwa6carkv5"
+    },
+    {
+      "from": "nmwa74oy0zo",
+      "to": "nmwa74wlb5w"
+    },
+    {
+      "from": "nmwa6kr2obe",
+      "to": "nmwa7544ne3"
+    },
+    {
+      "from": "nmwa7544ne3",
+      "to": "nmwa74oy05i"
+    },
+    {
+      "from": "nmwa6l6bktc",
+      "to": "nmwa7544n8n"
+    },
+    {
+      "from": "nmwa7544n8n",
+      "to": "nmwa6kr2oqm"
+    },
+    {
+      "from": "nmwa7544ne3",
+      "to": "nmwa7544n8n"
+    },
+    {
+      "from": "nmwa69n897o",
+      "to": "nmwa791eo1e"
+    },
+    {
+      "from": "nmwa791eo1e",
+      "to": "nmwa6c47kr8"
+    },
+    {
+      "from": "nmwa791eocz",
+      "to": "nmwa791eo1e"
+    },
+    {
+      "from": "nmwa7984pyi",
+      "to": "nmwa6c47kd0"
+    },
+    {
+      "from": "nmwa6npsoc6",
+      "to": "nmwa8mim89x"
+    },
+    {
+      "from": "nmwa8mim89x",
+      "to": "nmwa68si03m"
+    },
+    {
+      "from": "nmwa6npso8x",
+      "to": "nmwa8z5kghy"
+    },
+    {
+      "from": "nmwa8z5kghy",
+      "to": "nmwa6npsoc6"
+    },
+    {
+      "from": "nmwa8z5kgby",
+      "to": "nmwa8z5kghy"
+    },
+    {
+      "from": "nmwa68si03m",
+      "to": "nmwa8za47ol"
+    },
+    {
+      "from": "nmwa8za47ol",
+      "to": "nmwa68si0d2"
+    },
+    {
+      "from": "nmwa8za4666",
+      "to": "nmwa8za47ol"
+    },
+    {
+      "from": "nmwa8zcxzqe",
+      "to": "nmwa8za4666"
+    },
+    {
+      "from": "nmwa94ibqsn",
+      "to": "nmwa6iozk1y"
+    }
+  ],
+  "transitions": []
+}

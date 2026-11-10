@@ -567,6 +567,7 @@
     const g = graph(); let focus = null;
     if (g) g.nodes.forEach(n => { if (!focus && n.source === 'pin') focus = n; });
     if (focus && Object.keys(data.nodes).length === 0) map.jumpTo({ center: [focus.lng, focus.lat], zoom: Math.max(map.getZoom(), 19.5) });
+    if (NS().setNetworkVisible) NS().setNetworkVisible(false);       // the editor draws its own lines
     ensureLayers();
     renderAll();
     setTimeout(() => { map.resize(); renderAll(); }, 60);
@@ -585,6 +586,7 @@
     map.doubleClickZoom.enable();
     ['ne-nodes', 'ne-edges', 'ne-pin-nodes', 'ne-pin-edges', 'ne-sel', 'ne-draft', 'ne-draft-pts', 'ne-snap'].forEach(id => { if (map.getSource(id)) map.getSource(id).setData(EMPTY); });
     document.documentElement.style.removeProperty('--ne-sheet-h');
+    if (NS() && NS().setNetworkVisible) { NS().setNetworkVisible(true); NS().reloadGraph().then(() => NS().refreshNetwork && NS().refreshNetwork()); }
     if (dirty) toast('Draft kept. Press Save inside the editor to publish it.');
   }
 

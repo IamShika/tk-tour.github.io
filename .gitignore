@@ -1,0 +1,16 @@
+# API Keys and Config
+# config.json is safe to commit — API keys are in Cloudflare Worker secrets, not here
+
+# Worker local dev secrets
+worker/.dev.vars
+worker/node_modules/
+
+# Dependencies and caches
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+
+# OS generated files
+.DS_Store
+Thumbs.db

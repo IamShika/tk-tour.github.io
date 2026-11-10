@@ -27,7 +27,8 @@
 
   const SPEEDUP_DEMO = 5;          // m/s for the demo walker
   const ARROW_ID = 'nav-arrow';
-  const SRC_ROUTE = 'nav-route-src', SRC_ACC = 'nav-accuracy-src';
+  const SRC_ROUTE = 'nav-route-src', SRC_ACC = 'nav-accuracy-src', SRC_NET = 'nav-network-src';
+  const NET_ZOOM_HIDE = 17.8, NET_ZOOM_FULL = 19;   // grey walkway overlay: invisible below zoom 17.8, fully shown from 19 (map min zoom is ~17)
   const EMPTY = { type: 'FeatureCollection', features: [] };
 
   // ------------------------------------------------------------------ helpers
@@ -199,7 +200,7 @@
     mode: 'idle',                 // idle | preview | navigating | arrived
     route: null, rp: null, dest: null, start: null,
     accessible: lsGet('nav_accessible') === '1', voice: lsGet('nav_voice') === '1',
-    follow: false, graph: null, graphPins: -1,
+    follow: false, graph: null, graphPins: -1, networkVisible: true,
     lastReroute: 0, manualStepUntil: 0, lastRenderedStep: -2, lastDrawnProgress: -99, spokenStep: -1,
     baseNotice: null, dynNotice: null, sim: null, wakeLock: null, lastPos: null, cancelPick: null,
     markers: { user: null, dest: null, vertical: [] }, layersReady: false, busy: false
@@ -224,6 +225,7 @@
     if (!pins) { try { const r = await fetch('data/pins.json'); pins = r.ok ? await r.json() : []; } catch (e) { pins = []; } }
     const g = NC.NavGraph.build({ manual, pins });
     S.graph = g; S.graphPins = pins.length;
+    drawNetwork();
     console.log('[Nav] graph:', g.nodes.size, 'nodes,', g.edges.length, 'edges,', g.transitions.length, 'transitions', g.stats);
     return g;
   }
@@ -282,6 +284,19 @@
     try {
       if (!map.getStyle()) return false;
       if (!map.hasImage(ARROW_ID)) map.addImage(ARROW_ID, arrowImage(), { pixelRatio: 2 });
+      if (!map.getSource(SRC_NET)) {
+        // Faint grey walkway network (like Google's road overlay on satellite): fades in when you zoom in, gone when zoomed out
+        map.addSource(SRC_NET, { type: 'geojson', data: EMPTY });
+        const firstSymbol = (map.getStyle().layers || []).find(l => l.type === 'symbol');
+        map.addLayer({ id: 'nav-network', type: 'line', source: SRC_NET,
+          layout: { 'line-cap': 'round', 'line-join': 'round', visibility: S.networkVisible ? 'visible' : 'none' },
+          paint: {
+            'line-color': '#8d9399',
+            'line-opacity': ['interpolate', ['linear'], ['zoom'], NET_ZOOM_HIDE, 0, NET_ZOOM_FULL, 0.5],
+            'line-width': ['interpolate', ['exponential', 2], ['zoom'], 17, 2.6, 22, 83],      // roughly 3 m wide on the ground
+            'line-blur': 0.6
+          } }, firstSymbol ? firstSymbol.id : undefined);
+      }
       if (!map.getSource(SRC_ACC)) {
         map.addSource(SRC_ACC, { type: 'geojson', data: EMPTY });
         map.addLayer({ id: 'nav-accuracy-fill', type: 'fill', source: SRC_ACC, paint: { 'fill-color': '#1a73e8', 'fill-opacity': 0.13 } });
@@ -298,6 +313,7 @@
       }
       S.layersReady = true;
       applyFloorFilter();
+      drawNetwork();
       return true;
     } catch (e) { return false; }
   }
@@ -311,8 +327,49 @@
     set('nav-route-line', ['all', ['==', ['get', 'passed'], false], ['==', ['get', 'connector'], false]]);
     set('nav-route-connector', ['all', ['==', ['get', 'passed'], false], ['==', ['get', 'connector'], true]]);
     set('nav-route-arrows', ['all', ['==', ['get', 'passed'], false], ['==', ['get', 'connector'], false]]);
-    set('nav-accuracy-fill'); set('nav-accuracy-line');
+    set('nav-accuracy-fill'); set('nav-accuracy-line'); set('nav-network');
   }
+
+  /** Put every walk edge of the routing graph on the map as a faint line (filtered to the current floor). */
+  function drawNetwork() {
+    const map = mapObj(); if (!map || !S.layersReady || !map.getSource(SRC_NET)) return;
+    const g = S.graph, feats = [];
+    if (g) {
+      // Join edges into long polylines. Overlapping translucent segments would show darker blobs at every joint,
+      // so we only break a line where 3+ walkways meet or where it ends.
+      const adj = new Map();
+      const link = (x, y) => { if (!adj.has(x)) adj.set(x, new Set()); adj.get(x).add(y); };
+      g.edges.forEach(e => {
+        const a = g.nodes.get(e.a), b = g.nodes.get(e.b);
+        if (a && b && a.floor === b.floor && e.a !== e.b) { link(e.a, e.b); link(e.b, e.a); }
+      });
+      const used = new Set(), key = (x, y) => (x < y ? x + '|' + y : y + '|' + x);
+      const emit = ids => {
+        const n0 = g.nodes.get(ids[0]);
+        feats.push({ type: 'Feature', properties: { floor: n0.floor }, geometry: { type: 'LineString', coordinates: ids.map(id => { const n = g.nodes.get(id); return [n.lng, n.lat]; }) } });
+      };
+      const walk = (start, first) => {
+        const ids = [start, first]; used.add(key(start, first));
+        let prev = start, cur = first;
+        while (adj.get(cur).size === 2) {
+          const next = [...adj.get(cur)].find(x => x !== prev);
+          if (next === undefined || used.has(key(cur, next))) break;
+          used.add(key(cur, next)); ids.push(next); prev = cur; cur = next;
+        }
+        emit(ids);
+      };
+      adj.forEach((nb, id) => { if (nb.size !== 2) nb.forEach(o => { if (!used.has(key(id, o))) walk(id, o); }); });
+      adj.forEach((nb, id) => nb.forEach(o => { if (!used.has(key(id, o))) walk(id, o); }));      // leftover loops
+    }
+    map.getSource(SRC_NET).setData({ type: 'FeatureCollection', features: feats });
+  }
+
+  function setNetworkVisible(v) {
+    S.networkVisible = !!v;
+    const map = mapObj();
+    if (map && map.getLayer('nav-network')) map.setLayoutProperty('nav-network', 'visibility', v ? 'visible' : 'none');
+  }
+
 
   function bringToFront() {
     const map = mapObj(); if (!map || !S.layersReady) return;
@@ -1106,7 +1163,7 @@
   window.NavSystem = {
     navigateTo, openPicker, closePicker, end, begin, stepTo, tracker, S,
     reloadGraph: () => { graphPromise = null; return ensureGraph(true); },
-    getGraph: () => S.graph, ensureGraph, setManualLocation, chooseManualLocation, pickOnMap,
+    getGraph: () => S.graph, setNetworkVisible, refreshNetwork: drawNetwork, ensureGraph, setManualLocation, chooseManualLocation, pickOnMap,
     computeRoute, startDemo, normalizeDest, searchAll, userFloor, inCampus
   };
   navigationController = legacy;      // declared with `let` in script.js

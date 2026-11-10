@@ -100,7 +100,7 @@ class DevTools {
               <i class="fa-solid fa-map-pin"></i>
               <span class="dev-rail-badge" id="railBadgePins"></span>
             </button>
-            <button class="dev-rail-btn" data-tab="paths" title="Pathways">
+            <button class="dev-rail-btn" data-tab="paths" title="Walkways &amp; routes">
               <i class="fa-solid fa-route"></i>
               <span class="dev-rail-badge" id="railBadgePaths"></span>
             </button>
@@ -247,47 +247,68 @@ class DevTools {
               <div class="dev-saved-list" id="listPins"></div>
             </div>
             
-            <!-- Pathways Tab -->
+            <!-- Walkways Tab -->
             <div class="dev-section" id="tab-paths" style="display:none;">
-              <div class="dev-card dev-step-guide">
-                <div class="step-indicator">
-                  <div class="step-dot active" data-step="1">1</div>
-                  <div class="step-line"></div>
-                  <div class="step-dot" data-step="2">2</div>
-                  <div class="step-line"></div>
-                  <div class="step-dot" data-step="3">3</div>
+              <div class="dev-card dev-walk-card">
+                <div class="dev-walk-head">
+                  <i class="fa-solid fa-route"></i>
+                  <div>
+                    <b>Walkway network</b>
+                    <span id="walkStats">Loading…</span>
+                  </div>
                 </div>
-                <p class="step-text" id="pathStepText">Name your route, then click <b>Start Drawing</b></p>
+                <p class="dev-walk-text">This is the path network the Directions feature walks along. Draw corridors, doors and stairs with a crosshair, just like adding a missing road in Google Maps.</p>
+                <button class="dev-btn primary dev-walk-open" id="btnOpenWalkEditor">
+                  <i class="fa-solid fa-pen-ruler"></i> Open walkway editor
+                </button>
+                <span class="dev-shortcut-hint dev-walk-hint">Shortcut: Alt+Shift+W</span>
               </div>
 
-              <div class="dev-card">
-                <div class="dev-card-row">
-                  <label>Route Name</label>
-                  <input type="text" id="pathName" class="dev-input" placeholder="e.g. Main Entrance to Library">
+              <details class="dev-legacy" id="legacyRoutes">
+                <summary>Old route lines <span>(drawn on the map only — not used for directions)</span></summary>
+                <div class="dev-card dev-step-guide">
+                  <div class="step-indicator">
+                    <div class="step-dot active" data-step="1">1</div>
+                    <div class="step-line"></div>
+                    <div class="step-dot" data-step="2">2</div>
+                    <div class="step-line"></div>
+                    <div class="step-dot" data-step="3">3</div>
+                  </div>
+                  <p class="step-text" id="pathStepText">Name your route, then click <b>Start Drawing</b></p>
                 </div>
-              </div>
 
-              <div class="dev-action-bar">
-                <button class="dev-btn primary" id="btnDrawPath">
-                  <i class="fa-solid fa-pen"></i> Start Drawing
-                </button>
-                <button class="dev-btn ghost" id="btnUndoPath" disabled>
-                  <i class="fa-solid fa-rotate-left"></i> Undo
-                </button>
-              </div>
+                <div class="dev-card">
+                  <div class="dev-card-row">
+                    <label>Route Name</label>
+                    <input type="text" id="pathName" class="dev-input" placeholder="e.g. Main Entrance to Library">
+                  </div>
+                </div>
 
-              <div class="dev-status" id="statusPath">
-                <i class="fa-solid fa-circle-info"></i>
-                <span>Ready — draw at least 2 waypoints</span>
-              </div>
+                <div class="dev-action-bar">
+                  <button class="dev-btn primary" id="btnDrawPath">
+                    <i class="fa-solid fa-pen"></i> Start Drawing
+                  </button>
+                  <button class="dev-btn ghost" id="btnUndoPath" disabled>
+                    <i class="fa-solid fa-rotate-left"></i> Undo
+                  </button>
+                  <button class="dev-btn ghost" id="btnSavePathInline">
+                    <i class="fa-solid fa-check"></i> Save
+                  </button>
+                </div>
 
-              <div class="dev-section-label">
-                <span>SAVED</span>
-                <span class="dev-count-badge" id="countPath">0</span>
-              </div>
-              <div class="dev-saved-list" id="listPath"></div>
+                <div class="dev-status" id="statusPath">
+                  <i class="fa-solid fa-circle-info"></i>
+                  <span>Ready — draw at least 2 waypoints</span>
+                </div>
+
+                <div class="dev-section-label">
+                  <span>SAVED</span>
+                  <span class="dev-count-badge" id="countPath">0</span>
+                </div>
+                <div class="dev-saved-list" id="listPath"></div>
+              </details>
             </div>
-            
+
             <!-- Places Tab -->
             <div class="dev-section" id="tab-places" style="display:none;">
               <div class="dev-card dev-step-guide">
@@ -306,7 +327,7 @@ class DevTools {
                 </div>
                 <div class="dev-card-row">
                   <label>Category</label>
-                  <select id="devPlaceCategory" class="dev-input" style="background:#2d2d2d;border:none;padding:8px;border-radius:4px;color:white;width:100%;font-size:13px;margin-bottom:8px;">
+                  <select id="devPlaceCategory" class="dev-input">
                     <option value="library">Library (ห้องสมุด)</option>
                     <option value="cafeteria">Cafeteria (โรงอาหาร)</option>
                     <option value="restroom">Restroom (ห้องน้ำ)</option>
@@ -329,13 +350,18 @@ class DevTools {
                 </div>
                 <div class="dev-card-row">
                   <label>Image Upload</label>
-                  <input type="file" id="placeImage" accept="image/*" class="dev-input" style="font-size:11px;background:#2d2d2d;color:white;padding:5px;">
+                  <input type="file" id="placeImage" accept="image/*" class="dev-input">
                 </div>
                 <div class="dev-card-row">
                   <label>Linked 360° (Optional)</label>
-                  <select id="placePanoramaId" class="dev-input" style="background:#2d2d2d;border:none;padding:8px;border-radius:4px;color:white;width:100%;font-size:13px;">
+                  <select id="placePanoramaId" class="dev-input">
                     <option value="">-- None --</option>
                   </select>
+                </div>
+                <div class="dev-card-row">
+                  <label>Upload 360° Photo</label>
+                  <input type="file" id="place360Image" accept="image/*" class="dev-input">
+                  <small style="color:#888;font-size:10px;margin-top:4px;">Upload a panoramic image to create a new 360° view</small>
                 </div>
                 <div class="dev-card-row">
                   <label>Operating Hours</label>
@@ -472,6 +498,12 @@ class DevTools {
     // --- Paths ---
     document.getElementById('btnDrawPath').addEventListener('click', () => this.startDrawingPath());
     document.getElementById('btnUndoPath').addEventListener('click', () => this.undoPathPoint());
+    document.getElementById('btnSavePathInline').addEventListener('click', () => this.savePath());
+    document.getElementById('btnOpenWalkEditor').addEventListener('click', () => {
+      if (!window.NavEditor) { this._toast('Walkway editor is still loading — try again in a second', 'warning'); return; }
+      this.togglePanel(false);
+      window.NavEditor.open();
+    });
 
     // --- Places ---
     document.getElementById('btnDrawPlace').addEventListener('click', () => this.startDrawingPlace());
@@ -583,13 +615,16 @@ class DevTools {
     // Update header label
     const label = document.getElementById('devHeaderLabel');
     if (label) {
-      const labels = { buildings: 'BUILDINGS', pins: '360° PINS', paths: 'PATHWAYS', places: 'PLACES / POIS' };
+      const labels = { buildings: 'BUILDINGS', pins: '360° PINS', paths: 'WALKWAYS', places: 'PLACES / POIS' };
       label.textContent = labels[tabId] || tabId.toUpperCase();
     }
     
     // Update footer save button text
     const saveBtn = document.getElementById('btnSaveAction');
     if (saveBtn) {
+      const footer = document.querySelector('.dev-footer');
+      if (footer) footer.style.display = (tabId === 'pins' || tabId === 'paths') ? 'none' : '';   // pins auto-save; walkways have their own buttons
+      if (tabId === 'paths') this.renderWalkStats();
       if (tabId === 'pins') {
         saveBtn.style.display = 'none'; // Pins auto-save on click
       } else {
@@ -597,6 +632,14 @@ class DevTools {
         saveBtn.innerHTML = `<i class="fa-solid fa-check"></i> Save ${tabId === 'buildings' ? 'Building' : tabId === 'places' ? 'Place' : 'Route'}`;
       }
     }
+  }
+
+  renderWalkStats() {
+    const el = document.getElementById('walkStats'); if (!el) return;
+    const g = window.NavSystem && window.NavSystem.getGraph && window.NavSystem.getGraph();
+    if (!g) { el.textContent = 'Network not loaded yet'; return; }
+    let drawn = 0; g.edges.forEach(e => { if (e.source !== 'pin') drawn++; });
+    el.textContent = g.nodes.size + ' points · ' + g.edges.length + ' connections (' + drawn + ' drawn by you)';
   }
 
   updateTabBadges() {
@@ -1575,7 +1618,8 @@ class DevTools {
     if (panoramaId) place.panoramaId = panoramaId;
     if (this.state.editingPlaceId) place.id = this.state.editingPlaceId;
 
-    // Handle Image Upload
+    // Handle Image Upload (appends to images array)
+    place.images = [];
     const imageInput = document.getElementById('placeImage');
     if (imageInput.files && imageInput.files[0]) {
       const file = imageInput.files[0];
@@ -1589,12 +1633,38 @@ class DevTools {
         });
         const result = await response.json();
         if (response.ok && result.filename) {
-          place.image = result.filename;
+          place.images.push(result.filename);
         } else {
           this._toast('Image upload failed: ' + (result.error || 'Unknown error'), 'warning');
         }
       } catch (err) {
         this._toast('Error uploading image', 'error');
+        console.error(err);
+      }
+    }
+
+    // Handle 360° Photo Upload
+    const pano360Input = document.getElementById('place360Image');
+    if (pano360Input && pano360Input.files && pano360Input.files[0]) {
+      const file = pano360Input.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      try {
+        const response = await fetch('/upload_image', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await response.json();
+        if (response.ok && result.filename) {
+          // Set this as the panoramaId so the viewer can find it
+          place.panoramaId = result.filename;
+          this._toast('360° photo uploaded!', 'success');
+        } else {
+          this._toast('360° upload failed: ' + (result.error || 'Unknown error'), 'warning');
+        }
+      } catch (err) {
+        this._toast('Error uploading 360° photo', 'error');
         console.error(err);
       }
     }
@@ -1614,6 +1684,7 @@ class DevTools {
         nameEl.value = '';
         customCatEl.value = '';
         imageInput.value = '';
+        if (pano360Input) pano360Input.value = '';
         
         document.querySelectorAll('input[name="placeDays"]').forEach(cb => cb.checked = false);
         document.getElementById('placeOpenTime').value = '';
@@ -2043,6 +2114,7 @@ class DevTools {
 
     function dragMouseDown(e) {
       // Don't drag if clicking buttons inside the header
+      if (window.matchMedia('(max-width: 768px)').matches) return;   // bottom sheet on phones
       if (e.target.closest('button') || e.target.closest('.dev-shortcut-hint')) return;
       e.preventDefault();
       pos3 = e.clientX;

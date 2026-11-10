@@ -19,7 +19,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=1.2" />
 </head>
 
 <body>
@@ -57,7 +57,7 @@
     </div>
   </div>
 
-  <!-- Navigation Panel (slide-up from bottom) -->
+  <!-- Navigation Panel (slide-up from bottom). Filled in by navigation.js -->
   <div id="navigationPanel" class="navigation-panel" role="region" aria-label="Navigation directions">
     <div class="nav-panel-header">
       <div class="nav-route-info">
@@ -68,14 +68,20 @@
           <span class="nav-time" id="navTime">0 min</span>
         </div>
       </div>
+      <button class="nav-icon-btn" id="navMinBtn" aria-expanded="true" aria-label="Collapse"><span class="material-symbols-rounded">expand_more</span></button>
+      <button class="nav-icon-btn" id="navToggleSteps" aria-expanded="false" aria-label="Steps"><span class="material-symbols-rounded">format_list_bulleted</span></button>
       <button class="nav-close-btn" id="navCloseBtn" aria-label="Close navigation">×</button>
     </div>
 
     <div class="nav-panel-body">
-      <div class="nav-current-step" id="navCurrentStep">
+      <div class="nav-current-step" id="navCurrentStep" aria-live="polite">
         <div class="step-icon" id="navStepIcon"><span class="material-symbols-rounded">arrow_forward</span></div>
-        <div class="step-instruction" id="navStepInstruction">Start navigation to see directions</div>
+        <div class="step-text">
+          <div class="step-distance" id="navStepDistance"></div>
+          <div class="step-instruction" id="navStepInstruction">Start navigation to see directions</div>
+        </div>
       </div>
+      <div class="nav-notice" id="navNotice" hidden></div>
 
       <div class="nav-steps-list" id="navStepsList">
         <!-- Steps populated by JS -->
@@ -83,6 +89,16 @@
     </div>
 
     <div class="nav-panel-footer">
+      <div class="nav-tools" id="navTools">
+        <button type="button" class="nav-tool-btn" id="navPrevBtn"><span class="material-symbols-rounded">chevron_left</span></button>
+        <button type="button" class="nav-tool-btn" id="navNextBtn"><span class="material-symbols-rounded">chevron_right</span></button>
+        <span class="nav-tools-gap"></span>
+        <button type="button" class="nav-tool-btn" id="navLocBtn"><span class="material-symbols-rounded">edit_location_alt</span></button>
+        <button type="button" class="nav-tool-btn" id="navVoiceBtn"><span class="material-symbols-rounded">volume_off</span></button>
+        <button type="button" class="nav-tool-btn" id="navAccessBtn"><span class="material-symbols-rounded">accessible</span></button>
+        <button type="button" class="nav-tool-btn" id="navDemoBtn" style="display:none"><span class="material-symbols-rounded">play_arrow</span></button>
+      </div>
+      <button id="startNavBtn" class="btn-start-nav">Start</button>
       <button id="endNavBtn" class="btn-end-nav">End Navigation</button>
     </div>
   </div>
@@ -110,51 +126,8 @@
   </div>
 
   <!-- Empty State / Recent History Dropdown -->
-  <div id="searchEmptyState" class="gm-search-dropdown" style="display: none;" role="listbox">
-    <div class="gm-recent-item" role="option" tabindex="0">
-      <div class="gm-recent-icon"><span class="material-symbols-rounded">work</span></div>
-      <div class="gm-recent-text">
-        <div class="gm-recent-title">ที่ทำงาน</div>
-        <div class="gm-recent-subtitle"></div>
-      </div>
-      <div class="gm-recent-action">ตั้งสถานที่</div>
-    </div>
-    <div class="gm-recent-item" role="option" tabindex="0">
-      <div class="gm-recent-icon"><span class="material-symbols-rounded">home</span></div>
-      <div class="gm-recent-text">
-        <div class="gm-recent-title">บ้าน</div>
-        <div class="gm-recent-subtitle"></div>
-      </div>
-      <div class="gm-recent-action">แก้ไข</div>
-    </div>
-    <div class="gm-recent-item" role="option" tabindex="0">
-      <div class="gm-recent-icon"><span class="material-symbols-rounded">schedule</span></div>
-      <div class="gm-recent-text">
-        <div class="gm-recent-title">โลตัส นวนคร</div>
-        <div class="gm-recent-subtitle">98 ถนน พหลโยธิน ตำบล คลองหนึ่ง อำเภอคลอง...</div>
-        <div class="gm-recent-status"><span class="status-open">เปิดอยู่</span> · ปิดเวลา 21:00</div>
-      </div>
-    </div>
-    <div class="gm-recent-item" role="option" tabindex="0">
-      <div class="gm-recent-icon"><span class="material-symbols-rounded">schedule</span></div>
-      <div class="gm-recent-text">
-        <div class="gm-recent-title">คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยธรร...</div>
-        <div class="gm-recent-subtitle">อาคารวิทยาศาสตร์บร.5 ตำบล คลองหนึ่ง อำเภอค...</div>
-        <div class="gm-recent-status"><span class="status-open">เปิดอยู่</span> · ปิดเวลา 17:00</div>
-      </div>
-    </div>
-    <div class="gm-recent-item" role="option" tabindex="0">
-      <div class="gm-recent-icon"><span class="material-symbols-rounded">schedule</span></div>
-      <div class="gm-recent-text">
-        <div class="gm-recent-title">ร้านปิ่นแก้ว</div>
-        <div class="gm-recent-subtitle">13 ซอย คลองหลวง 15 ตำบล คลองหนึ่ง อำเภอคล...</div>
-        <div class="gm-recent-status"><span class="status-open">เปิดอยู่</span> · ปิดเวลา 20:00</div>
-      </div>
-    </div>
-    <div class="gm-recent-more">
-      <a href="#" class="gm-recent-more-link">เพิ่มเติมจากประวัติล่าสุด</a>
-    </div>
-  </div>
+  <!-- Suggestions + recent searches: filled in by search-history.js -->
+  <div id="searchEmptyState" class="gm-search-dropdown" style="display: none;" role="listbox" aria-label="Suggestions"></div>
 
   <!-- Topbar -->
   <div id="topbar">
@@ -191,18 +164,23 @@
 
   <!-- PLACE INFO SIDEBAR (left) - Google Maps Style -->
   <aside id="placeSidebar" class="sidebar-panel left place-sidebar" aria-label="Place Information" aria-hidden="true">
+    <div class="bottom-sheet-handle"></div>
     <button id="closePlaceSidebarBtn" class="close-btn overlay-close" title="Close" aria-label="Close place info">×</button>
-    <div class="place-header-image" id="placeHeaderImage"></div>
+    <div class="place-image-carousel" id="placeImageCarousel">
+      <div class="carousel-track" id="carouselTrack"></div>
+      <button class="carousel-btn carousel-prev" id="carouselPrev" aria-label="Previous image">‹</button>
+      <button class="carousel-btn carousel-next" id="carouselNext" aria-label="Next image">›</button>
+      <div class="carousel-dots" id="carouselDots"></div>
+      <div class="carousel-counter" id="carouselCounter"></div>
+    </div>
     <div class="place-body">
       <h2 class="place-title" id="placeTitle">Name</h2>
       <div class="place-subtitle">
-        <span class="place-rating">4.5 <span class="stars">★★★★<span class="star-half">★</span></span></span>
         <span class="place-category" id="placeCategory">Category</span>
       </div>
       
       <div class="place-tabs">
         <div class="place-tab active" data-tab="overview">ภาพรวม</div>
-        <div class="place-tab" data-tab="reviews">รีวิว</div>
         <div class="place-tab" data-tab="about">เกี่ยวกับ</div>
       </div>
       
@@ -254,9 +232,7 @@
         </div>
       </div>
 
-      <div class="place-tab-content" id="placeTabReviews" style="display:none; padding: 16px;">
-        <p style="color:var(--muted); font-size:14px; text-align:center;">ยังไม่มีรีวิว</p>
-      </div>
+
 
       <div class="place-tab-content" id="placeTabAbout" style="display:none; padding: 16px;">
         <p id="placeAboutText" style="color:var(--text); font-size:14px; line-height:1.5;"></p>
@@ -298,6 +274,8 @@
             class="material-symbols-rounded">star</span> <span class="menu-text">Rate & Feedback</span></li>
         <li class="menu-item" id="devModeBtn" style="display: none;" role="button" tabindex="0"><span
             class="material-symbols-rounded">build</span> <span class="menu-text">Developer Tools</span></li>
+        <li class="menu-item" id="navEditorBtn" style="display: none;" role="button" tabindex="0"><span
+            class="material-symbols-rounded">alt_route</span> <span class="menu-text">Walkway Editor</span></li>
       </ul>
     </nav>
   </aside>
@@ -340,11 +318,16 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- App -->
-  <script src="map-engine.js?v=1.6"></script>
+  <script src="map-engine.js?v=1.7"></script>
   <script src="leaflet-compat.js?v=1.6"></script>
   <script src="script.js?v=1.6"></script>
+  <!-- Navigation: routing engine, GPS + UI, dev-only walkway editor -->
+  <script src="nav-core.js?v=1.0"></script>
+  <script src="navigation.js?v=1.1"></script>
+  <script src="nav-editor.js?v=1.2"></script>
+  <script src="search-history.js?v=1.0"></script>
   <!-- New Dev Tools -->
-  <script src="dev-tools.js?v=1.6"></script>
+  <script src="dev-tools.js?v=1.8"></script>
 </body>
 
 </html>

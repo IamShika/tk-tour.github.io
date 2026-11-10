@@ -91,7 +91,7 @@ class MapEngine {
                 if (bounds) {
                     const sw = this._toMapLibre(bounds[0]);
                     const ne = this._toMapLibre(bounds[1]);
-                    this.map.fitBounds([sw, ne], {
+                    maplibregl.Map.prototype.fitBounds.call(this.map, [sw, ne], {
                         padding: { top: 60, bottom: 20, left: 20, right: 20 },
                         duration: 0 // Instant on first load
                     });
@@ -151,7 +151,7 @@ class MapEngine {
         // bounds: [[lat1,lng1],[lat2,lng2]]
         const sw = this._toMapLibre(bounds[0]);
         const ne = this._toMapLibre(bounds[1]);
-        this.map.fitBounds([sw, ne], {
+        maplibregl.Map.prototype.fitBounds.call(this.map, [sw, ne], {
             padding: options.padding || 50,
             duration: options.duration || 1000
         });
@@ -268,9 +268,10 @@ class MapEngine {
                 'symbol-placement': 'point'
             },
             paint: {
-                'text-color': '#ffffff',
-                'text-halo-color': '#000000',
-                'text-halo-width': 1.5
+                'text-color': '#111111',
+                'text-halo-color': '#ffffff',
+                'text-halo-width': 1.5,
+                'text-halo-blur': 1
             }
         });
 
@@ -640,9 +641,10 @@ class MapEngine {
                     'text-justify': 'center'
                 },
                 paint: {
-                    'text-color': '#000000',
+                    'text-color': '#111111',
                     'text-halo-color': '#ffffff',
-                    'text-halo-width': 2
+                    'text-halo-width': 1.5,
+                    'text-halo-blur': 1
                 }
             });
         }

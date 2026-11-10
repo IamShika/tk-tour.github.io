@@ -1,5 +1,5 @@
 // =================== CONFIG ===================
-const APP_VERSION = 'BETA 1.0Sep';
+const APP_VERSION = 'BETA Aug1.5H';
 // version identifer [release] {month Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec}{howmanyversionnow}{is "H"alf a month}
 const CENTER = [14.085933, 100.608844];
 const FLOORS = [
@@ -509,7 +509,7 @@ window.addEventListener('resize', () => {
   map.on = function (event, arg1, arg2) {
     let layerId = null;
     let handler = null;
-    
+
     if (typeof arg1 === 'function') {
       handler = arg1;
     } else {
@@ -527,11 +527,11 @@ window.addEventListener('resize', () => {
       }
       handler(e);
     };
-    
+
     const key = event + '_' + (layerId || '') + '_' + (handler.name || '') + '_' + handler.toString().slice(0, 50);
     _handlerMap.set(key, wrappedHandler);
     handler._wrappedCompat = wrappedHandler;
-    
+
     if (layerId) {
       _origOn(event, layerId, wrappedHandler);
     } else {
@@ -543,7 +543,7 @@ window.addEventListener('resize', () => {
   map.off = function (event, arg1, arg2) {
     let layerId = null;
     let handler = null;
-    
+
     if (typeof arg1 === 'function') {
       handler = arg1;
     } else {
@@ -605,7 +605,7 @@ window.addEventListener('resize', () => {
 })();
 
 // =================== GLOBAL CONFIG & STATE ===================
-window.onerror = function(msg, url, lineNo, columnNo, error) {
+window.onerror = function (msg, url, lineNo, columnNo, error) {
   alert('JS Error: ' + msg + '\nLine: ' + lineNo + '\nFile: ' + url);
   return false;
 };
@@ -1045,9 +1045,9 @@ function openModal(modalId) {
           if (place) {
             const item = document.createElement('div');
             item.style.cssText = 'padding:12px; border-bottom:1px solid #333; cursor:pointer; display:flex; align-items:center; gap:10px;';
-            
+
             const floorStr = Array.isArray(place.floor) ? (place.floor.includes('all') ? 'All floors' : `Floor ${place.floor.join(',')}`) : `Floor ${place.floor || 'G'}`;
-            
+
             item.innerHTML = `
               <div style="width:40px;height:40px;border-radius:8px;background:#333;background-image:url('images/streetview/${place.image || ''}');background-size:cover;background-position:center;"></div>
               <div style="flex:1;">
@@ -1249,10 +1249,10 @@ function renderPlaces() {
 
   allPlaces.forEach(p => {
     // Support p.floor being a single number, 'all', or an array
-    const floorMatch = Array.isArray(p.floor) 
+    const floorMatch = Array.isArray(p.floor)
       ? (p.floor.includes('all') || p.floor.includes(currentFloor) || p.floor.includes(0))
       : (p.floor === 'all' || p.floor === currentFloor || p.floor === 0);
-      
+
     if (!floorMatch) return;
     if (!p.coords || p.coords.length < 3) return;
 
@@ -1280,25 +1280,7 @@ function renderPlaces() {
       }
     });
 
-    // Draw POI marker label for non-dev users
-    if (!window.devMode && strokeOpacity === 0) {
-      const center = getPolygonCenter(p.coords);
-      const el = document.createElement('div');
-      el.className = 'place-poi-label';
-      let icon = '📍';
-      if (p.category === 'library') icon = '📚';
-      if (p.category === 'cafeteria') icon = '🍽️';
-      if (p.category === 'restroom' || p.category === 'bathroom') icon = '🚻';
-      if (p.category === 'lab') icon = '🔬';
 
-      el.innerHTML = `<div class="place-poi-icon">${icon}</div><div class="place-poi-text">${p.name}</div>`;
-      el.addEventListener('click', () => openPlaceSidebar(p));
-
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([center[1], center[0]])
-        .addTo(mapEngine.map);
-      placeMarkers.push(marker);
-    }
   });
 }
 
@@ -1327,17 +1309,154 @@ function openPlaceSidebar(place) {
   const catTrans = t(place.category) || place.category;
   document.getElementById('placeCategory').textContent = catTrans;
 
-  const floorDisplay = Array.isArray(place.floor) 
+  const floorDisplay = Array.isArray(place.floor)
     ? (place.floor.includes('all') ? 'ชั้นทั้งหมด' : `ชั้น ${place.floor.join(', ')}`)
     : `ชั้น ${place.floor || 'G'}`;
   document.getElementById('placeLocationText').textContent = floorDisplay;
 
-  const imgEl = document.getElementById('placeHeaderImage');
-  if (place.image) {
-    imgEl.style.backgroundImage = `url('images/streetview/${place.image}')`;
-  } else {
-    imgEl.style.backgroundImage = `url('https://via.placeholder.com/380x220?text=No+Image')`;
+  // Build image carousel
+  const images = place.images || (place.image ? [place.image] : []);
+  const track = document.getElementById('carouselTrack');
+  const dots = document.getElementById('carouselDots');
+  const counter = document.getElementById('carouselCounter');
+  const prevBtn = document.getElementById('carouselPrev');
+  const nextBtn = document.getElementById('carouselNext');
+  const carousel = document.getElementById('placeImageCarousel');
+  track.innerHTML = '';
+  dots.innerHTML = '';
+
+  // Add image slides
+  images.forEach(img => {
+    const slide = document.createElement('div');
+    slide.className = 'carousel-slide';
+    slide.style.backgroundImage = `url('images/streetview/${img}')`;
+    track.appendChild(slide);
+  });
+
+  // Add 360° slide if panoramaId exists
+  if (place.panoramaId) {
+    const slide360 = document.createElement('div');
+    slide360.className = 'carousel-slide-360';
+    const viewerContainer = document.createElement('div');
+    viewerContainer.style.cssText = 'width:100%;height:100%;position:relative;';
+    viewerContainer.id = 'carousel360Viewer';
+    slide360.appendChild(viewerContainer);
+
+    // Overlay button to expand to full viewer
+    const expandBtn = document.createElement('div');
+    expandBtn.className = 'slide-360-expand';
+    expandBtn.innerHTML = '<span class="material-symbols-rounded">fullscreen</span>';
+    expandBtn.title = 'ขยาย 360°';
+    slide360.appendChild(expandBtn);
+
+    // Determine the panorama source
+    const pin = allPins.find(p => p.id === place.panoramaId) || allPins.find(p => p.name === place.panoramaId);
+    const panoSrc = pin
+      ? `images/streetview/${pin.image}`
+      : `images/streetview/${place.panoramaId}`;
+
+    // Load mini viewer when slide becomes visible
+    let miniViewer = null;
+    const initMiniViewer = () => {
+      if (miniViewer) return;
+      try {
+        miniViewer = new PhotoSphereViewer.Viewer({
+          container: viewerContainer,
+          panorama: panoSrc,
+          navbar: false,
+          defaultZoomLvl: 0,
+          mousewheel: false,
+          touchmoveTwoFingers: true,
+        });
+      } catch (e) {
+        console.warn('Mini 360 viewer failed:', e);
+        viewerContainer.innerHTML = '<div class="slide-360-label"><span class="material-symbols-rounded">360</span><span>360° ไม่สามารถโหลดได้</span></div>';
+      }
+    };
+
+    // Init viewer when scrolled into view
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          initMiniViewer();
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.5 });
+    observer.observe(slide360);
+
+    // Expand to full viewer on button click
+    expandBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (miniViewer) { try { miniViewer.destroy(); } catch(e){} miniViewer = null; }
+      sidebar.classList.remove('open');
+      if (pin) {
+        openViewer(place.panoramaId);
+      } else {
+        // Direct image — open a standalone viewer
+        _openDirectPanorama(panoSrc, place.name);
+      }
+    });
+
+    track.appendChild(slide360);
   }
+
+  // If no images and no 360, show placeholder
+  if (images.length === 0 && !place.panoramaId) {
+    const slide = document.createElement('div');
+    slide.className = 'carousel-slide';
+    slide.style.backgroundImage = `url('https://via.placeholder.com/380x220?text=No+Image')`;
+    track.appendChild(slide);
+  }
+
+  const totalSlides = track.children.length;
+  let currentSlide = 0;
+
+  // Build dots
+  for (let i = 0; i < totalSlides; i++) {
+    const dot = document.createElement('button');
+    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goToSlide(i));
+    dots.appendChild(dot);
+  }
+
+  // Counter
+  const updateCounter = () => {
+    counter.textContent = totalSlides > 1 ? `${currentSlide + 1} / ${totalSlides}` : '';
+  };
+  updateCounter();
+
+  // Show/hide arrows
+  const updateArrows = () => {
+    prevBtn.style.display = totalSlides > 1 ? '' : 'none';
+    nextBtn.style.display = totalSlides > 1 ? '' : 'none';
+    // Always show controls on touch devices
+    if (totalSlides > 1) carousel.classList.add('show-controls');
+    else carousel.classList.remove('show-controls');
+  };
+  updateArrows();
+
+  function goToSlide(idx) {
+    currentSlide = idx;
+    track.children[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    dots.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+    updateCounter();
+  }
+
+  prevBtn.onclick = () => goToSlide(currentSlide > 0 ? currentSlide - 1 : totalSlides - 1);
+  nextBtn.onclick = () => goToSlide(currentSlide < totalSlides - 1 ? currentSlide + 1 : 0);
+
+  // Sync dots on scroll (for swipe)
+  track.addEventListener('scroll', () => {
+    const scrollLeft = track.scrollLeft;
+    const slideWidth = track.offsetWidth;
+    const idx = Math.round(scrollLeft / slideWidth);
+    if (idx !== currentSlide && idx >= 0 && idx < totalSlides) {
+      currentSlide = idx;
+      dots.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+      updateCounter();
+    }
+  });
 
   // Populate Hours
   const hoursRow = document.getElementById('placeHoursRow');
@@ -1350,19 +1469,19 @@ function openPlaceSidebar(place) {
       const days = (place.hours.days && place.hours.days.length > 0) ? place.hours.days.join(', ') : '';
       const open = place.hours.open || '';
       const close = place.hours.close || '';
-      
+
       if (days || open || close) {
         text = days;
         if (open && close) {
-           text += text ? ` ${open} - ${close}` : `${open} - ${close}`;
+          text += text ? ` ${open} - ${close}` : `${open} - ${close}`;
         } else if (open) {
-           text += text ? ` เปิด (Open) ${open}` : `เปิด (Open) ${open}`;
+          text += text ? ` เปิด (Open) ${open}` : `เปิด (Open) ${open}`;
         } else if (close) {
-           text += text ? ` ปิด (Close) ${close}` : `ปิด (Close) ${close}`;
+          text += text ? ` ปิด (Close) ${close}` : `ปิด (Close) ${close}`;
         }
       }
     }
-    
+
     if (text.trim() !== '') {
       hoursText.textContent = text.trim();
       hoursRow.style.display = 'flex';
@@ -1399,7 +1518,7 @@ function openPlaceSidebar(place) {
     view360Btn.style.display = 'flex';
     view360Btn.onclick = () => {
       sidebar.classList.remove('open');
-      openViewer(place.panoramaId);
+      openViewer(place.panoramaId, place.name);
     };
   } else {
     view360Btn.style.display = 'none';
@@ -1427,17 +1546,16 @@ function openPlaceSidebar(place) {
   const navBtn = document.getElementById('placeNavBtn');
   navBtn.onclick = () => {
     sidebar.classList.remove('open');
-    const center = getPolygonCenter(place.coords);
-    if (navigationController) {
-      // Simulate a search result to pass to navigateToLocation
-      navigationController.currentDestinationId = place.id;
-      navigationController.navigateToLocation({
+    if (window.NavSystem) {
+      window.NavSystem.navigateTo({
+        type: 'place',
+        id: place.id,
         name: place.name,
-        lat: center[0],
-        lng: center[1],
+        coords: place.coords,
         floor: place.floor
       });
-      renderPlaces(); // re-render to show stroke
+    } else {
+      showToast(t('gpsError'), 'error');
     }
   };
 
@@ -1615,6 +1733,36 @@ function loadSavedPaths() {
 loadSavedPaths();
 
 // =================== VIEWER ===================
+function _openDirectPanorama(src, name) {
+  const viewerOverlay = document.getElementById('viewerOverlay');
+  viewerOverlay.style.display = 'flex';
+  try {
+    if (viewerInstance) {
+      try { viewerInstance.destroy(); } catch (e) { }
+      viewerInstance = null;
+    }
+    document.getElementById('viewer').innerHTML = '';
+    showViewerLoading();
+    
+    // Ensure correct path
+    const fullSrc = src.includes('/') ? src : `images/streetview/${src}`;
+
+    viewerInstance = new PhotoSphereViewer.Viewer({
+      container: document.getElementById('viewer'),
+      panorama: fullSrc,
+      caption: name || '360\u00b0 View',
+      defaultZoomLvl: 0
+    });
+    
+    viewerInstance.once('ready', () => {
+      hideViewerLoading();
+    });
+  } catch (e) {
+    hideViewerLoading();
+    if (typeof showToast === 'function') showToast('Error loading 360\u00b0 view', 'error');
+    console.error(e);
+  }
+}
 const viewerOverlay = document.getElementById('viewerOverlay');
 const viewerClose = document.getElementById('viewerClose');
 
@@ -1683,10 +1831,15 @@ function drawStreetViewPaths() {
   }
 }
 
-function openViewer(idOrName) {
+function openViewer(idOrName, directName = null) {
   // Try finding by ID first, then fallback to name
   const pin = allPins.find(p => p.id === idOrName) || allPins.find(p => p.name === idOrName);
+  
   if (!pin) {
+    if (idOrName && (idOrName.endsWith('.jpg') || idOrName.endsWith('.png') || idOrName.includes('/'))) {
+      _openDirectPanorama(idOrName, directName || '360° View');
+      return;
+    }
     showToast('Pin not found', 'error');
     return;
   }
@@ -2271,6 +2424,47 @@ function searchLocations(query) {
   return uniqueResults.slice(0, SEARCH_MAX_RESULTS);
 }
 
+// Opens a search result (from the result list or from "recent searches"): switches floor, flies there, opens its card.
+function selectSearchResult(result) {
+  playRandomSound(); // Play sound on click
+  // For buildings, just zoom to location
+  if (result.type === 'building') {
+    mapEngine.setView([result.lat, result.lng], 19, { animate: true });
+  } else {
+    // For regular locations, switch floor if needed
+    let targetFloor = result.floor;
+    if (Array.isArray(result.floor)) {
+      if (!result.floor.includes('all') && !result.floor.includes(currentFloor)) {
+        targetFloor = result.floor[0];
+      } else {
+        targetFloor = currentFloor; // Stay on current floor if applicable
+      }
+    }
+    if (targetFloor !== undefined && targetFloor !== currentFloor) {
+      switchFloor(targetFloor);
+    }
+    mapEngine.setView([result.lat, result.lng], 19, { animate: true });
+
+    if (result.type === 'pin' && result.id) {
+      // Give the map a moment to pan before opening popup
+      setTimeout(() => {
+        mapEngine.openMarkerPopup(`pin_marker_${result.id}`);
+      }, 100);
+    } else if (result.type === 'place' && result.id) {
+      const p = allPlaces.find(x => x.id === result.id);
+      if (p) openPlaceSidebar(p);
+    }
+  }
+
+  // Close search dropdown
+  searchRecommendations.classList.remove('active');
+  searchInput.value = '';
+  if (searchEmptyState) searchEmptyState.style.display = 'none';
+  if (searchInput.blur) searchInput.blur();
+
+  showToast(`${t('searchResults')}: ${result.name}`, 'success');
+}
+
 function displaySearchResults(results) {
   if (!searchRecommendations) return;
 
@@ -2297,9 +2491,9 @@ function displaySearchResults(results) {
         infoText = `${result.floors} floor${result.floors > 1 ? 's' : ''} • ${result.buildingType}`;
       } else if (result.floor !== undefined) {
         if (Array.isArray(result.floor)) {
-            infoText = result.floor.includes('all') ? 'ชั้นทั้งหมด' : `${t('floor')} ${result.floor.join(', ')}`;
+          infoText = result.floor.includes('all') ? 'ชั้นทั้งหมด' : `${t('floor')} ${result.floor.join(', ')}`;
         } else {
-            infoText = `${t('floor')} ${result.floor}`;
+          infoText = `${t('floor')} ${result.floor}`;
         }
       }
 
@@ -2310,42 +2504,8 @@ function displaySearchResults(results) {
       `;
 
       resultDiv.addEventListener('click', () => {
-        playRandomSound(); // Play sound on click
-
-        // For buildings, just zoom to location
-        if (result.type === 'building') {
-          mapEngine.setView([result.lat, result.lng], 19, { animate: true });
-        } else {
-          // For regular locations, switch floor if needed
-          let targetFloor = result.floor;
-          if (Array.isArray(result.floor)) {
-            if (!result.floor.includes('all') && !result.floor.includes(currentFloor)) {
-                targetFloor = result.floor[0];
-            } else {
-                targetFloor = currentFloor; // Stay on current floor if applicable
-            }
-          }
-          if (targetFloor !== undefined && targetFloor !== currentFloor) {
-            switchFloor(targetFloor);
-          }
-          mapEngine.setView([result.lat, result.lng], 19, { animate: true });
-
-          if (result.type === 'pin' && result.id) {
-            // Give the map a moment to pan before opening popup
-            setTimeout(() => {
-              mapEngine.openMarkerPopup(`pin_marker_${result.id}`);
-            }, 100);
-          } else if (result.type === 'place' && result.id) {
-            const p = allPlaces.find(x => x.id === result.id);
-            if (p) openPlaceSidebar(p);
-          }
-        }
-
-        // Close search dropdown
-        searchRecommendations.classList.remove('active');
-        searchInput.value = '';
-
-        showToast(`${t('searchResults')}: ${result.name}`, 'success');
+        if (window.SearchHistory) window.SearchHistory.add(result);
+        selectSearchResult(result);
       });
 
       searchRecommendations.appendChild(resultDiv);
@@ -2399,7 +2559,9 @@ if (searchInput) {
   const createSnapEffect = (text) => {
     const container = searchInput.parentElement;
     const inputStyle = getComputedStyle(searchInput);
-    const paddingLeft = parseFloat(inputStyle.paddingLeft);
+    const paddingLeft = parseFloat(inputStyle.paddingLeft) || 0;
+    const inputOffset = searchInput.offsetLeft || 0;
+    const startX = inputOffset + paddingLeft;
     const fontSize = parseFloat(inputStyle.fontSize);
 
     // Calculate accurate text width using a temporary element
@@ -2435,7 +2597,7 @@ if (searchInput) {
     // Create red neon rectangle that "eats" the text first
     const wipeRect = document.createElement('div');
     wipeRect.className = 'text-wipe-rect';
-    wipeRect.style.left = `${paddingLeft}px`;
+    wipeRect.style.left = `${startX}px`;
     wipeRect.style.top = '8px';
     wipeRect.style.width = `${textWidth}px`;
     wipeRect.style.height = `${searchInput.offsetHeight - 16}px`;
@@ -2463,7 +2625,7 @@ if (searchInput) {
         particle.style.setProperty('--start-color', startColor);
 
         // Position only within text area
-        const xPos = paddingLeft + Math.random() * textWidth;
+        const xPos = startX + Math.random() * textWidth;
         particle.style.left = `${xPos}px`;
         particle.style.top = `${10 + Math.random() * 20}px`; // Centered vertically
 
@@ -2521,12 +2683,15 @@ if (searchInput) {
       if (searchInput.value.trim() === '') {
         if (searchEmptyState) searchEmptyState.style.display = 'block';
       }
-      
+
       // Check for phone display mode OR actual small screen width
       const isPhoneMode = document.body.getAttribute('data-display') === 'phone';
       const isSmallScreen = window.innerWidth <= 768;
       if (isPhoneMode || isSmallScreen) {
         topbar.classList.add('search-focused');
+        const gmSearchBox = document.getElementById('gmSearchBox');
+        if (gmSearchBox) gmSearchBox.classList.add('search-focused');
+
         // Also expand search recommendations
         if (searchRecommendations) {
           searchRecommendations.classList.add('expanded');
@@ -2536,6 +2701,8 @@ if (searchInput) {
 
     searchInput.addEventListener('blur', () => {
       topbar.classList.remove('search-focused');
+      const gmSearchBox = document.getElementById('gmSearchBox');
+      if (gmSearchBox) gmSearchBox.classList.remove('search-focused');
       // Collapse search recommendations after a small delay (allows clicking results)
       setTimeout(() => {
         if (searchRecommendations) {
@@ -2588,1134 +2755,11 @@ document.addEventListener('click', (e) => {
   }
 }, true); // Use capture phase to catch all clicks
 
-// =================== GPS & NAVIGATION SYSTEM ===================
-
-// Navigation Graph Data
-let navGraph = { nodes: {}, edges: [], transitions: [] };
-
-// GPS Tracker Class
-class GPSTracker {
-  constructor(mapInstance) {
-    this.map = mapInstance;
-    this.currentPosition = null;
-    this.watchId = null;
-    this.userMarker = null;
-    this.accuracyCircle = null;
-    this.isTracking = false;
-    this.manualMode = false;
-    this.currentFloor = 1;
-    this.callbacks = [];
-  }
-
-  isGPSAvailable() {
-    return 'geolocation' in navigator;
-  }
-
-  startTracking() {
-    if (!this.isGPSAvailable()) {
-      showToast(t('gpsUnavailable'), 'error');
-      return false;
-    }
-
-    this.isTracking = true;
-    document.getElementById('gpsBtn')?.classList.add('active');
-
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 1000  // Reduced for more frequent updates
-    };
-
-    // Get initial position
-    navigator.geolocation.getCurrentPosition(
-      (pos) => this.handlePosition(pos),
-      (err) => this.handleError(err),
-      options
-    );
-
-    // Watch position updates
-    this.watchId = navigator.geolocation.watchPosition(
-      (pos) => this.handlePosition(pos),
-      (err) => this.handleError(err),
-      options
-    );
-
-    return true;
-  }
-
-  stopTracking() {
-    if (this.watchId !== null) {
-      navigator.geolocation.clearWatch(this.watchId);
-      this.watchId = null;
-    }
-    this.isTracking = false;
-    this.manualMode = false;
-    document.getElementById('gpsBtn')?.classList.remove('active', 'manual-mode');
-  }
-
-  handlePosition(pos) {
-    const { latitude, longitude, accuracy, heading, speed } = pos.coords;
-
-    // Check if within school bounds
-    if (!this.isWithinBounds(latitude, longitude)) {
-      // Stop tracking when out of bounds (only show toast once)
-      if (this.isTracking) {
-        showToast(t('gpsOutOfBounds'), 'error');
-        this.stopTracking();
-      }
-      return;
-    }
-
-    this.currentPosition = {
-      lat: latitude,
-      lng: longitude,
-      accuracy: accuracy,
-      floor: this.currentFloor,
-      source: 'gps',
-      timestamp: Date.now(),
-      heading: heading,
-      speed: speed
-    };
-
-    this.updateMarker();
-    this.notifyCallbacks();
-  }
-
-  handleError(err) {
-    console.warn('GPS Error:', err.message);
-    if (err.code === err.PERMISSION_DENIED) {
-      showToast(t('gpsPermissionDenied'), 'error');
-    } else if (err.code === err.POSITION_UNAVAILABLE) {
-      showToast(t('gpsUnavailable'), 'error');
-    }
-  }
-
-  setManualPosition(latlng, floor) {
-    this.currentPosition = {
-      lat: latlng.lat,
-      lng: latlng.lng,
-      accuracy: 5,
-      floor: floor || currentFloor + 1,
-      source: 'manual',
-      timestamp: Date.now()
-    };
-
-    this.manualMode = true;
-    document.getElementById('gpsBtn')?.classList.remove('active');
-    document.getElementById('gpsBtn')?.classList.add('manual-mode');
-
-    this.updateMarker();
-    this.notifyCallbacks();
-    showToast(t('locationSet'), 'success');
-  }
-
-  updateMarker() {
-    if (!this.currentPosition) return;
-
-    const { lat, lng, accuracy } = this.currentPosition;
-
-    // Create user location icon
-    const userIcon = L.divIcon({
-      className: 'user-location-marker',
-      html: `
-        <div class="user-marker-outer">
-          <div class="user-marker-pulse"></div>
-          <div class="user-marker-inner"></div>
-        </div>
-      `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20]
-    });
-
-    // Update or create marker
-    if (this.userMarker) {
-      this.userMarker.setLatLng([lat, lng]);
-    } else {
-      this.userMarker = L.marker([lat, lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(this.map);
-    }
-
-    // Update or create accuracy circle
-    if (accuracy && accuracy > 10) {
-      if (this.accuracyCircle) {
-        this.accuracyCircle.setLatLng([lat, lng]);
-        this.accuracyCircle.setRadius(accuracy);
-      } else {
-        this.accuracyCircle = L.circle([lat, lng], {
-          radius: accuracy,
-          className: 'user-accuracy-circle',
-          interactive: false
-        }).addTo(this.map);
-      }
-    } else if (this.accuracyCircle) {
-      this.accuracyCircle.remove();
-      this.accuracyCircle = null;
-    }
-  }
-
-  removeMarker() {
-    if (this.userMarker) {
-      this.userMarker.remove();
-      this.userMarker = null;
-    }
-    if (this.accuracyCircle) {
-      this.accuracyCircle.remove();
-      this.accuracyCircle = null;
-    }
-  }
-
-  isWithinBounds(lat, lng) {
-    return lat >= 14.083915 && lat <= 14.086142 &&
-      lng >= 100.606071 && lng <= 100.610199;
-  }
-
-  centerOnUser() {
-    if (this.currentPosition) {
-      mapEngine.setView([this.currentPosition.lat, this.currentPosition.lng], 20);
-    }
-  }
-
-  onPositionUpdate(callback) {
-    this.callbacks.push(callback);
-  }
-
-  notifyCallbacks() {
-    this.callbacks.forEach(cb => cb(this.currentPosition));
-  }
-
-  setFloor(floor) {
-    this.currentFloor = floor;
-    if (this.currentPosition) {
-      this.currentPosition.floor = floor;
-    }
-  }
-}
-
-// MinHeap for A* algorithm
-class MinHeap {
-  constructor() {
-    this.heap = [];
-  }
-
-  push(item) {
-    this.heap.push(item);
-    this.bubbleUp(this.heap.length - 1);
-  }
-
-  pop() {
-    if (this.heap.length === 0) return null;
-    if (this.heap.length === 1) return this.heap.pop();
-
-    const min = this.heap[0];
-    this.heap[0] = this.heap.pop();
-    this.bubbleDown(0);
-    return min;
-  }
-
-  bubbleUp(index) {
-    while (index > 0) {
-      const parentIndex = Math.floor((index - 1) / 2);
-      if (this.heap[parentIndex].f <= this.heap[index].f) break;
-      [this.heap[parentIndex], this.heap[index]] = [this.heap[index], this.heap[parentIndex]];
-      index = parentIndex;
-    }
-  }
-
-  bubbleDown(index) {
-    const length = this.heap.length;
-    while (true) {
-      const leftChild = 2 * index + 1;
-      const rightChild = 2 * index + 2;
-      let smallest = index;
-
-      if (leftChild < length && this.heap[leftChild].f < this.heap[smallest].f) {
-        smallest = leftChild;
-      }
-      if (rightChild < length && this.heap[rightChild].f < this.heap[smallest].f) {
-        smallest = rightChild;
-      }
-
-      if (smallest === index) break;
-      [this.heap[smallest], this.heap[index]] = [this.heap[index], this.heap[smallest]];
-      index = smallest;
-    }
-  }
-
-  isEmpty() {
-    return this.heap.length === 0;
-  }
-
-  contains(id) {
-    return this.heap.some(item => item.id === id);
-  }
-}
-
-// Pathfinder Class (A* Algorithm)
-class Pathfinder {
-  constructor(graph) {
-    this.nodes = graph.nodes || {};
-    this.edges = graph.edges || [];
-    this.transitions = graph.transitions || [];
-  }
-
-  findPath(startNodeId, endNodeId, options = {}) {
-    const { preferElevator = false, avoidStairs = false } = options;
-
-    if (!this.nodes[startNodeId] || !this.nodes[endNodeId]) {
-      console.warn('Invalid start or end node');
-      return null;
-    }
-
-    const openSet = new MinHeap();
-    const cameFrom = new Map();
-    const gScore = new Map();
-    const fScore = new Map();
-    const closedSet = new Set();
-
-    gScore.set(startNodeId, 0);
-    fScore.set(startNodeId, this.heuristic(startNodeId, endNodeId));
-    openSet.push({ id: startNodeId, f: fScore.get(startNodeId) });
-
-    while (!openSet.isEmpty()) {
-      const current = openSet.pop();
-
-      if (current.id === endNodeId) {
-        return this.reconstructPath(cameFrom, current.id);
-      }
-
-      if (closedSet.has(current.id)) continue;
-      closedSet.add(current.id);
-
-      const neighbors = this.getNeighbors(current.id, { avoidStairs, preferElevator });
-
-      for (const neighbor of neighbors) {
-        if (closedSet.has(neighbor.id)) continue;
-
-        const tentativeG = gScore.get(current.id) + neighbor.cost;
-
-        if (tentativeG < (gScore.get(neighbor.id) || Infinity)) {
-          cameFrom.set(neighbor.id, {
-            node: current.id,
-            edge: neighbor.edge,
-            transition: neighbor.transition
-          });
-          gScore.set(neighbor.id, tentativeG);
-          fScore.set(neighbor.id, tentativeG + this.heuristic(neighbor.id, endNodeId));
-
-          if (!openSet.contains(neighbor.id)) {
-            openSet.push({ id: neighbor.id, f: fScore.get(neighbor.id) });
-          }
-        }
-      }
-    }
-
-    return null; // No path found
-  }
-
-  heuristic(nodeAId, nodeBId) {
-    const a = this.nodes[nodeAId];
-    const b = this.nodes[nodeBId];
-    if (!a || !b) return Infinity;
-
-    const horizontalDist = this.haversineDistance(a.lat, a.lng, b.lat, b.lng);
-    const floorPenalty = Math.abs((a.floor || 1) - (b.floor || 1)) * 30;
-    return horizontalDist + floorPenalty;
-  }
-
-  haversineDistance(lat1, lng1, lat2, lng2) {
-    const R = 6371e3; // Earth radius in meters
-    const phi1 = lat1 * Math.PI / 180;
-    const phi2 = lat2 * Math.PI / 180;
-    const deltaPhi = (lat2 - lat1) * Math.PI / 180;
-    const deltaLambda = (lng2 - lng1) * Math.PI / 180;
-
-    const a = Math.sin(deltaPhi / 2) ** 2 +
-      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
-  }
-
-  getNeighbors(nodeId, options = {}) {
-    const neighbors = [];
-    const node = this.nodes[nodeId];
-    if (!node) return neighbors;
-
-    // Get neighbors from edges
-    for (const edge of this.edges) {
-      let neighborId = null;
-      if (edge.from === nodeId) neighborId = edge.to;
-      else if (edge.to === nodeId && edge.bidirectional !== false) neighborId = edge.from;
-
-      if (neighborId && this.nodes[neighborId]) {
-        neighbors.push({
-          id: neighborId,
-          cost: edge.distance || edge.walkTime || 10,
-          edge: edge
-        });
-      }
-    }
-
-    // Get neighbors from transitions (stairs/elevators)
-    for (const trans of this.transitions) {
-      if (options.avoidStairs && trans.type === 'staircase') continue;
-
-      const nodeIndex = trans.nodes?.indexOf(nodeId);
-      if (nodeIndex !== -1 && trans.nodes) {
-        // Connect to adjacent floors
-        if (nodeIndex > 0) {
-          const neighborId = trans.nodes[nodeIndex - 1];
-          if (this.nodes[neighborId]) {
-            let cost = trans.timeBetweenFloors || 30;
-            if (options.preferElevator && trans.type === 'elevator') cost *= 0.5;
-            neighbors.push({ id: neighborId, cost, transition: trans });
-          }
-        }
-        if (nodeIndex < trans.nodes.length - 1) {
-          const neighborId = trans.nodes[nodeIndex + 1];
-          if (this.nodes[neighborId]) {
-            let cost = trans.timeBetweenFloors || 30;
-            if (options.preferElevator && trans.type === 'elevator') cost *= 0.5;
-            neighbors.push({ id: neighborId, cost, transition: trans });
-          }
-        }
-      }
-    }
-
-    return neighbors;
-  }
-
-  reconstructPath(cameFrom, endNodeId) {
-    const path = [];
-    let currentId = endNodeId;
-
-    while (currentId) {
-      const node = this.nodes[currentId];
-      if (node) {
-        path.unshift({ ...node, id: currentId });
-      }
-      const prev = cameFrom.get(currentId);
-      currentId = prev ? prev.node : null;
-    }
-
-    return path;
-  }
-
-  findNearestNode(lat, lng, floor) {
-    let nearest = null;
-    let minDist = Infinity;
-
-    for (const [id, node] of Object.entries(this.nodes)) {
-      // Prefer same floor
-      const floorMatch = (node.floor || 1) === floor;
-      const dist = this.haversineDistance(lat, lng, node.lat, node.lng);
-      const adjustedDist = floorMatch ? dist : dist + 100; // Penalty for different floor
-
-      if (adjustedDist < minDist) {
-        minDist = adjustedDist;
-        nearest = { ...node, id };
-      }
-    }
-
-    return nearest;
-  }
-}
-
-// Directions Generator Class
-class DirectionsGenerator {
-  constructor(graph) {
-    this.nodes = graph.nodes || {};
-    this.edges = graph.edges || [];
-    this.transitions = graph.transitions || [];
-  }
-
-  generateDirections(path) {
-    if (!path || path.length < 2) return null;
-
-    const steps = [];
-    let totalDistance = 0;
-    let totalTime = 0;
-
-    for (let i = 0; i < path.length; i++) {
-      const currentNode = path[i];
-      const nextNode = path[i + 1];
-      const prevNode = path[i - 1];
-
-      if (!nextNode) {
-        // Final destination
-        steps.push({
-          index: i,
-          instruction: this.formatInstruction('arrive', { name: currentNode.name }),
-          icon: '🏁',
-          distance: 0,
-          time: 0,
-          node: currentNode,
-          floor: currentNode.floor || 1,
-          isDestination: true
-        });
-        break;
-      }
-
-      const instruction = this.generateInstruction(prevNode, currentNode, nextNode);
-      const edge = this.findEdge(currentNode.id, nextNode.id);
-      const distance = edge?.distance || this.calculateDistance(currentNode, nextNode);
-      const time = edge?.walkTime || Math.round(distance / 1.4); // ~1.4 m/s walking speed
-
-      totalDistance += distance;
-      totalTime += time;
-
-      steps.push({
-        index: i,
-        instruction: instruction.text,
-        icon: instruction.icon,
-        distance: distance,
-        time: time,
-        node: currentNode,
-        floor: currentNode.floor || 1,
-        isFloorChange: (currentNode.floor || 1) !== (nextNode.floor || 1)
-      });
-    }
-
-    return {
-      steps,
-      totalDistance: Math.round(totalDistance),
-      totalTime: Math.round(totalTime),
-      startNode: path[0],
-      endNode: path[path.length - 1]
-    };
-  }
-
-  generateInstruction(prevNode, currentNode, nextNode) {
-    // Check for floor transition
-    if ((currentNode.floor || 1) !== (nextNode.floor || 1)) {
-      const direction = (nextNode.floor || 1) > (currentNode.floor || 1) ? 'up' : 'down';
-      const transitionType = currentNode.type || 'staircase';
-
-      if (transitionType === 'elevator') {
-        return {
-          text: this.formatInstruction('takeElevator', { floor: nextNode.floor }),
-          icon: '🛗'
-        };
-      } else {
-        return {
-          text: this.formatInstruction(direction === 'up' ? 'goStairsUp' : 'goStairsDown', { floor: nextNode.floor }),
-          icon: direction === 'up' ? '⬆️' : '⬇️'
-        };
-      }
-    }
-
-    // Calculate turn direction
-    if (prevNode) {
-      const turn = this.calculateTurn(prevNode, currentNode, nextNode);
-      if (turn === 'left') {
-        return { text: t('turnLeft'), icon: '↰' };
-      } else if (turn === 'right') {
-        return { text: t('turnRight'), icon: '↱' };
-      }
-    }
-
-    // Default: go straight or start
-    if (!prevNode) {
-      return { text: this.formatInstruction('startAt', { name: currentNode.name || t('yourLocation') }), icon: '<span class="material-symbols-rounded">location_on</span>' };
-    }
-
-    return { text: t('goStraight'), icon: '↑' };
-  }
-
-  calculateTurn(prevNode, currentNode, nextNode) {
-    const bearing1 = this.calculateBearing(prevNode.lat, prevNode.lng, currentNode.lat, currentNode.lng);
-    const bearing2 = this.calculateBearing(currentNode.lat, currentNode.lng, nextNode.lat, nextNode.lng);
-
-    let turnAngle = bearing2 - bearing1;
-    if (turnAngle > 180) turnAngle -= 360;
-    if (turnAngle < -180) turnAngle += 360;
-
-    if (turnAngle > 30) return 'right';
-    if (turnAngle < -30) return 'left';
-    return 'straight';
-  }
-
-  calculateBearing(lat1, lng1, lat2, lng2) {
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const lat1Rad = lat1 * Math.PI / 180;
-    const lat2Rad = lat2 * Math.PI / 180;
-
-    const y = Math.sin(dLng) * Math.cos(lat2Rad);
-    const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
-      Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLng);
-
-    return Math.atan2(y, x) * 180 / Math.PI;
-  }
-
-  calculateDistance(nodeA, nodeB) {
-    const R = 6371e3;
-    const phi1 = nodeA.lat * Math.PI / 180;
-    const phi2 = nodeB.lat * Math.PI / 180;
-    const deltaPhi = (nodeB.lat - nodeA.lat) * Math.PI / 180;
-    const deltaLambda = (nodeB.lng - nodeA.lng) * Math.PI / 180;
-
-    const a = Math.sin(deltaPhi / 2) ** 2 +
-      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
-  }
-
-  findEdge(fromId, toId) {
-    return this.edges.find(e =>
-      (e.from === fromId && e.to === toId) ||
-      (e.to === fromId && e.from === toId && e.bidirectional !== false)
-    );
-  }
-
-  formatInstruction(key, params = {}) {
-    let text = t(key) || key;
-    for (const [k, v] of Object.entries(params)) {
-      text = text.replace(`{${k}}`, v);
-    }
-    return text;
-  }
-}
-
-// Navigation Controller
-class NavigationController {
-  constructor(mapInstance) {
-    this.map = mapInstance;
-    this.gpsTracker = new GPSTracker(mapInstance);
-    this.pathfinder = null;
-    this.directionsGenerator = null;
-
-    this.currentRoute = null;
-    this.routePolylines = [];
-    this.destinationMarker = null;
-    this.transitionMarkers = [];
-    this.isNavigating = false;
-    this.currentStepIndex = 0;
-
-    this.init();
-  }
-
-  async init() {
-    await this.loadNavGraph();
-    this.pathfinder = new Pathfinder(navGraph);
-    this.directionsGenerator = new DirectionsGenerator(navGraph);
-    this.setupEventListeners();
-  }
-
-  async loadNavGraph() {
-    try {
-      const response = await fetch('data/navgraph.json');
-      navGraph = await response.json();
-    } catch (err) {
-      console.warn('Could not load navgraph.json:', err);
-      navGraph = { nodes: {}, edges: [], transitions: [] };
-    }
-  }
-
-  setupEventListeners() {
-    // GPS Button
-    const gpsBtn = document.getElementById('gpsBtn');
-    if (gpsBtn) {
-      gpsBtn.addEventListener('click', () => this.handleGPSButtonClick());
-    }
-
-    // Manual location overlay
-    const cancelManualBtn = document.getElementById('cancelManualBtn');
-    if (cancelManualBtn) {
-      cancelManualBtn.addEventListener('click', () => this.exitManualLocationMode());
-    }
-
-    // Navigation panel close
-    const navCloseBtn = document.getElementById('navCloseBtn');
-    if (navCloseBtn) {
-      navCloseBtn.addEventListener('click', () => this.endNavigation());
-    }
-
-    // End navigation button
-    const endNavBtn = document.getElementById('endNavBtn');
-    if (endNavBtn) {
-      endNavBtn.addEventListener('click', () => this.endNavigation());
-    }
-
-    // GPS position updates
-    this.gpsTracker.onPositionUpdate((pos) => {
-      if (this.isNavigating) {
-        this.trackProgress(pos);
-      }
-    });
-  }
-
-  handleGPSButtonClick() {
-    if (this.gpsTracker.isTracking || this.gpsTracker.manualMode) {
-      // If already tracking or in manual mode, stop tracking (toggle off)
-      this.stopGPSTracking();
-    } else {
-      // Try GPS first
-      if (!this.gpsTracker.startTracking()) {
-        // GPS failed, prompt manual mode
-        this.enterManualLocationMode();
-      }
-    }
-  }
-
-  stopGPSTracking() {
-    this.gpsTracker.stopTracking();
-    this.gpsTracker.removeMarker();
-  }
-
-  enterManualLocationMode() {
-    const overlay = document.getElementById('manualLocationOverlay');
-    if (overlay) overlay.classList.add('active');
-
-    document.getElementById('gpsBtn')?.classList.add('manual-mode');
-
-    // One-time map click handler
-    const mapClickHandler = (e) => {
-      this.gpsTracker.setManualPosition(e.latlng, currentFloor + 1);
-      this.exitManualLocationMode();
-      this.map.off('click', mapClickHandler);
-    };
-
-    this.map.on('click', mapClickHandler);
-    this._manualClickHandler = mapClickHandler;
-  }
-
-  exitManualLocationMode() {
-    const overlay = document.getElementById('manualLocationOverlay');
-    if (overlay) overlay.classList.remove('active');
-
-    if (!this.gpsTracker.manualMode) {
-      document.getElementById('gpsBtn')?.classList.remove('manual-mode');
-    }
-
-    if (this._manualClickHandler) {
-      this.map.off('click', this._manualClickHandler);
-      this._manualClickHandler = null;
-    }
-  }
-
-  async startNavigation(destinationId, options = {}) {
-    // Get current position
-    const startPos = this.gpsTracker.currentPosition;
-    if (!startPos) {
-      showToast(t('setLocationFirst'), 'error');
-      this.enterManualLocationMode();
-      return;
-    }
-
-    // Find nearest node to current position
-    const startNode = this.pathfinder.findNearestNode(
-      startPos.lat,
-      startPos.lng,
-      startPos.floor || currentFloor + 1
-    );
-
-    if (!startNode) {
-      showToast(t('noRouteFound'), 'error');
-      return;
-    }
-
-    // Calculate path
-    const path = this.pathfinder.findPath(startNode.id, destinationId, options);
-
-    if (!path || path.length === 0) {
-      showToast(t('noRouteFound'), 'error');
-      return;
-    }
-
-    // Generate directions
-    this.currentRoute = this.directionsGenerator.generateDirections(path);
-
-    if (!this.currentRoute) {
-      showToast(t('noRouteFound'), 'error');
-      return;
-    }
-
-    // Display route on map
-    this.displayRoute(path);
-
-    // Show navigation panel
-    this.showNavigationPanel();
-
-    // Start tracking progress
-    this.isNavigating = true;
-    this.currentStepIndex = 0;
-  }
-
-  // Navigate to a pin or location by name/coords
-  navigateToLocation(location) {
-    if (!location) return;
-
-    // Check if navigation graph is loaded
-    if (!navGraph || !navGraph.nodes || Object.keys(navGraph.nodes).length === 0) {
-      showToast('Navigation system not set up yet. Please create navigation graph first.', 'error');
-      return;
-    }
-
-    // If location has an ID in navGraph, use it
-    if (location.id && navGraph.nodes[location.id]) {
-      this.startNavigation(location.id);
-      return;
-    }
-
-    // Otherwise find nearest node to this location
-    const nearestNode = this.pathfinder.findNearestNode(
-      location.lat,
-      location.lng,
-      location.floor || 1
-    );
-
-    if (nearestNode) {
-      this.startNavigation(nearestNode.id);
-    } else {
-      showToast(t('noRouteFound'), 'error');
-    }
-  }
-
-  displayRoute(path) {
-    this.clearRoute();
-
-    if (!path || path.length < 2) return;
-
-    // Group path by floor
-    const floorSegments = [];
-    let currentSegment = { floor: path[0].floor || 1, coords: [] };
-
-    for (const node of path) {
-      if ((node.floor || 1) !== currentSegment.floor) {
-        if (currentSegment.coords.length > 0) {
-          floorSegments.push(currentSegment);
-        }
-        currentSegment = { floor: node.floor || 1, coords: [] };
-      }
-      currentSegment.coords.push([node.lat, node.lng]);
-    }
-    if (currentSegment.coords.length > 0) {
-      floorSegments.push(currentSegment);
-    }
-
-    // Draw polylines for each floor segment
-    for (const segment of floorSegments) {
-      if (segment.coords.length < 2) continue;
-
-      const shadow = L.polyline(segment.coords, {
-        color: 'rgba(10, 132, 255, 0.3)',
-        weight: 12,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
-
-      const line = L.polyline(segment.coords, {
-        color: '#0a84ff',
-        weight: 6,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
-
-      // Only show on current floor
-      if (segment.floor === currentFloor + 1) {
-        shadow.addTo(this.map);
-        line.addTo(this.map);
-      }
-
-      this.routePolylines.push({ floor: segment.floor, shadow, line });
-    }
-
-    // Add destination marker
-    const endNode = path[path.length - 1];
-    this.destinationMarker = L.marker([endNode.lat, endNode.lng], {
-      icon: L.divIcon({
-        className: 'destination-marker',
-        html: '<div class="destination-marker-inner">🏁</div>',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32]
-      })
-    });
-
-    if ((endNode.floor || 1) === currentFloor + 1) {
-      this.destinationMarker.addTo(this.map);
-    }
-
-    // Add floor transition markers
-    for (let i = 0; i < path.length - 1; i++) {
-      const current = path[i];
-      const next = path[i + 1];
-
-      if ((current.floor || 1) !== (next.floor || 1)) {
-        const marker = L.marker([current.lat, current.lng], {
-          icon: L.divIcon({
-            className: 'floor-transition-marker',
-            html: current.type === 'elevator' ? '🛗' : '🪜',
-            iconSize: [28, 28],
-            iconAnchor: [14, 14]
-          })
-        });
-
-        if ((current.floor || 1) === currentFloor + 1) {
-          marker.addTo(this.map);
-        }
-
-        this.transitionMarkers.push({ floor: current.floor || 1, marker });
-      }
-    }
-
-    // Fit map to route
-    const allCoords = path.map(n => [n.lat, n.lng]);
-    this.map.fitBounds(L.latLngBounds(allCoords), { padding: [50, 50] });
-  }
-
-  updateVisibleRoute(floor) {
-    // Show/hide polylines based on floor
-    for (const polyline of this.routePolylines) {
-      if (polyline.floor === floor) {
-        if (!this.map.hasLayer(polyline.shadow)) {
-          polyline.shadow.addTo(this.map);
-          polyline.line.addTo(this.map);
-        }
-      } else {
-        if (this.map.hasLayer(polyline.shadow)) {
-          polyline.shadow.remove();
-          polyline.line.remove();
-        }
-      }
-    }
-
-    // Show/hide destination marker
-    if (this.destinationMarker && this.currentRoute) {
-      const endFloor = this.currentRoute.endNode.floor || 1;
-      if (endFloor === floor) {
-        if (!this.map.hasLayer(this.destinationMarker)) {
-          this.destinationMarker.addTo(this.map);
-        }
-      } else {
-        if (this.map.hasLayer(this.destinationMarker)) {
-          this.destinationMarker.remove();
-        }
-      }
-    }
-
-    // Show/hide transition markers
-    for (const tm of this.transitionMarkers) {
-      if (tm.floor === floor) {
-        if (!this.map.hasLayer(tm.marker)) {
-          tm.marker.addTo(this.map);
-        }
-      } else {
-        if (this.map.hasLayer(tm.marker)) {
-          tm.marker.remove();
-        }
-      }
-    }
-  }
-
-  clearRoute() {
-    for (const polyline of this.routePolylines) {
-      polyline.shadow.remove();
-      polyline.line.remove();
-    }
-    this.routePolylines = [];
-
-    if (this.destinationMarker) {
-      this.destinationMarker.remove();
-      this.destinationMarker = null;
-    }
-
-    for (const tm of this.transitionMarkers) {
-      tm.marker.remove();
-    }
-    this.transitionMarkers = [];
-  }
-
-  showNavigationPanel() {
-    const panel = document.getElementById('navigationPanel');
-    if (panel) panel.classList.add('active');
-
-    this.updateNavigationUI();
-  }
-
-  hideNavigationPanel() {
-    const panel = document.getElementById('navigationPanel');
-    if (panel) panel.classList.remove('active');
-  }
-
-  updateNavigationUI() {
-    if (!this.currentRoute) return;
-
-    // Update destination
-    const destEl = document.getElementById('navDestination');
-    if (destEl) destEl.textContent = this.currentRoute.endNode.name || t('destination');
-
-    // Update stats
-    const distEl = document.getElementById('navDistance');
-    if (distEl) {
-      const dist = this.currentRoute.totalDistance;
-      distEl.textContent = dist >= 1000 ? `${(dist / 1000).toFixed(1)} km` : `${Math.round(dist)} m`;
-    }
-
-    const timeEl = document.getElementById('navTime');
-    if (timeEl) {
-      const mins = Math.ceil(this.currentRoute.totalTime / 60);
-      timeEl.textContent = `${mins} ${t('minutes') || 'min'}`;
-    }
-
-    // Update current step
-    const currentStep = this.currentRoute.steps[this.currentStepIndex];
-    if (currentStep) {
-      const iconEl = document.getElementById('navStepIcon');
-      if (iconEl) iconEl.textContent = currentStep.icon;
-
-      const instrEl = document.getElementById('navStepInstruction');
-      if (instrEl) instrEl.textContent = currentStep.instruction;
-    }
-
-    // Update steps list
-    const listEl = document.getElementById('navStepsList');
-    if (listEl) {
-      listEl.innerHTML = this.currentRoute.steps.map((step, i) => `
-        <div class="nav-step-item ${i < this.currentStepIndex ? 'completed' : ''} ${i === this.currentStepIndex ? 'current' : ''} ${step.isFloorChange ? 'floor-change' : ''}">
-          <div class="step-icon">${i < this.currentStepIndex ? '✓' : step.icon}</div>
-          <div class="step-text">
-            <div class="step-instruction">${step.instruction}</div>
-            <div class="step-distance">${step.distance > 0 ? `${Math.round(step.distance)} m` : ''}</div>
-          </div>
-        </div>
-      `).join('');
-    }
-  }
-
-  trackProgress(pos) {
-    if (!this.currentRoute || !this.isNavigating) return;
-
-    const currentStep = this.currentRoute.steps[this.currentStepIndex];
-    if (!currentStep || currentStep.isDestination) return;
-
-    // Calculate distance to current step's node
-    const dist = this.calculateDistance(pos.lat, pos.lng, currentStep.node.lat, currentStep.node.lng);
-
-    // If within 10 meters, advance to next step
-    if (dist < 10) {
-      this.advanceStep();
-    }
-
-    // Check for floor change
-    if (currentStep.isFloorChange && pos.floor !== currentStep.floor) {
-      // User might have changed floors, update route visibility
-      this.updateVisibleRoute(pos.floor);
-    }
-  }
-
-  calculateDistance(lat1, lng1, lat2, lng2) {
-    const R = 6371e3;
-    const phi1 = lat1 * Math.PI / 180;
-    const phi2 = lat2 * Math.PI / 180;
-    const deltaPhi = (lat2 - lat1) * Math.PI / 180;
-    const deltaLambda = (lng2 - lng1) * Math.PI / 180;
-
-    const a = Math.sin(deltaPhi / 2) ** 2 +
-      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
-  }
-
-  advanceStep() {
-    this.currentStepIndex++;
-
-    if (this.currentStepIndex >= this.currentRoute.steps.length) {
-      this.arriveAtDestination();
-      return;
-    }
-
-    this.updateNavigationUI();
-
-    // Auto-switch floor if needed
-    const step = this.currentRoute.steps[this.currentStepIndex];
-    if (step && step.floor !== currentFloor + 1) {
-      switchFloor(step.floor - 1);
-    }
-  }
-
-  arriveAtDestination() {
-    showToast(t('arrivedAtDestination'), 'success');
-    this.endNavigation();
-  }
-
-  endNavigation() {
-    this.isNavigating = false;
-    this.currentRoute = null;
-    this.currentStepIndex = 0;
-    this.clearRoute();
-    this.hideNavigationPanel();
-  }
-
-  // Update route visibility when floor changes
-  onFloorChange(newFloor) {
-    if (this.isNavigating) {
-      this.updateVisibleRoute(newFloor + 1); // newFloor is 0-indexed
-    }
-    this.gpsTracker.setFloor(newFloor + 1);
-  }
-}
-
-// Initialize Navigation Controller
-let navigationController;
-
-// Wait for map to be ready, then initialize
-const initNavigation = () => {
-  if (typeof map !== 'undefined' && map) {
-    navigationController = new NavigationController(map);
-
-    // Hook into floor switching to update route visibility
-    const originalSwitchFloor = window.switchFloor;
-    if (originalSwitchFloor) {
-      window.switchFloor = function (floorIndex) {
-        originalSwitchFloor(floorIndex);
-        if (navigationController) {
-          navigationController.onFloorChange(floorIndex);
-        }
-        if (typeof renderPlaces === 'function') renderPlaces();
-      };
-    }
-
-    console.log('🧭 Navigation system initialized!');
-  } else {
-    setTimeout(initNavigation, 100);
-  }
-};
-
-// Start initialization
-setTimeout(initNavigation, 500);
-
-// Add navigation to search results
-const originalDisplaySearchResults = window.displaySearchResults;
-if (typeof displaySearchResults === 'function') {
-  window.displaySearchResults = function (results) {
-    if (originalDisplaySearchResults) {
-      originalDisplaySearchResults(results);
-    }
-
-    // Add navigation buttons to search results
-    setTimeout(() => {
-      const resultItems = document.querySelectorAll('.search-result-item');
-      resultItems.forEach((item, index) => {
-        if (results[index] && !item.querySelector('.nav-to-btn')) {
-          const navBtn = document.createElement('button');
-          navBtn.className = 'nav-to-btn';
-          navBtn.innerHTML = '🧭';
-          navBtn.title = t('navigateTo');
-          navBtn.style.cssText = 'position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--accent);border:none;border-radius:50%;width:28px;height:28px;color:white;cursor:pointer;font-size:14px;';
-          navBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (navigationController) {
-              navigationController.navigateToLocation(results[index]);
-            }
-          });
-          item.style.position = 'relative';
-          item.appendChild(navBtn);
-        }
-      });
-    }, 50);
-  };
-}
+// =================== GPS & NAVIGATION ===================
+// The GPS tracker, route planner, turn-by-turn panel and directions picker live in
+// nav-core.js (routing engine), navigation.js (GPS + UI) and nav-editor.js (dev-only walkway editor).
+// navigation.js assigns the facade below (isNavigating / currentDestinationId / navigateToLocation).
+let navigationController = null;
 
 // =================== FLUENT EMOJI PARSER ===================
 // Parse emojis to use Microsoft's Windows 11 Fluent Emojis across all platforms
@@ -3723,24 +2767,49 @@ console.log('App loaded!');
 console.log('Sound effects:', soundEffectsEnabled ? 'enabled' : 'disabled');
 
 
-// Directions and Empty State Click Handlers
-document.addEventListener('DOMContentLoaded', () => {
-  const dirBtn = document.querySelector('.gm-search-directions');
-  if (dirBtn) {
-    dirBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (typeof showToast === 'function') showToast('การนำทางยังไม่เปิดให้บริการ', 'info');
-    });
-  }
+// (.gm-search-directions is wired in navigation.js; the suggestions/recent list is search-history.js)
 
-  const recentItems = document.querySelectorAll('.gm-recent-item, .gm-recent-more-link');
-  recentItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (typeof showToast === 'function') showToast('ฟีเจอร์ประวัติการค้นหายังไม่พร้อมใช้งาน', 'info');
-      const searchEmptyState = document.getElementById('searchEmptyState');
-      if (searchEmptyState) searchEmptyState.style.display = 'none';
-    });
-  });
-});
+// Bottom Sheet Drag Logic for Mobile
+const placeSidebar = document.getElementById('placeSidebar');
+const handle = document.querySelector('.bottom-sheet-handle');
+let startY = 0;
+let currentY = 0;
+let isDragging = false;
+
+if (placeSidebar && handle) {
+  const onTouchStart = (e) => {
+    if (window.innerWidth > 768) return; // Only on mobile
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    placeSidebar.style.transition = 'none';
+  };
+
+  const onTouchMove = (e) => {
+    if (!isDragging) return;
+    currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY;
+    if (deltaY > 0) { // Only allow dragging down
+      placeSidebar.style.transform = `translateY(${deltaY}px)`;
+    }
+  };
+
+  const onTouchEnd = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    placeSidebar.style.transition = ''; // Restore CSS transition
+    const deltaY = currentY - startY;
+
+    if (deltaY > 100) {
+      // Dragged down enough, close it
+      placeSidebar.style.transform = '';
+      placeSidebar.classList.remove('open');
+    } else {
+      // Snap back
+      placeSidebar.style.transform = '';
+    }
+  };
+
+  handle.addEventListener('touchstart', onTouchStart, { passive: true });
+  document.addEventListener('touchmove', onTouchMove, { passive: true });
+  document.addEventListener('touchend', onTouchEnd);
+};

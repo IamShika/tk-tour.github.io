@@ -207,26 +207,53 @@
   };
 
   // ------------------------------------------------------------------ graph loading
-  let graphPromise = null;
+  let graphPromise = null, graphRetryTimer = null, graphRetries = 0;
   function ensureGraph(force) {
     const pinCount = (typeof allPins !== 'undefined' && allPins) ? allPins.length : 0;
     if (!graphPromise || force || (pinCount && pinCount !== S.graphPins)) graphPromise = buildGraph();
     return graphPromise;
   }
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  /** fetch() that tries again when the network hiccups (a phone on Wi-Fi/port-forwarding drops requests now and then).
+   *  Returns the Response, or null if every try failed. A 404 is a real answer ("no such file"), not a failure. */
+  async function fetchRetry(url, tries) {
+    for (let i = 0; i < tries; i++) {
+      try { return await fetch(url, { cache: 'no-store' }); } catch (e) { if (i < tries - 1) await sleep(350 * (i + 1)); }
+    }
+    return null;
+  }
   async function buildGraph() {
-    let manual = null;
+    let manual = null, incomplete = false;
     try { if (window.devMode) { const d = lsGet('dev_navgraph'); if (d) manual = JSON.parse(d); } } catch (e) { /* corrupt draft */ }
     if (!manual) {
+      let reached = false;
       for (const url of ['/get_navgraph', 'data/navgraph.json']) {
-        try { const r = await fetch(url, { cache: 'no-store' }); if (r.ok) { const j = await r.json(); if (j && typeof j === 'object') { manual = j; break; } } } catch (e) { /* try next */ }
+        const r = await fetchRetry(url, 3);
+        if (!r) continue;
+        reached = true;
+        if (r.ok) { try { const j = await r.json(); if (j && typeof j === 'object') { manual = j; break; } } catch (e) { /* not JSON, try next */ } }
       }
+      if (!reached) incomplete = true;               // could not talk to the server at all
     }
     let pins = (typeof allPins !== 'undefined' && allPins && allPins.length) ? allPins : null;
-    if (!pins) { try { const r = await fetch('data/pins.json'); pins = r.ok ? await r.json() : []; } catch (e) { pins = []; } }
+    if (!pins) {
+      const r = await fetchRetry('data/pins.json', 3);
+      if (!r) { pins = []; incomplete = true; }
+      else { try { pins = r.ok ? await r.json() : []; } catch (e) { pins = []; incomplete = true; } }
+    }
     const g = NC.NavGraph.build({ manual, pins });
-    S.graph = g; S.graphPins = pins.length;
+    g.incomplete = incomplete;
+    S.graph = g; S.graphPins = incomplete ? -1 : pins.length;
     drawNetwork();
-    console.log('[Nav] graph:', g.nodes.size, 'nodes,', g.edges.length, 'edges,', g.transitions.length, 'transitions', g.stats);
+    console.log('[Nav] graph:', g.nodes.size, 'nodes,', g.edges.length, 'edges,', g.transitions.length, 'transitions', g.stats, incomplete ? '(INCOMPLETE - will retry)' : '');
+    if (incomplete) {
+      // Do not remember a half-loaded graph: forget it and try again shortly (max 6 times), so the path shows up as soon as the server answers.
+      graphPromise = null;
+      if (!graphRetryTimer && graphRetries < 6) {
+        graphRetries++;
+        graphRetryTimer = setTimeout(() => { graphRetryTimer = null; ensureGraph(true); }, 2000 * graphRetries);
+      }
+    } else graphRetries = 0;
     return g;
   }
 
@@ -254,7 +281,8 @@
 
   // ------------------------------------------------------------------ routing
   async function computeRoute(start, dest) {
-    const g = await ensureGraph();
+    let g = await ensureGraph();
+    if (g.incomplete) g = await ensureGraph(true);          // last load was cut short: try once more before routing
     const end = { lat: dest.lat, lng: dest.lng, floor: dest.floor, name: dest.name, placeId: dest.placeId };
     let route = g.findRoute(start, end, { accessible: S.accessible });
     let notice = null;
@@ -280,15 +308,17 @@
   function ensureLayers() {
     const map = mapObj();
     if (!map) return false;
-    if (S.layersReady && map.getSource(SRC_ROUTE)) return true;
+    if (S.layersReady && layersComplete(map)) return true;
     try {
       if (!map.getStyle()) return false;
       if (!map.hasImage(ARROW_ID)) map.addImage(ARROW_ID, arrowImage(), { pixelRatio: 2 });
-      if (!map.getSource(SRC_NET)) {
+      // each source / layer is checked on its own: if an earlier attempt stopped half-way, this finishes the job
+      const addLayer = (spec, before) => { if (!map.getLayer(spec.id)) map.addLayer(spec, before); };
+      if (!map.getSource(SRC_NET)) map.addSource(SRC_NET, { type: 'geojson', data: EMPTY });
+      {
         // Faint grey walkway network (like Google's road overlay on satellite): fades in when you zoom in, gone when zoomed out
-        map.addSource(SRC_NET, { type: 'geojson', data: EMPTY });
         const firstSymbol = (map.getStyle().layers || []).find(l => l.type === 'symbol');
-        map.addLayer({ id: 'nav-network', type: 'line', source: SRC_NET,
+        addLayer({ id: 'nav-network', type: 'line', source: SRC_NET,
           layout: { 'line-cap': 'round', 'line-join': 'round', visibility: S.networkVisible ? 'visible' : 'none' },
           paint: {
             'line-color': '#8d9399',
@@ -297,25 +327,29 @@
             'line-blur': 0.6
           } }, firstSymbol ? firstSymbol.id : undefined);
       }
-      if (!map.getSource(SRC_ACC)) {
-        map.addSource(SRC_ACC, { type: 'geojson', data: EMPTY });
-        map.addLayer({ id: 'nav-accuracy-fill', type: 'fill', source: SRC_ACC, paint: { 'fill-color': '#1a73e8', 'fill-opacity': 0.13 } });
-        map.addLayer({ id: 'nav-accuracy-line', type: 'line', source: SRC_ACC, paint: { 'line-color': '#1a73e8', 'line-opacity': 0.35, 'line-width': 1 } });
+      if (!map.getSource(SRC_ACC)) map.addSource(SRC_ACC, { type: 'geojson', data: EMPTY });
+      {
+        addLayer({ id: 'nav-accuracy-fill', type: 'fill', source: SRC_ACC, paint: { 'fill-color': '#1a73e8', 'fill-opacity': 0.13 } });
+        addLayer({ id: 'nav-accuracy-line', type: 'line', source: SRC_ACC, paint: { 'line-color': '#1a73e8', 'line-opacity': 0.35, 'line-width': 1 } });
       }
-      if (!map.getSource(SRC_ROUTE)) {
-        map.addSource(SRC_ROUTE, { type: 'geojson', data: EMPTY });
+      if (!map.getSource(SRC_ROUTE)) map.addSource(SRC_ROUTE, { type: 'geojson', data: EMPTY });
+      {
         const round = { 'line-cap': 'round', 'line-join': 'round' };
-        map.addLayer({ id: 'nav-route-casing', type: 'line', source: SRC_ROUTE, layout: round, paint: { 'line-color': '#ffffff', 'line-width': 11, 'line-opacity': 0.95 } });
-        map.addLayer({ id: 'nav-route-passed', type: 'line', source: SRC_ROUTE, layout: round, paint: { 'line-color': '#9aa0a6', 'line-width': 6, 'line-opacity': 0.9 } });
-        map.addLayer({ id: 'nav-route-line', type: 'line', source: SRC_ROUTE, layout: round, paint: { 'line-color': '#1a73e8', 'line-width': 6 } });
-        map.addLayer({ id: 'nav-route-connector', type: 'line', source: SRC_ROUTE, layout: { 'line-cap': 'butt', 'line-join': 'round' }, paint: { 'line-color': '#1a73e8', 'line-width': 5, 'line-dasharray': [1.2, 1.6] } });
-        map.addLayer({ id: 'nav-route-arrows', type: 'symbol', source: SRC_ROUTE, layout: { 'symbol-placement': 'line', 'symbol-spacing': 70, 'icon-image': ARROW_ID, 'icon-size': 0.6, 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
+        addLayer({ id: 'nav-route-casing', type: 'line', source: SRC_ROUTE, layout: round, paint: { 'line-color': '#ffffff', 'line-width': 11, 'line-opacity': 0.95 } });
+        addLayer({ id: 'nav-route-passed', type: 'line', source: SRC_ROUTE, layout: round, paint: { 'line-color': '#9aa0a6', 'line-width': 6, 'line-opacity': 0.9 } });
+        addLayer({ id: 'nav-route-line', type: 'line', source: SRC_ROUTE, layout: round, paint: { 'line-color': '#1a73e8', 'line-width': 6 } });
+        addLayer({ id: 'nav-route-connector', type: 'line', source: SRC_ROUTE, layout: { 'line-cap': 'butt', 'line-join': 'round' }, paint: { 'line-color': '#1a73e8', 'line-width': 5, 'line-dasharray': [1.2, 1.6] } });
+        addLayer({ id: 'nav-route-arrows', type: 'symbol', source: SRC_ROUTE, layout: { 'symbol-placement': 'line', 'symbol-spacing': 70, 'icon-image': ARROW_ID, 'icon-size': 0.6, 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
       }
       S.layersReady = true;
       applyFloorFilter();
       drawNetwork();
       return true;
-    } catch (e) { return false; }
+    } catch (e) { console.warn('[Nav] map layers not ready yet, will retry:', e && e.message); S.layersReady = false; return false; }
+  }
+  const LAYER_IDS = ['nav-network', 'nav-accuracy-fill', 'nav-route-casing', 'nav-route-line', 'nav-route-arrows'];
+  function layersComplete(map) {
+    return !!(map.getSource(SRC_NET) && map.getSource(SRC_ACC) && map.getSource(SRC_ROUTE) && LAYER_IDS.every(id => map.getLayer(id)));
   }
 
   function applyFloorFilter() {
@@ -1134,7 +1168,9 @@
 
     const map = mapObj();
     map.on('dragstart', e => { if (e.originalEvent && S.follow) { S.follow = false; } });
-    map.on('styledata', () => { if (S.layersReady && !map.getSource(SRC_ROUTE)) { S.layersReady = false; if (ensureLayers()) { drawRoute(); if (S.lastPos) updateUserMarker(S.lastPos); } } });
+    const heal = () => { if (S.layersReady && !layersComplete(map)) { S.layersReady = false; if (ensureLayers()) { drawRoute(); if (S.lastPos) updateUserMarker(S.lastPos); } } };
+    map.on('styledata', heal);
+    map.on('idle', heal);          // safety net: whenever the map settles, make sure our path layers still exist
 
     tracker.on((ev, pos) => {
       if (ev === 'position') { onPosition(pos); updateGpsBtn(); }

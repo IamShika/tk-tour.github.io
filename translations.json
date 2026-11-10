@@ -200,7 +200,10 @@
     "search_remove": "ลบออกจากประวัติ",
     "search_hint": "พิมพ์ชื่อห้องหรือสถานที่เพื่อค้นหา",
     "nav_collapse": "ย่อ",
-    "nav_expand": "ขยาย"
+    "nav_expand": "ขยาย",
+    "bar_saved": "บันทึก",
+    "bar_info": "ข้อมูล",
+    "compass_label": "เข็มทิศ: แตะเพื่อหันไปทางทิศเหนือ"
   },
   "t-th": {
     "searchPlaceholder": "เจ้าใฝ่หาสิ่งใดอยู่หรือ...?",
@@ -403,7 +406,10 @@
     "search_remove": "ลบออกจากความทรงจำ",
     "search_hint": "พิมพ์ชื่อห้องหรือสถานที่ที่ต้องการตามหา",
     "nav_collapse": "ย่อ",
-    "nav_expand": "ขยาย"
+    "nav_expand": "ขยาย",
+    "bar_saved": "อันซึ่งจารึกไว้",
+    "bar_info": "ข่าวสาร",
+    "compass_label": "เข็มทิศ: แตะเพื่อหันสู่อุดร"
   },
   "en": {
     "searchPlaceholder": "Search room name or number...",
@@ -606,6 +612,9 @@
     "search_remove": "Remove from history",
     "search_hint": "Type a room or place name to search",
     "nav_collapse": "Collapse",
-    "nav_expand": "Expand"
+    "nav_expand": "Expand",
+    "bar_saved": "Saved",
+    "bar_info": "Info",
+    "compass_label": "Compass: tap to face north"
   }
 }

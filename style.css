@@ -5675,3 +5675,308 @@ input[type="file"].dev-input { padding: 7px 8px; height: auto; font-size: 12px; 
   .navigation-panel.active { transform: none; }
   body.nav-panel-open .gps-btn, body.nav-panel-open .layer-switcher, body.nav-panel-open .maplibregl-ctrl-bottom-right, body.nav-panel-open .maplibregl-ctrl-bottom-left { transform: none; }
 }
+
+
+/* ==========================================================================
+   GOOGLE-MAPS-STYLE UI LAYER (v1.3)  -  loaded last on purpose, so it wins.
+   Think of it as 3 parts:  1) design tokens (colors/shadows)  2) layout of the map screen
+   3) panels (place card, menu).  Change a token here and the whole app follows.
+   `body[data-display]` is only there to be a bit "stronger" than the older rules above.
+   ========================================================================== */
+
+/* ---------- 1) Tokens ---------- */
+:root {
+  --accent: #1a73e8;
+  --accent-light: rgba(26, 115, 232, 0.10);
+  --bg: #f1f3f4;
+  --card: #ffffff;
+  --card-solid: #ffffff;
+  --surface: #f1f3f4;
+  --text: #202124;
+  --text-secondary: #3c4043;
+  --muted: #5f6368;
+  --border: #dadce0;
+  --shadow: 0 1px 2px rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+  --shadow-elevated: 0 1px 3px rgba(60, 64, 67, .30), 0 4px 8px 3px rgba(60, 64, 67, .15);
+  --radius: 12px;
+  --gm-hover: rgba(60, 64, 67, .08);
+  --gm-pill-shadow: 0 1px 6px rgba(32, 33, 36, .28);
+  --floor-1: #1a73e8;
+  --color-iabout-light: transparent; --color-ihowto-light: transparent; --color-isettings-light: transparent;
+  --color-idonate-light: transparent; --color-ifeedback-light: transparent;
+}
+body.dark-theme {
+  --accent: #8ab4f8;
+  --accent-light: rgba(138, 180, 248, 0.16);
+  --bg: #202124;
+  --card: #292a2d;
+  --card-solid: #292a2d;
+  --surface: #3c4043;
+  --text: #e8eaed;
+  --text-secondary: #bdc1c6;
+  --muted: #9aa0a6;
+  --border: #5f6368;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 1px 3px 1px rgba(0, 0, 0, .3);
+  --shadow-elevated: 0 1px 3px rgba(0, 0, 0, .5), 0 4px 8px 3px rgba(0, 0, 0, .3);
+  --gm-hover: rgba(232, 234, 237, .10);
+  --gm-pill-shadow: 0 1px 6px rgba(0, 0, 0, .6);
+  --floor-1: #8ab4f8;
+}
+body.dark-theme #map { filter: none; }
+body[data-display] .gm-search-directions,
+body[data-display] .place-action-btn .action-icon.primary { background: #1a73e8; }
+body.dark-theme[data-display] .gm-search-directions,
+body.dark-theme[data-display] .place-action-btn .action-icon.primary { background: #8ab4f8; color: #202124; }
+body.dark-theme .gm-search-directions .material-symbols-rounded { color: #202124 !important; }
+
+/* ---------- 2) Search pill + menu button inside it ---------- */
+body[data-display] .gm-search-box {
+  top: 16px; left: 16px; width: 380px; max-width: calc(100vw - 32px); height: 48px;
+  padding: 0 8px 0 52px;               /* left padding leaves room for the menu button */
+  border-radius: 24px; background: var(--card); box-shadow: var(--gm-pill-shadow); border: 0;
+}
+body[data-display] .gm-search-box:focus-within { box-shadow: 0 2px 8px rgba(32, 33, 36, .35); }
+body[data-display] .gm-search-box #searchInput { color: var(--text); font-size: 16px; height: 46px; padding: 0 4px; text-align: left; background: transparent; border: 0; box-shadow: none; }
+body[data-display] .gm-search-box #searchInput::placeholder { color: var(--muted); font-size: 16px; }
+body[data-display] .gm-search-input-wrapper { flex-direction: row; }
+body[data-display] .gm-search-icon { order: 3; color: var(--muted); font-size: 22px; margin: 0 6px 0 2px; }
+body[data-display] .gm-search-divider { background: var(--border); height: 24px; margin: 0 6px 0 2px; }
+body[data-display] .gm-search-directions { width: 36px; height: 36px; border-radius: 50%; }
+
+body[data-display] #menuToggle {
+  position: fixed; top: 20px; left: 20px; z-index: 1203;
+  width: 40px; height: 40px; border: 0; border-radius: 50%;
+  background: transparent; box-shadow: none; color: var(--muted); font-size: 0;
+  transform: none; margin: 0; padding: 0;
+}
+body[data-display] #menuToggle:hover { background: var(--gm-hover); color: var(--text); transform: none; box-shadow: none; }
+body[data-display] #menuToggle:active { background: var(--gm-hover); transform: none; }
+body[data-display] #menuToggle .material-symbols-rounded { font-size: 24px; }
+/* phone: keep the menu button visible when the search box is focused */
+body[data-display="phone"][data-display][data-display] #topbar.search-focused #menuToggle { opacity: 1; width: 40px; pointer-events: auto; overflow: visible; }
+body.nav-picker-open #menuToggle, body.ne-active #menuToggle { display: none; }
+
+body[data-display="phone"] .gm-search-box { left: 16px; right: 16px; width: auto; max-width: none; }
+
+/* dropdowns line up with the pill */
+body[data-display] .gm-search-dropdown { top: 68px; left: 16px; width: 380px; max-width: calc(100vw - 32px); border-radius: 12px; box-shadow: var(--shadow-elevated); background: var(--card); }
+body[data-display="phone"] .gm-search-dropdown { width: auto; right: 16px; }
+body[data-display] .search-recommendations { top: 68px; left: 16px; width: 380px; max-width: calc(100vw - 32px); right: auto; border-radius: 12px; box-shadow: var(--shadow-elevated); }
+body[data-display="phone"] .search-recommendations,
+body[data-display="phone"] .search-recommendations.expanded { width: auto; right: 16px; max-width: none; }
+
+/* ---------- category chips ---------- */
+.gm-chips {
+  position: fixed; z-index: 1190; top: 72px; left: 0; right: 0;
+  display: flex; gap: 8px; padding: 4px 16px 8px; overflow-x: auto; pointer-events: none;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.gm-chips::-webkit-scrollbar { display: none; }
+.gm-chips[hidden] { display: none; }
+.gm-chip {
+  pointer-events: auto; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+  height: 36px; padding: 0 14px 0 10px; border: 0; border-radius: 18px; cursor: pointer;
+  background: var(--card); color: var(--text); font: 500 14px/1 'Kanit', sans-serif;
+  box-shadow: var(--gm-pill-shadow); transition: background .15s, box-shadow .15s;
+}
+.gm-chip .material-symbols-rounded { font-size: 20px; color: var(--accent); }
+.gm-chip:hover { background: var(--surface); }
+.gm-chip:active { box-shadow: none; }
+body[data-display]:not([data-display="phone"]) .gm-chips { top: 16px; left: 412px; padding: 6px 16px; }
+body.gm-searching .gm-chips, body.nav-picker-open .gm-chips, body.ne-active .gm-chips,
+body:has(.navigation-panel.active) .gm-chips { display: none; }
+body[data-display="phone"]:has(#placeSidebar.open) .gm-chips,
+body[data-display="phone"]:has(#mainSidebar.open) .gm-chips { display: none; }
+
+/* ---------- floating map buttons: one family (white, 40px, soft shadow) ---------- */
+body[data-display] .gps-btn,
+body[data-display] .layer-switcher-btn,
+body[data-display] .floor-pill {
+  background: var(--card); border: 0; box-shadow: var(--gm-pill-shadow); color: var(--text);
+}
+body[data-display] .gps-btn { width: 48px; height: 48px; right: 12px; bottom: 24px; border-radius: 50%; }
+body[data-display] .gps-btn svg { fill: var(--muted); width: 24px; height: 24px; }
+body[data-display] .gps-btn:hover { background: var(--surface); transform: none; box-shadow: var(--gm-pill-shadow); }
+body[data-display] .gps-btn:hover svg { fill: var(--accent); }
+body[data-display] .gps-btn.active svg { fill: var(--accent); }
+body[data-display] .layer-switcher { left: auto; right: 12px; bottom: auto; top: 128px; }
+body[data-display] .layer-switcher-btn { width: 40px; height: 40px; border-radius: 8px; }
+body[data-display] .layer-switcher-btn:hover { background: var(--surface); color: var(--text); transform: none; box-shadow: var(--gm-pill-shadow); }
+body[data-display] .layer-switcher-btn .material-symbols-rounded { color: var(--muted); font-size: 22px; }
+body[data-display] .layer-switcher-panel { top: 0; bottom: auto; right: calc(100% + 8px); border: 0; border-radius: 12px; background: var(--card); box-shadow: var(--shadow-elevated); transform-origin: top right; }
+body[data-display] .layer-option-label { color: var(--text-secondary); }
+
+/* floor selector: sits under the layers button */
+body[data-display] #topbar { right: auto; left: auto; top: 0; z-index: 1202; }
+body[data-display] .floor-pill { position: fixed; top: 176px; right: 12px; width: 40px; height: 40px; border-radius: 8px; z-index: 1150; }
+body[data-display] .floor-pill:hover { border: 0; box-shadow: var(--gm-pill-shadow); background: var(--surface); }
+body[data-display] .floor-pill.expanded { border-radius: 8px 8px 0 0; background: var(--card); }
+body[data-display] .floor-pill-list { border: 0; border-radius: 0 0 8px 8px; left: 0; right: 0; background: var(--card); box-shadow: var(--shadow-elevated); }
+body[data-display] .floor-pill.expanded .floor-pill-list { border: 0; }
+body[data-display] .floor-pill-current .floor-num { color: var(--text); }
+body[data-display] .floor-pill-current .floor-label { color: var(--muted); }
+body[data-display] .floor-pill-item:hover { background: var(--gm-hover); }
+body.nav-picker-open .floor-pill, body.ne-active .floor-pill { display: none; }
+
+/* desktop: chips are in the top row, so the right-hand stack starts higher */
+body[data-display]:not([data-display="phone"]) .layer-switcher { top: 16px; }
+body[data-display]:not([data-display="phone"]) .floor-pill { top: 64px; }
+/* phone: no +/- buttons (pinch to zoom, like Google); keep the compass above the location button */
+body[data-display="phone"] .maplibregl-ctrl-zoom-in,
+body[data-display="phone"] .maplibregl-ctrl-zoom-out { display: none; }
+body[data-display="phone"] .maplibregl-ctrl-bottom-right { bottom: 84px; right: 4px; }
+/* desktop zoom buttons */
+body[data-display]:not([data-display="phone"]) .maplibregl-ctrl-bottom-right { bottom: 24px; right: 4px; }
+body[data-display]:not([data-display="phone"]) .gps-btn { bottom: 212px; right: 12px; width: 40px; height: 40px; border-radius: 8px; }
+body[data-display]:not([data-display="phone"]) .gps-btn svg { width: 22px; height: 22px; }
+.maplibregl-ctrl-group { border-radius: 8px !important; box-shadow: var(--gm-pill-shadow) !important; background: var(--card) !important; border: 0 !important; }
+.maplibregl-ctrl-group button { background-color: transparent; width: 40px; height: 40px; }
+.maplibregl-ctrl-group button + button { border-top: 1px solid var(--border); }
+.maplibregl-ctrl-group button:hover { background-color: var(--gm-hover); }
+body.dark-theme .maplibregl-ctrl-icon { filter: invert(1) hue-rotate(180deg); }
+
+/* ---------- 3) Panels ---------- */
+/* place card: desktop = left panel UNDER the search pill (Google style) */
+body[data-display]:not([data-display="phone"]) .sidebar-panel.left.place-sidebar {
+  top: 72px; width: 412px; max-width: 100vw; border-radius: 0; border: 0;
+  box-shadow: 0 2px 6px rgba(60, 64, 67, .3), 0 4px 8px 3px rgba(60, 64, 67, .15);
+}
+body[data-display]:not([data-display="phone"]) .sidebar-panel.left.place-sidebar.open ~ #topbar { z-index: 1200; }
+body[data-display] .sidebar-panel { background: var(--card); box-shadow: var(--shadow-elevated); }
+body[data-display="phone"] .sidebar-panel.left.place-sidebar { border-radius: 16px 16px 0 0; }
+.bottom-sheet-handle { background: var(--border); width: 32px; height: 4px; opacity: 1; }
+.overlay-close { background: rgba(32, 33, 36, .6); }
+.place-title { font-weight: 500; color: var(--text); }
+.place-category, .place-subtitle { color: var(--muted); }
+.place-tab { color: var(--muted); font-weight: 500; }
+.place-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.place-action-btn > span { color: var(--accent); font-weight: 500; }
+.action-icon { border-color: var(--border); background: transparent; color: var(--accent); }
+.action-icon.primary { color: #fff; border-color: transparent; }
+body.dark-theme .action-icon.primary { color: #202124; }
+.detail-row .material-symbols-rounded { color: var(--accent); }
+
+/* menu drawer: slides in from the LEFT like Google, calm gray icons, no rainbow */
+body[data-display] #mainSidebar.sidebar-panel.right {
+  left: 0; right: auto; transform: translateX(-105%); width: 320px; max-width: 88vw;
+  border: 0; border-radius: 0 16px 16px 0; box-shadow: 0 8px 10px 1px rgba(0, 0, 0, .14), 0 3px 14px 2px rgba(0, 0, 0, .12);
+}
+body[data-display="phone"] #mainSidebar.sidebar-panel.right { width: 320px; max-width: 88vw; }
+body[data-display] #mainSidebar.sidebar-panel.right.open { transform: translateX(0); }
+body[data-display] #mainSidebar .sidebar-header { padding: 16px 16px 12px 24px; border-bottom: 1px solid var(--border); }
+body[data-display] #mainSidebar .sidebar-title { font-size: 20px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text); }
+body[data-display] #mainSidebar .close-btn { width: 40px; height: 40px; background: transparent; color: var(--muted); }
+body[data-display] #mainSidebar .close-btn:hover { background: var(--gm-hover); color: var(--text); }
+body[data-display] .sidebar-body { padding: 8px 12px 20px 0; }
+body[data-display] .menu-item { border-radius: 0 24px 24px 0; padding: 12px 24px; gap: 20px; font-weight: 400; font-size: 15px; border: 0; }
+body[data-display] .menu-item::before { display: none; }
+body[data-display] .menu-item .material-symbols-rounded { color: var(--muted) !important; font-size: 24px; }
+body[data-display] .menu-item:hover { background: var(--gm-hover) !important; }
+body[data-display] .menu-item:active { background: var(--accent-light) !important; color: var(--accent); }
+body[data-display] .menu-item:active .material-symbols-rounded { color: var(--accent) !important; }
+
+@media (prefers-reduced-motion: reduce) { .gm-chip { transition: none; } }
+
+/* map credits readable in dark mode */
+body.dark-theme .maplibregl-ctrl-attrib { background: rgba(41, 42, 45, .85) !important; }
+body.dark-theme .maplibregl-ctrl-attrib, body.dark-theme .maplibregl-ctrl-attrib a { color: var(--muted) !important; }
+body.dark-theme .maplibregl-ctrl-attrib-button { filter: invert(1); }
+
+/* floor picker: flat, no glow */
+body[data-display] .floor-pill.expanded .floor-pill-current { background: transparent; border-radius: 8px 8px 0 0; }
+body[data-display] .floor-pill.expanded .floor-pill-current .floor-num,
+body[data-display] .floor-pill.expanded .floor-pill-current .floor-label { color: var(--muted); }
+body[data-display] .floor-pill-indicator { border-radius: 8px; box-shadow: none; }
+
+/* the layers button now hangs from the top, so it must not ride up with the bottom sheets */
+body.nav-panel-open .layer-switcher, body.ne-active .layer-switcher { transform: none; }
+/* phone: search results are exactly as wide as the pill */
+body[data-display="phone"][data-display] .search-recommendations,
+body[data-display="phone"][data-display] .search-recommendations.expanded { left: 16px; right: 16px; width: auto; max-width: none; }
+
+
+/* ==========================================================================
+   v1.4 FIXES: centered menu icon, full-width search on phone, directions button under GPS,
+   round compass (red N), bottom bar (phone)
+   ========================================================================== */
+
+/* bar height is a variable so the buttons above it can sit on top of it */
+body[data-display="phone"] { --gm-bar-h: calc(64px + env(safe-area-inset-bottom, 0px)); }
+body:not([data-display="phone"]) { --gm-bar-h: 0px; }
+body[data-display="phone"].gm-searching, body[data-display="phone"].nav-picker-open, body[data-display="phone"].ne-active,
+body[data-display="phone"]:has(#placeSidebar.open), body[data-display="phone"]:has(#mainSidebar.open),
+body[data-display="phone"]:has(.navigation-panel.active), body[data-display="phone"]:has(.modal-overlay.active) { --gm-bar-h: 0px; }
+
+/* -- menu icon: perfectly centred inside its 40px circle -- */
+body[data-display] #menuToggle { display: flex; align-items: center; justify-content: center; line-height: 1; }
+body[data-display] #menuToggle .material-symbols-rounded { display: block; width: 24px; height: 24px; line-height: 24px; font-size: 24px; text-align: center; margin: 0; padding: 0; }
+
+/* -- search pill: the older phone rules were stronger, so beat them on purpose -- */
+body[data-display="phone"][data-display][data-display] .gm-search-box { left: 16px; right: 16px; width: auto; max-width: none; height: 48px; border-radius: 24px; }
+body[data-display="phone"][data-display][data-display] .gm-search-box #searchInput,
+body[data-display="phone"][data-display][data-display] .gm-search-box #searchInput::placeholder { font-size: 16px; }
+body[data-display="phone"][data-display][data-display] .gm-search-box #searchInput { padding-right: 4px; }
+body[data-display] .gm-search-box { padding-right: 12px; }
+
+/* -- directions button: its own button under the GPS button -- */
+body[data-display] .gm-directions-fab {
+  position: fixed; z-index: 1150; right: 12px; bottom: calc(var(--gm-bar-h) + 16px);
+  width: 56px; height: 56px; border-radius: 16px; border: 0; padding: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: #1a73e8; box-shadow: var(--gm-pill-shadow); transition: transform .15s, bottom .2s;
+}
+body[data-display] .gm-directions-fab .material-symbols-rounded { font-size: 28px; color: #fff !important; }
+body[data-display] .gm-directions-fab:active { transform: scale(.94); }
+body.dark-theme[data-display] .gm-directions-fab { background: #8ab4f8; }
+body.dark-theme[data-display] .gm-directions-fab .material-symbols-rounded { color: #202124 !important; }
+body[data-display] .gps-btn { bottom: calc(var(--gm-bar-h) + 16px + 56px + 12px); width: 48px; height: 48px; border-radius: 14px; right: 16px; transition: bottom .2s; }
+body[data-display] .gps-btn svg { width: 24px; height: 24px; }
+/* desktop: stack sits above the zoom +/- buttons */
+body[data-display]:not([data-display="phone"]) .gps-btn { bottom: 276px; width: 48px; height: 48px; border-radius: 14px; right: 16px; }
+body[data-display]:not([data-display="phone"]) .gm-directions-fab { bottom: 208px; }
+body.nav-picker-open .gm-directions-fab, body.ne-active .gm-directions-fab,
+body:has(.navigation-panel.active) .gm-directions-fab { display: none; }
+body[data-display="phone"]:has(#placeSidebar.open) .gm-directions-fab,
+body[data-display="phone"]:has(#mainSidebar.open) .gm-directions-fab { display: none; }
+
+/* -- compass: round, white, red north needle, sits under the floor button -- */
+.gm-compass {
+  position: fixed; z-index: 1150; right: 12px; top: 224px; width: 40px; height: 40px; padding: 0;
+  border: 0; border-radius: 50%; background: var(--card); box-shadow: var(--gm-pill-shadow);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.gm-compass:hover { background: var(--surface); }
+.gm-compass svg { transition: transform .12s linear; pointer-events: none; }
+body:not([data-display="phone"]) .gm-compass { top: 112px; }
+body.nav-picker-open .gm-compass, body.ne-active .gm-compass { display: none; }
+.maplibregl-ctrl-compass { display: none !important; }
+/* phone: no +/- buttons (pinch instead); keep the map credits (required) but park them bottom-left above the bar */
+body[data-display="phone"] .maplibregl-ctrl-bottom-right { right: auto; left: 0; bottom: var(--gm-bar-h); }
+body[data-display="phone"] .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { display: none; }
+body[data-display="phone"] .maplibregl-ctrl-bottom-left { bottom: var(--gm-bar-h); }
+
+/* -- bottom bar (phone only) -- */
+.gm-bottom-bar { display: none; }
+body[data-display="phone"] .gm-bottom-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1180;
+  height: calc(64px + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box;
+  display: flex; align-items: stretch; justify-content: space-around;
+  background: var(--card); box-shadow: 0 -1px 0 var(--border), 0 -2px 8px rgba(32, 33, 36, .08);
+  transition: transform .2s ease;
+}
+body[data-display="phone"].gm-searching .gm-bottom-bar, body[data-display="phone"].nav-picker-open .gm-bottom-bar, body[data-display="phone"].ne-active .gm-bottom-bar,
+body[data-display="phone"]:has(#placeSidebar.open) .gm-bottom-bar, body[data-display="phone"]:has(#mainSidebar.open) .gm-bottom-bar,
+body[data-display="phone"]:has(.navigation-panel.active) .gm-bottom-bar, body[data-display="phone"]:has(.modal-overlay.active) .gm-bottom-bar { transform: translateY(110%); }
+.gm-bar-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: 0; background: transparent; cursor: pointer; color: var(--muted); font: 500 12px/1.1 'Kanit', sans-serif; padding: 6px 0 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.gm-bar-icon { display: flex; align-items: center; justify-content: center; width: 56px; height: 30px; border-radius: 15px; transition: background .15s; }
+.gm-bar-icon .material-symbols-rounded { font-size: 24px; }
+.gm-bar-btn:active .gm-bar-icon, .gm-bar-btn:hover .gm-bar-icon { background: var(--accent-light); }
+.gm-bar-btn:active { color: var(--accent); }
+.gm-bar-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .gm-bottom-bar, .gm-directions-fab, .gps-btn { transition: none; } }
+/* menu button: exactly 40x40 (older rule made it 36) so its centre is the centre of the pill's left end */
+body[data-display][data-display][data-display] #menuToggle { width: 40px; height: 40px; min-width: 40px; top: 20px; left: 20px; }

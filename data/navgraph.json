@@ -540,9 +540,9 @@
       "floor": 1,
       "lat": 14.084383548801455,
       "lng": 100.6091405106971,
-      "type": "door",
       "name": "โรงยิม",
-      "placeId": "place_1794285035987"
+      "placeId": "place_1794285035987",
+      "type": "door"
     },
     "nmwa6pg343x": {
       "floor": 1,
@@ -810,74 +810,192 @@
       "lng": 100.60763479302669,
       "type": "corridor"
     },
-    "nmwa791eocz": {
-      "lat": 14.08508648837929,
-      "lng": 100.6075938443592,
-      "floor": 1,
-      "type": "entrance",
-      "name": "ประตูเข้าอาคาร 7"
-    },
     "nmwa791eo1e": {
+      "floor": 1,
       "lat": 14.085083884884043,
       "lng": 100.60761855498976,
-      "floor": 1,
       "type": "corridor"
     },
+    "nmwa791eocz": {
+      "floor": 1,
+      "lat": 14.08508648837929,
+      "lng": 100.6075938443592,
+      "name": "ประตูเข้าอาคาร 7",
+      "type": "entrance"
+    },
     "nmwa7984pyi": {
+      "floor": 1,
       "lat": 14.08508328930806,
       "lng": 100.60712034022964,
-      "floor": 1,
-      "type": "entrance",
-      "name": "ประตูเข้าอาคาร 7"
+      "name": "ประตูเข้าอาคาร 7",
+      "type": "entrance"
     },
     "nmwa8mim89x": {
+      "floor": 1,
       "lat": 14.084378420917261,
       "lng": 100.60919365801124,
-      "floor": 1,
       "type": "corridor"
     },
     "nmwa8z5kgby": {
+      "floor": 1,
       "lat": 14.08440568248271,
       "lng": 100.6091153858469,
-      "floor": 1,
-      "type": "door",
       "name": "สนามมวย",
-      "placeId": "place_1788702528160"
+      "placeId": "place_1788702528160",
+      "type": "door"
     },
     "nmwa8z5kghy": {
+      "floor": 1,
       "lat": 14.084406058175766,
       "lng": 100.60914014768115,
-      "floor": 1,
       "type": "corridor"
     },
     "nmwa8za4666": {
+      "floor": 1,
       "lat": 14.084299413143498,
       "lng": 100.60889568066835,
-      "floor": 1,
-      "type": "door",
       "name": "สนามมวย",
-      "placeId": "place_1788702528160"
+      "placeId": "place_1788702528160",
+      "type": "door"
     },
     "nmwa8za47ol": {
+      "floor": 1,
       "lat": 14.084257906364815,
       "lng": 100.6088971614007,
-      "floor": 1,
       "type": "corridor"
     },
     "nmwa8zcxzqe": {
+      "floor": 1,
       "lat": 14.084305591908404,
       "lng": 100.60888897515247,
-      "floor": 1,
-      "type": "door",
       "name": "สนามมวย",
-      "placeId": "place_1788702528160"
+      "placeId": "place_1788702528160",
+      "type": "door"
     },
     "nmwa94ibqsn": {
+      "floor": 1,
       "lat": 14.084048571355709,
       "lng": 100.61020763834205,
+      "name": "โรงเผาขยะ",
+      "type": "door"
+    },
+    "nmwa9xvo6sd": {
+      "lat": 14.085116019651153,
+      "lng": 100.6089167995869,
       "floor": 1,
-      "type": "door",
-      "name": "โรงเผาขยะ"
+      "type": "entrance",
+      "name": "อาคาร 1",
+      "placeId": "place_1788696866154"
+    },
+    "nmwa9xx75eb": {
+      "lat": 14.085015726003732,
+      "lng": 100.60891584734833,
+      "floor": 1,
+      "type": "entrance",
+      "name": "อาคาร 1",
+      "placeId": "place_1788696866154"
+    },
+    "nmwa9xz7v22": {
+      "lat": 14.084961187757926,
+      "lng": 100.60891356693986,
+      "floor": 1,
+      "type": "entrance",
+      "name": "อาคาร 1",
+      "placeId": "place_1788696866154"
+    },
+    "nmwa9y0x81w": {
+      "lat": 14.084894458235553,
+      "lng": 100.60892357207007,
+      "floor": 1,
+      "type": "entrance",
+      "name": "อาคาร 1",
+      "placeId": "place_1788696866154"
+    },
+    "nmwa9y1sgmr": {
+      "lat": 14.084819142569515,
+      "lng": 100.608926817709,
+      "floor": 1,
+      "type": "entrance",
+      "name": "อาคาร 1",
+      "placeId": "place_1788696866154"
+    },
+    "nmwa9y3rmc3": {
+      "lat": 14.084668276378707,
+      "lng": 100.6089205146962,
+      "floor": 1,
+      "type": "entrance",
+      "name": "อาคาร 1",
+      "placeId": "place_1788696866154"
+    },
+    "nmwa9y5dhm8": {
+      "lat": 14.084579358752123,
+      "lng": 100.6089291395632,
+      "floor": 1,
+      "type": "entrance",
+      "name": "อาคาร 1",
+      "placeId": "place_1788696866154"
+    },
+    "nmwa9y6xct2": {
+      "lat": 14.084508260381114,
+      "lng": 100.60891813902668,
+      "floor": 1,
+      "type": "entrance",
+      "name": "อาคาร 1",
+      "placeId": "place_1788696866154"
+    },
+    "nmwa9zb7swb": {
+      "lat": 14.085201168013045,
+      "lng": 100.6088515991209,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwa9zz9yw1": {
+      "lat": 14.085200445989038,
+      "lng": 100.6088758966306,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwa9zz9zrc": {
+      "lat": 14.084576215244757,
+      "lng": 100.60888952166317,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwaa1h2ypn": {
+      "lat": 14.084915682700961,
+      "lng": 100.60901500261294,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwaa1h2y52": {
+      "lat": 14.084913178380848,
+      "lng": 100.60909644195291,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwaa26bgqe": {
+      "lat": 14.084807631110667,
+      "lng": 100.60901651715268,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwaa26bg6w": {
+      "lat": 14.08480492614049,
+      "lng": 100.60892524809641,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwaa2xsept": {
+      "lat": 14.084646290650822,
+      "lng": 100.60901877863296,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwaa2xsfla": {
+      "lat": 14.084645789309409,
+      "lng": 100.60909657618684,
+      "floor": 1,
+      "type": "corridor"
     }
   },
   "edges": [
@@ -912,10 +1030,6 @@
     {
       "from": "nmwa69bm8s7",
       "to": "nmwa69n89p2"
-    },
-    {
-      "from": "nmwa69n89p2",
-      "to": "nmwa682lkxw"
     },
     {
       "from": "nmwa69n89p2",
@@ -1214,10 +1328,6 @@
       "to": "nmwa6n5gpe9"
     },
     {
-      "from": "nmwa6n5gpe9",
-      "to": "nmwa6n5gp3f"
-    },
-    {
       "from": "nmwa68si01n",
       "to": "nmwa6nce0rg"
     },
@@ -1232,10 +1342,6 @@
     {
       "from": "nmwa6nishky",
       "to": "nmwa6nce0rg"
-    },
-    {
-      "from": "nmwa6nishky",
-      "to": "nmwa6nishmi"
     },
     {
       "from": "nmwa6nishmi",
@@ -1540,6 +1646,110 @@
     {
       "from": "nmwa94ibqsn",
       "to": "nmwa6iozk1y"
+    },
+    {
+      "from": "nmwa9xvo6sd",
+      "to": "pin:pin_1785735126018"
+    },
+    {
+      "from": "nmwa9xx75eb",
+      "to": "stair:pin:pin_1785735483877:F1"
+    },
+    {
+      "from": "nmwa9xz7v22",
+      "to": "nmwa9xx75eb"
+    },
+    {
+      "from": "nmwa9y0x81w",
+      "to": "nmwa9xz7v22"
+    },
+    {
+      "from": "nmwa9y3rmc3",
+      "to": "stair:pin:pin_1785735473956:F1"
+    },
+    {
+      "from": "nmwa9y6xct2",
+      "to": "nmwa9y5dhm8"
+    },
+    {
+      "from": "nmwa69n89p2",
+      "to": "nmwa9zb7swb"
+    },
+    {
+      "from": "nmwa9zb7swb",
+      "to": "nmwa682lkxw"
+    },
+    {
+      "from": "nmwa6n5gpaa",
+      "to": "nmwa9zz9yw1"
+    },
+    {
+      "from": "nmwa9zz9yw1",
+      "to": "nmwa9zb7swb"
+    },
+    {
+      "from": "nmwa9y5dhm8",
+      "to": "nmwa9zz9zrc"
+    },
+    {
+      "from": "nmwa9zz9zrc",
+      "to": "nmwa69bm8s7"
+    },
+    {
+      "from": "nmwa9zz9yw1",
+      "to": "nmwa9zz9zrc"
+    },
+    {
+      "from": "nmwa9zz9zrc",
+      "to": "nmwa8zcxzqe"
+    },
+    {
+      "from": "nmwa6n5gpe9",
+      "to": "nmwaa1h2ypn"
+    },
+    {
+      "from": "nmwa6nishky",
+      "to": "nmwaa1h2y52"
+    },
+    {
+      "from": "nmwaa1h2ypn",
+      "to": "nmwaa1h2y52"
+    },
+    {
+      "from": "nmwaa1h2ypn",
+      "to": "nmwaa26bgqe"
+    },
+    {
+      "from": "nmwa9y1sgmr",
+      "to": "nmwaa26bg6w"
+    },
+    {
+      "from": "nmwaa26bg6w",
+      "to": "pin:pin_1785735179654"
+    },
+    {
+      "from": "nmwaa26bgqe",
+      "to": "nmwaa26bg6w"
+    },
+    {
+      "from": "nmwaa26bgqe",
+      "to": "nmwaa2xsept"
+    },
+    {
+      "from": "nmwaa2xsept",
+      "to": "nmwa6n5gp3f"
+    },
+    {
+      "from": "nmwaa1h2y52",
+      "to": "nmwaa2xsfla"
+    },
+    {
+      "from": "nmwaa2xsfla",
+      "to": "nmwa6nishmi"
+    },
+    {
+      "from": "nmwaa2xsept",
+      "to": "nmwaa2xsfla"
     }
   ],
   "transitions": []

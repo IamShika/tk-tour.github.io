@@ -1,5 +1,5 @@
 // =================== CONFIG ===================
-const APP_VERSION = 'BETA NOV1.5 26';
+const APP_VERSION = 'BETA Aug1.5H';
 // version identifer [release] {month Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec}{howmanyversionnow}{is "H"alf a month}
 const CENTER = [14.085933, 100.608844];
 const FLOORS = [

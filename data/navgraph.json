@@ -474,7 +474,9 @@
       "floor": 1,
       "lat": 14.085714114227585,
       "lng": 100.60678037600701,
-      "type": "corridor"
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
     },
     "nmwa6l6bktc": {
       "floor": 1,
@@ -492,7 +494,9 @@
       "floor": 1,
       "lat": 14.085522337718615,
       "lng": 100.60676240983355,
-      "type": "corridor"
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
     },
     "nmwa6n5gp3f": {
       "floor": 1,
@@ -535,14 +539,6 @@
       "lat": 14.084443150244923,
       "lng": 100.60913954948535,
       "type": "corridor"
-    },
-    "nmwa6npsoc6": {
-      "floor": 1,
-      "lat": 14.084383548801455,
-      "lng": 100.6091405106971,
-      "name": "โรงยิม",
-      "placeId": "place_1794285035987",
-      "type": "door"
     },
     "nmwa6pg343x": {
       "floor": 1,
@@ -655,7 +651,7 @@
       "lat": 14.085084403987892,
       "lng": 100.6065606675723,
       "name": "โรงอาหาร",
-      "placeId": "place_1788152204998",
+      "placeId": "place_1788697747875",
       "type": "entrance"
     },
     "nmwa6pttsw5": {
@@ -836,14 +832,6 @@
       "lng": 100.60919365801124,
       "type": "corridor"
     },
-    "nmwa8z5kgby": {
-      "floor": 1,
-      "lat": 14.08440568248271,
-      "lng": 100.6091153858469,
-      "name": "สนามมวย",
-      "placeId": "place_1788702528160",
-      "type": "door"
-    },
     "nmwa8z5kghy": {
       "floor": 1,
       "lat": 14.084406058175766,
@@ -883,41 +871,9 @@
       "floor": 1,
       "lat": 14.085116019651153,
       "lng": 100.6089167995869,
-      "name": "อาคาร 1",
+      "name": "111",
       "placeId": "place_1788696866154",
-      "type": "entrance"
-    },
-    "nmwa9xx75eb": {
-      "floor": 1,
-      "lat": 14.085015726003732,
-      "lng": 100.60891584734833,
-      "name": "อาคาร 1",
-      "placeId": "place_1788696866154",
-      "type": "entrance"
-    },
-    "nmwa9xz7v22": {
-      "floor": 1,
-      "lat": 14.084961187757926,
-      "lng": 100.60891356693986,
-      "name": "อาคาร 1",
-      "placeId": "place_1788696866154",
-      "type": "entrance"
-    },
-    "nmwa9y0x81w": {
-      "floor": 1,
-      "lat": 14.084894458235553,
-      "lng": 100.60892357207007,
-      "name": "อาคาร 1",
-      "placeId": "place_1788696866154",
-      "type": "entrance"
-    },
-    "nmwa9y1sgmr": {
-      "floor": 1,
-      "lat": 14.084819142569515,
-      "lng": 100.608926817709,
-      "name": "อาคาร 1",
-      "placeId": "place_1788696866154",
-      "type": "entrance"
+      "type": "door"
     },
     "nmwa9y3rmc3": {
       "floor": 1,
@@ -931,17 +887,9 @@
       "floor": 1,
       "lat": 14.084579358752123,
       "lng": 100.6089291395632,
-      "name": "อาคาร 1",
+      "name": "ห้องสภา",
       "placeId": "place_1788696866154",
-      "type": "entrance"
-    },
-    "nmwa9y6xct2": {
-      "floor": 1,
-      "lat": 14.084508260381114,
-      "lng": 100.60891813902668,
-      "name": "อาคาร 1",
-      "placeId": "place_1788696866154",
-      "type": "entrance"
+      "type": "door"
     },
     "nmwa9zb7swb": {
       "floor": 1,
@@ -965,7 +913,9 @@
       "floor": 1,
       "lat": 14.084913178380848,
       "lng": 100.60909644195291,
-      "type": "corridor"
+      "name": "อาคาร 1",
+      "placeId": "place_1788696866154",
+      "type": "entrance"
     },
     "nmwaa1h2ypn": {
       "floor": 1,
@@ -995,117 +945,1299 @@
       "floor": 1,
       "lat": 14.084645789309409,
       "lng": 100.60909657618684,
-      "type": "corridor"
+      "name": "อาคาร 1",
+      "placeId": "place_1788696866154",
+      "type": "entrance"
     },
     "nmwad9x5sup": {
+      "floor": 1,
       "lat": 14.08590412378648,
       "lng": 100.6076334588301,
-      "floor": 1,
       "type": "corridor"
     },
     "nmwad9x5tm5": {
+      "floor": 1,
       "lat": 14.085930812770796,
       "lng": 100.608862729623,
-      "floor": 1,
       "type": "corridor"
     },
-    "nmwaddi8xd6": {
+    "nmwaddi8x2s": {
+      "floor": 5,
       "lat": 14.084929967278454,
       "lng": 100.60855163182374,
-      "floor": 1,
       "type": "elevator"
     },
     "nmwaddi8x9c": {
-      "lat": 14.084929967278454,
-      "lng": 100.60855163182374,
       "floor": 2,
-      "type": "elevator"
-    },
-    "nmwaddi8xjz": {
       "lat": 14.084929967278454,
       "lng": 100.60855163182374,
-      "floor": 3,
       "type": "elevator"
     },
-    "nmwaddi8xpt": {
+    "nmwaddi8xd6": {
+      "floor": 1,
       "lat": 14.084929967278454,
       "lng": 100.60855163182374,
-      "floor": 4,
-      "type": "elevator"
-    },
-    "nmwaddi8x2s": {
-      "lat": 14.084929967278454,
-      "lng": 100.60855163182374,
-      "floor": 5,
       "type": "elevator"
     },
     "nmwaddi8xim": {
+      "floor": 6,
       "lat": 14.084929967278454,
       "lng": 100.60855163182374,
-      "floor": 6,
+      "type": "elevator"
+    },
+    "nmwaddi8xjz": {
+      "floor": 3,
+      "lat": 14.084929967278454,
+      "lng": 100.60855163182374,
+      "type": "elevator"
+    },
+    "nmwaddi8xpt": {
+      "floor": 4,
+      "lat": 14.084929967278454,
+      "lng": 100.60855163182374,
       "type": "elevator"
     },
     "nmwaddi92td": {
+      "floor": 1,
       "lat": 14.084929967278454,
       "lng": 100.60855163182374,
-      "floor": 1,
       "type": "corridor"
     },
-    "nmwaddosrg0": {
+    "nmwaddosr8o": {
+      "floor": 4,
       "lat": 14.084938934949534,
       "lng": 100.60808980966374,
-      "floor": 1,
-      "type": "elevator"
-    },
-    "nmwaddosrtq": {
-      "lat": 14.084938934949534,
-      "lng": 100.60808980966374,
-      "floor": 2,
       "type": "elevator"
     },
     "nmwaddosrbu": {
-      "lat": 14.084938934949534,
-      "lng": 100.60808980966374,
       "floor": 3,
-      "type": "elevator"
-    },
-    "nmwaddosr8o": {
       "lat": 14.084938934949534,
       "lng": 100.60808980966374,
-      "floor": 4,
-      "type": "elevator"
-    },
-    "nmwaddosruc": {
-      "lat": 14.084938934949534,
-      "lng": 100.60808980966374,
-      "floor": 5,
       "type": "elevator"
     },
     "nmwaddosrlw": {
+      "floor": 6,
       "lat": 14.084938934949534,
       "lng": 100.60808980966374,
-      "floor": 6,
+      "type": "elevator"
+    },
+    "nmwaddosrtq": {
+      "floor": 2,
+      "lat": 14.084938934949534,
+      "lng": 100.60808980966374,
+      "type": "elevator"
+    },
+    "nmwaddosruc": {
+      "floor": 5,
+      "lat": 14.084938934949534,
+      "lng": 100.60808980966374,
       "type": "elevator"
     },
     "nmwaddostv7": {
+      "floor": 1,
       "lat": 14.084931406187367,
       "lng": 100.60808978473086,
+      "type": "corridor"
+    },
+    "nmwauc5njrf": {
+      "floor": 1,
+      "lat": 14.085708300107555,
+      "lng": 100.60673923428732,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwauc6yxmj": {
+      "floor": 1,
+      "lat": 14.085713339064014,
+      "lng": 100.60670072777236,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwauc9yyih": {
+      "floor": 1,
+      "lat": 14.085719461731045,
+      "lng": 100.60666269464303,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaucb6qd4": {
+      "floor": 1,
+      "lat": 14.08571316537919,
+      "lng": 100.6066214155129,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaucb6rsb": {
+      "floor": 1,
+      "lat": 14.085712157849676,
+      "lng": 100.60659047627914,
+      "type": "corridor"
+    },
+    "nmwaucd0c64": {
+      "floor": 1,
+      "lat": 14.085688110060076,
+      "lng": 100.6066113646117,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaucd0dfy": {
+      "floor": 1,
+      "lat": 14.085687457678754,
+      "lng": 100.60659133127474,
+      "type": "corridor"
+    },
+    "nmwaucelv1b": {
+      "floor": 1,
+      "lat": 14.08566131569394,
+      "lng": 100.60661461099141,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaucelwvu": {
+      "floor": 1,
+      "lat": 14.085660587883371,
+      "lng": 100.60659226137183,
+      "type": "corridor"
+    },
+    "nmwaucfkfd8": {
+      "floor": 1,
+      "lat": 14.085630557186562,
+      "lng": 100.60661622821357,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaucfkfl6": {
+      "floor": 1,
+      "lat": 14.08562981140364,
+      "lng": 100.60659332669867,
+      "type": "corridor"
+    },
+    "nmwauch45ag": {
+      "floor": 1,
+      "lat": 14.08560274437906,
+      "lng": 100.60661944989647,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaucitkcc": {
+      "floor": 1,
+      "lat": 14.085571782771623,
+      "lng": 100.60661951558251,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaucitlzc": {
+      "floor": 1,
+      "lat": 14.0855709962344,
+      "lng": 100.60659536258383,
+      "type": "corridor"
+    },
+    "nmwauckmq34": {
+      "floor": 1,
+      "lat": 14.085543742463647,
+      "lng": 100.60659630597222,
+      "type": "corridor"
+    },
+    "nmwauckmqm4": {
+      "floor": 1,
+      "lat": 14.085544469119256,
+      "lng": 100.60661862012529,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaucmtb1a": {
+      "floor": 1,
+      "lat": 14.085602207761358,
+      "lng": 100.60659428219785,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaucmtbue": {
+      "floor": 1,
+      "lat": 14.085602207761358,
+      "lng": 100.60659428219785,
+      "type": "corridor"
+    },
+    "nmwauctk5we": {
+      "floor": 1,
+      "lat": 14.085523104558035,
+      "lng": 100.6066223560648,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaucz98tg": {
+      "floor": 1,
+      "lat": 14.085464055692245,
+      "lng": 100.60676275294027,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaucz99hh": {
+      "floor": 1,
+      "lat": 14.085464055692245,
+      "lng": 100.60676275294027,
+      "type": "corridor"
+    },
+    "nmwaud3u3zb": {
+      "floor": 1,
+      "lat": 14.085457259843665,
+      "lng": 100.60679013323164,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaud6r9i8": {
+      "floor": 1,
+      "lat": 14.085711864135888,
+      "lng": 100.60681445923558,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaud7xvkw": {
+      "floor": 1,
+      "lat": 14.085713729745407,
+      "lng": 100.60684436960014,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaudaolzx": {
+      "floor": 1,
+      "lat": 14.085680965537222,
+      "lng": 100.60685822479951,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaudc85f3": {
+      "floor": 1,
+      "lat": 14.085652715741844,
+      "lng": 100.60685737411086,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwaudlqd80": {
+      "floor": 1,
+      "lat": 14.085456134356505,
+      "lng": 100.60673782673598,
+      "name": "สวนธรณีวิทยาฯ",
+      "placeId": "place_1794324230395",
+      "type": "entrance"
+    },
+    "nmwbmy4eao8": {
+      "floor": 1,
+      "lat": 14.08449194043331,
+      "lng": 100.60681456774762,
+      "name": "ร้านค้าสวัสดีการ",
+      "placeId": "place_1788697747872",
+      "type": "entrance"
+    },
+    "nmwbmyucy9t": {
+      "floor": 1,
+      "lat": 14.085785856749311,
+      "lng": 100.60758132055798,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmyuczls": {
+      "floor": 1,
+      "lat": 14.085821491963246,
+      "lng": 100.60758191977085,
+      "type": "corridor"
+    },
+    "nmwbmyxkzku": {
+      "floor": 1,
+      "lat": 14.085777138220834,
+      "lng": 100.6075943951904,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmyzg8js": {
+      "floor": 1,
+      "lat": 14.085777534501148,
+      "lng": 100.60762293450404,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmyzg8u7": {
+      "floor": 1,
+      "lat": 14.08577772314571,
+      "lng": 100.60763547927898,
+      "type": "corridor"
+    },
+    "nmwbmz1j5cg": {
+      "floor": 1,
+      "lat": 14.085802141475469,
+      "lng": 100.60753696234747,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmz1j5lh": {
+      "floor": 1,
+      "lat": 14.085822197818787,
+      "lng": 100.60753729959869,
+      "type": "corridor"
+    },
+    "nmwbmz2uirm": {
+      "floor": 1,
+      "lat": 14.085805908988348,
+      "lng": 100.60746094980976,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmz2uj7s": {
+      "floor": 1,
+      "lat": 14.085823400958649,
+      "lng": 100.60746124394056,
+      "type": "corridor"
+    },
+    "nmwbmz4c2fa": {
+      "floor": 1,
+      "lat": 14.085824944947404,
+      "lng": 100.6073636417542,
+      "type": "corridor"
+    },
+    "nmwbmz4c2ur": {
+      "floor": 1,
+      "lat": 14.085811893000809,
+      "lng": 100.60736342228324,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmz5gas3": {
+      "floor": 1,
+      "lat": 14.085807991902072,
+      "lng": 100.60729099033955,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmz5gbnr": {
+      "floor": 1,
+      "lat": 14.085826089420856,
+      "lng": 100.60729129465277,
+      "type": "corridor"
+    },
+    "nmwbmz6j6nw": {
+      "floor": 1,
+      "lat": 14.085813152978929,
+      "lng": 100.60719128745552,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmz6j6ql": {
+      "floor": 1,
+      "lat": 14.085827667594035,
+      "lng": 100.60719153152154,
+      "type": "corridor"
+    },
+    "nmwbmz8pm4u": {
+      "floor": 1,
+      "lat": 14.085828817771706,
+      "lng": 100.60711882383191,
+      "type": "corridor"
+    },
+    "nmwbmz8pm6g": {
+      "floor": 1,
+      "lat": 14.085813152957542,
+      "lng": 100.60711856042508,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmza9jj6": {
+      "floor": 1,
+      "lat": 14.085829936908691,
+      "lng": 100.6070480783577,
+      "type": "corridor"
+    },
+    "nmwbmza9jsm": {
+      "floor": 1,
+      "lat": 14.085817109287674,
+      "lng": 100.60704786265882,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmzbuy6r": {
+      "floor": 1,
+      "lat": 14.085830702434627,
+      "lng": 100.6069996861626,
+      "type": "corridor"
+    },
+    "nmwbmzbuysv": {
+      "floor": 1,
+      "lat": 14.085812057303457,
+      "lng": 100.60699937264116,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmzd47ld": {
+      "floor": 1,
+      "lat": 14.085789842601613,
+      "lng": 100.60698725268418,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmzeo0t0": {
+      "floor": 1,
+      "lat": 14.085794208451446,
+      "lng": 100.60697208751048,
+      "name": "อาคาร 5",
+      "placeId": "place_1794372043040",
+      "type": "entrance"
+    },
+    "nmwbmzvh6zb": {
+      "floor": 1,
+      "lat": 14.085890140714824,
+      "lng": 100.60766994946209,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbmzvh77x": {
+      "floor": 1,
+      "lat": 14.085904908643522,
+      "lng": 100.60766960864484,
+      "type": "corridor"
+    },
+    "nmwbn00m8jg": {
+      "floor": 1,
+      "lat": 14.085480650009728,
+      "lng": 100.6076782556027,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn00m8of": {
+      "floor": 1,
+      "lat": 14.0854800782956,
+      "lng": 100.60764023697804,
+      "type": "corridor"
+    },
+    "nmwbn01zm9a": {
+      "floor": 1,
+      "lat": 14.085476190616205,
+      "lng": 100.60771938783819,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn033s2s": {
+      "floor": 1,
+      "lat": 14.085472279802872,
+      "lng": 100.60779754466074,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn044x8h": {
+      "floor": 1,
+      "lat": 14.085467770875141,
+      "lng": 100.60785202056582,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn058xlv": {
+      "floor": 1,
+      "lat": 14.085470703975062,
+      "lng": 100.60792479899231,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn06d4h1": {
+      "floor": 1,
+      "lat": 14.085469709414099,
+      "lng": 100.60801372971105,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn07yhc3": {
+      "floor": 1,
+      "lat": 14.085466285627447,
+      "lng": 100.60816307480445,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn09vtqp": {
+      "floor": 1,
+      "lat": 14.085468352925588,
+      "lng": 100.60829339672176,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn0c1tx9": {
+      "floor": 1,
+      "lat": 14.08546884177187,
+      "lng": 100.60842795786596,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn0dc4b7": {
+      "floor": 1,
+      "lat": 14.085470308327913,
+      "lng": 100.60854608087152,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn0eo26u": {
+      "floor": 1,
+      "lat": 14.085459957163877,
+      "lng": 100.60861905320837,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn0frurm": {
+      "floor": 1,
+      "lat": 14.08546470504858,
+      "lng": 100.6087377777348,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn0he2sy": {
+      "floor": 1,
+      "lat": 14.085471017696733,
+      "lng": 100.6088230203087,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn0he3yd": {
+      "floor": 1,
+      "lat": 14.085470530318306,
+      "lng": 100.60885535505287,
+      "type": "corridor"
+    },
+    "nmwbn0kohve": {
+      "floor": 1,
+      "lat": 14.085896650397416,
+      "lng": 100.60882044336768,
+      "name": "TK โดม",
+      "placeId": "place_1794371927740",
+      "type": "entrance"
+    },
+    "nmwbn0koid7": {
+      "floor": 1,
+      "lat": 14.085929878035149,
+      "lng": 100.60881967653351,
+      "type": "corridor"
+    },
+    "nmwbn3td4l9": {
+      "floor": 1,
+      "lat": 14.084167801998973,
+      "lng": 100.60630867433201,
+      "name": "อาคาร 9",
+      "placeId": "place_1794323777988",
+      "type": "entrance"
+    },
+    "nmwbn3td5lq": {
+      "floor": 1,
+      "lat": 14.08416685200751,
+      "lng": 100.60625617751006,
+      "type": "corridor"
+    },
+    "nmwbn3wxlfr": {
+      "floor": 1,
+      "lat": 14.084181332438135,
+      "lng": 100.60636796090887,
+      "name": "อาคาร 9",
+      "placeId": "place_1794323777988",
+      "type": "entrance"
+    },
+    "nmwbn3wxmyc": {
+      "floor": 1,
+      "lat": 14.084222353741517,
+      "lng": 100.60636713220475,
+      "type": "corridor"
+    },
+    "nmwbn3ybl1e": {
+      "floor": 1,
+      "lat": 14.08422485561612,
+      "lng": 100.60649877182301,
+      "type": "corridor"
+    },
+    "nmwbn3ybl4g": {
+      "floor": 1,
+      "lat": 14.084176161740672,
+      "lng": 100.6064997555269,
+      "name": "อาคาร 9",
+      "placeId": "place_1794323777988",
+      "type": "entrance"
+    },
+    "nmwbn3zogru": {
+      "floor": 1,
+      "lat": 14.084176161741382,
+      "lng": 100.60655135633675,
+      "name": "อาคาร 9",
+      "placeId": "place_1794323777988",
+      "type": "entrance"
+    },
+    "nmwbn40rsds": {
+      "floor": 1,
+      "lat": 14.084173906673215,
+      "lng": 100.60664661955394,
+      "name": "อาคาร 9",
+      "placeId": "place_1794323777988",
+      "type": "entrance"
+    },
+    "nmwbn4200je": {
+      "floor": 1,
+      "lat": 14.084169939565044,
+      "lng": 100.6066856054565,
+      "name": "อาคาร 9",
+      "placeId": "place_1794323777988",
+      "type": "entrance"
+    },
+    "nmwbn43oh7e": {
+      "floor": 1,
+      "lat": 14.084223508818459,
+      "lng": 100.60642790818753,
+      "type": "corridor"
+    },
+    "nmwbn43ohqx": {
+      "floor": 1,
+      "lat": 14.084184033785178,
+      "lng": 100.6064287056542,
+      "name": "อาคาร 9",
+      "placeId": "place_1794323777988",
+      "type": "entrance"
+    },
+    "nmwbn48yihc": {
+      "floor": 1,
+      "lat": 14.083971412760155,
+      "lng": 100.6063011626355,
+      "type": "corridor"
+    },
+    "nmwbn48yiux": {
+      "floor": 1,
+      "lat": 14.083987842410181,
+      "lng": 100.6063008326584,
+      "name": "อาคาร 9",
+      "placeId": "place_1794323777988",
+      "type": "entrance"
+    },
+    "nmwbowklqg7": {
+      "floor": 2,
+      "lat": 14.084624337133548,
+      "lng": 100.60890822598395,
+      "type": "stairs"
+    },
+    "nmwbowklqxc": {
+      "floor": 3,
+      "lat": 14.084624337133548,
+      "lng": 100.60890822598395,
+      "type": "stairs"
+    },
+    "nmwbowklubn": {
+      "floor": 1,
+      "lat": 14.084623931669062,
+      "lng": 100.60888848016074,
+      "type": "corridor"
+    },
+    "nmwbp2f4dvv": {
+      "floor": 1,
+      "lat": 14.084549738702833,
+      "lng": 100.60732142513734,
+      "name": "813",
+      "placeId": "place_1794372256198",
+      "type": "door"
+    },
+    "nmwbp2f4ffw": {
+      "floor": 1,
+      "lat": 14.084531093371938,
+      "lng": 100.60732076907148,
+      "type": "corridor"
+    },
+    "nmwbqcma84l": {
+      "floor": 1,
+      "lat": 14.084993945859622,
+      "lng": 100.60798826333001,
+      "name": "อาคาร 2",
+      "placeId": "place_1794372467709",
+      "type": "entrance"
+    },
+    "nmwbqcma94f": {
+      "floor": 1,
+      "lat": 14.08493172312463,
+      "lng": 100.60798805726797,
+      "type": "corridor"
+    },
+    "nmwbqegm9xs": {
+      "floor": 1,
+      "lat": 14.085212321158451,
+      "lng": 100.60809684148518,
+      "name": "อาคาร 2",
+      "placeId": "place_1794372467709",
+      "type": "entrance"
+    },
+    "nmwbqegmd19": {
+      "floor": 1,
+      "lat": 14.085300294012598,
+      "lng": 100.60809735565492,
+      "type": "corridor"
+    },
+    "nmwbqf5g86d": {
+      "floor": 4,
+      "lat": 14.08515923538937,
+      "lng": 100.6080721544376,
+      "type": "stairs"
+    },
+    "nmwbqf5g8dc": {
+      "floor": 1,
+      "lat": 14.08515923538937,
+      "lng": 100.6080721544376,
+      "type": "stairs"
+    },
+    "nmwbqf5g8hz": {
+      "floor": 2,
+      "lat": 14.08515923538937,
+      "lng": 100.6080721544376,
+      "type": "stairs"
+    },
+    "nmwbqf5g8tz": {
+      "floor": 3,
+      "lat": 14.08515923538937,
+      "lng": 100.6080721544376,
+      "type": "stairs"
+    },
+    "nmwbqg8jq3u": {
+      "floor": 1,
+      "lat": 14.084930438056471,
+      "lng": 100.60840052604,
+      "type": "corridor"
+    },
+    "nmwbqg8jquh": {
+      "floor": 1,
+      "lat": 14.084997684328911,
+      "lng": 100.6084007487384,
+      "name": "อาคาร 2",
+      "placeId": "place_1794372467709",
+      "type": "entrance"
+    },
+    "nmwbqhwr8bw": {
+      "floor": 1,
+      "lat": 14.085177013021237,
+      "lng": 100.60853110509134,
+      "name": "อาคาร 2",
+      "placeId": "place_1794372467709",
+      "type": "entrance"
+    },
+    "nmwbqhwr8qo": {
+      "floor": 1,
+      "lat": 14.08529790516509,
+      "lng": 100.60853181166249,
+      "type": "corridor"
+    },
+    "nmwbqicjvbl": {
+      "floor": 1,
+      "lat": 14.085131477975224,
+      "lng": 100.608552769303,
+      "type": "stairs"
+    },
+    "nmwbqicjvgu": {
+      "floor": 3,
+      "lat": 14.085131477975224,
+      "lng": 100.608552769303,
+      "type": "stairs"
+    },
+    "nmwbqicjvkv": {
+      "floor": 2,
+      "lat": 14.085131477975224,
+      "lng": 100.608552769303,
+      "type": "stairs"
+    },
+    "nmwbqicjvvq": {
+      "floor": 4,
+      "lat": 14.085131477975224,
+      "lng": 100.608552769303,
+      "type": "stairs"
+    },
+    "nmwbqouwd5v": {
+      "floor": 1,
+      "lat": 14.085215665695074,
+      "lng": 100.60890098686389,
+      "name": "ห้อง กิจการนักเรียน(ปกครอง)",
+      "placeId": "place_1794373176050",
+      "type": "entrance"
+    },
+    "nmwbqoxrf8q": {
+      "floor": 1,
+      "lat": 14.085296813392887,
+      "lng": 100.60890672327065,
+      "name": "ห้อง กิจการนักเรียน(ปกครอง)",
+      "placeId": "place_1794373176050",
+      "type": "entrance"
+    },
+    "nmwbqoxrfqv": {
+      "floor": 1,
+      "lat": 14.085326880473959,
+      "lng": 100.6089062933686,
+      "type": "corridor"
+    },
+    "nmwbqozwl9m": {
+      "floor": 1,
+      "lat": 14.08530492333523,
+      "lng": 100.60895423033679,
+      "name": "ห้อง กิจการนักเรียน(ปกครอง)",
+      "placeId": "place_1794373176050",
+      "type": "entrance"
+    },
+    "nmwbqozwlqp": {
+      "floor": 1,
+      "lat": 14.085327520940412,
+      "lng": 100.60895390723404,
+      "type": "corridor"
+    },
+    "nmwbqp1tzqm": {
+      "floor": 1,
+      "lat": 14.085259339030884,
+      "lng": 100.60889846042954,
+      "name": "ห้อง กิจการนักเรียน(ปกครอง)",
+      "placeId": "place_1794373176050",
+      "type": "entrance"
+    },
+    "nmwbqp4k3wb": {
+      "floor": 1,
+      "lat": 14.085261616213401,
+      "lng": 100.60886887506092,
+      "name": "ห้อง กิจการนักเรียน(ปกครอง)",
+      "placeId": "place_1794373176050",
+      "type": "entrance"
+    },
+    "nmwbqp4k5if": {
+      "floor": 1,
+      "lat": 14.085261774974455,
+      "lng": 100.60885221295558,
+      "type": "corridor"
+    },
+    "nmwbqq2zvrp": {
+      "floor": 1,
+      "lat": 14.085266917435945,
+      "lng": 100.60897146974713,
+      "name": "ประตูห้องปกครอง",
+      "placeId": "place_1794373176050",
+      "type": "door"
+    },
+    "nmwbqux4yz5": {
+      "lat": 14.085015726003732,
+      "lng": 100.60891584734833,
+      "floor": 1,
+      "type": "door",
+      "name": "112",
+      "placeId": "place_1788696866154"
+    },
+    "nmwbqvk0rms": {
+      "lat": 14.0849405310084,
+      "lng": 100.60892056338037,
+      "floor": 1,
+      "type": "stairs"
+    },
+    "nmwbqvk0rxl": {
+      "lat": 14.0849405310084,
+      "lng": 100.60892056338037,
+      "floor": 2,
+      "type": "stairs"
+    },
+    "nmwbqvk0rjv": {
+      "lat": 14.0849405310084,
+      "lng": 100.60892056338037,
+      "floor": 3,
+      "type": "stairs"
+    },
+    "nmwbqvk0ssd": {
+      "lat": 14.084939730664976,
+      "lng": 100.60888158724231,
       "floor": 1,
       "type": "corridor"
+    },
+    "nmwbqwguaoo": {
+      "lat": 14.084845158688779,
+      "lng": 100.60892062149145,
+      "floor": 1,
+      "type": "door",
+      "name": "ห้องเรียน Innovation Learning & Robot",
+      "placeId": "place_1788696866154"
+    },
+    "nmwbqwguawn": {
+      "lat": 14.084844399877433,
+      "lng": 100.60888366801949,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwbqxfvdqe": {
+      "lat": 14.08479052616643,
+      "lng": 100.60892365821891,
+      "floor": 1,
+      "type": "door",
+      "name": "113",
+      "placeId": "place_1788696866154"
+    },
+    "nmwbqxfvexi": {
+      "lat": 14.08479052616643,
+      "lng": 100.60892365821891,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwbqy1hxun": {
+      "lat": 14.084684878641013,
+      "lng": 100.60892182839973,
+      "floor": 1,
+      "type": "door",
+      "name": "114",
+      "placeId": "place_1788696866154"
+    },
+    "nmwbqylo2d8": {
+      "lat": 14.08464221503678,
+      "lng": 100.60892065790597,
+      "floor": 2,
+      "type": "stairs"
+    },
+    "nmwbqylo2tr": {
+      "lat": 14.08464221503678,
+      "lng": 100.60892065790597,
+      "floor": 3,
+      "type": "stairs"
+    },
+    "nmwbqylo2mh": {
+      "lat": 14.08464221503678,
+      "lng": 100.60892065790597,
+      "floor": 4,
+      "type": "stairs"
+    },
+    "nmwbqz17ezr": {
+      "lat": 14.0846425829384,
+      "lng": 100.60892068975619,
+      "floor": 1,
+      "type": "stairs"
+    },
+    "nmwbqz17e8s": {
+      "lat": 14.0846425829384,
+      "lng": 100.60892068975619,
+      "floor": 2,
+      "type": "stairs"
+    },
+    "nmwbqz17emq": {
+      "lat": 14.0846425829384,
+      "lng": 100.60892068975619,
+      "floor": 3,
+      "type": "stairs"
+    },
+    "nmwbqz17e4w": {
+      "lat": 14.0846425829384,
+      "lng": 100.60892068975619,
+      "floor": 4,
+      "type": "stairs"
+    },
+    "nmwbqzjieqc": {
+      "lat": 14.084623286963094,
+      "lng": 100.6089227585187,
+      "floor": 1,
+      "type": "door",
+      "name": "ห้องเสมารักษ์",
+      "placeId": "place_1788696866154"
+    },
+    "nmwbr3pjbal": {
+      "lat": 14.08438355743614,
+      "lng": 100.60914101269151,
+      "floor": 1,
+      "type": "door",
+      "name": "โรงยิม",
+      "placeId": "place_1794285035987"
+    },
+    "nmwbr4k1u24": {
+      "lat": 14.084403741659429,
+      "lng": 100.60911468041792,
+      "floor": 1,
+      "type": "door",
+      "name": "สนามมวย",
+      "placeId": "place_1788702528160"
+    },
+    "nmwbr6785sb": {
+      "lat": 14.08447156226623,
+      "lng": 100.60912203906702,
+      "floor": 1,
+      "type": "door",
+      "name": "ห้องพละ 2",
+      "placeId": "place_1788696866154"
+    },
+    "nmwbr6789o9": {
+      "lat": 14.084471550281755,
+      "lng": 100.60909666365785,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwbr6rgdq7": {
+      "lat": 14.084542962790385,
+      "lng": 100.60909662780753,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwbr73uo8s": {
+      "lat": 14.084570819803233,
+      "lng": 100.60911520375038,
+      "floor": 1,
+      "type": "door",
+      "name": "ห้องพละ 3",
+      "placeId": "place_1788696866154"
+    },
+    "nmwbr73upp": {
+      "lat": 14.084570811023454,
+      "lng": 100.60909661382723,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwbr8krilw": {
+      "lat": 14.084534520223386,
+      "lng": 100.60902038811713,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwbr8sumi1": {
+      "lat": 14.084542341207344,
+      "lng": 100.60902027391202,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwbr9awcbr": {
+      "lat": 14.08454422943015,
+      "lng": 100.60903947544466,
+      "floor": 1,
+      "type": "door",
+      "name": "ห้องพละ 1",
+      "placeId": "place_1788696866154"
+    },
+    "nmwbr9wl7l3": {
+      "lat": 14.084523789977624,
+      "lng": 100.60902078830685,
+      "floor": 1,
+      "type": "door",
+      "name": "ห้องสภา 2",
+      "placeId": "place_1788696866154"
+    },
+    "nmwbraj9fqm": {
+      "lat": 14.084808086840937,
+      "lng": 100.60902926737123,
+      "floor": 1,
+      "type": "door",
+      "name": "ห้องวิหค",
+      "placeId": "place_1788696866154"
+    },
+    "nmwbrau7unv": {
+      "lat": 14.08469953249687,
+      "lng": 100.60908853053218,
+      "floor": 1,
+      "type": "door",
+      "name": "ห้องวิหค",
+      "placeId": "place_1788696866154"
+    },
+    "nmwbrau7uuv": {
+      "lat": 14.084699536283976,
+      "lng": 100.60909654920493,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwbrdlupyv": {
+      "lat": 14.084878936375048,
+      "lng": 100.6085177494756,
+      "floor": 1,
+      "type": "elevator"
+    },
+    "nmwbrdlupb7": {
+      "lat": 14.084878936375048,
+      "lng": 100.6085177494756,
+      "floor": 2,
+      "type": "elevator"
+    },
+    "nmwbrdlupl3": {
+      "lat": 14.084878936375048,
+      "lng": 100.6085177494756,
+      "floor": 3,
+      "type": "elevator"
+    },
+    "nmwbrdlupdh": {
+      "lat": 14.084878936375048,
+      "lng": 100.6085177494756,
+      "floor": 4,
+      "type": "elevator"
+    },
+    "nmwbrdlup0": {
+      "lat": 14.084878936375048,
+      "lng": 100.6085177494756,
+      "floor": 5,
+      "type": "elevator"
+    },
+    "nmwbrdlup9q": {
+      "lat": 14.084878936375048,
+      "lng": 100.6085177494756,
+      "floor": 6,
+      "type": "elevator"
+    },
+    "nmwbrdlupmj": {
+      "lat": 14.084930072313085,
+      "lng": 100.60851791882166,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwbrevx182": {
+      "lat": 14.084901774150168,
+      "lng": 100.60801716346128,
+      "floor": 1,
+      "type": "elevator"
+    },
+    "nmwbrevx1ct": {
+      "lat": 14.084901774150168,
+      "lng": 100.60801716346128,
+      "floor": 2,
+      "type": "elevator"
+    },
+    "nmwbrevx1vj": {
+      "lat": 14.084901774150168,
+      "lng": 100.60801716346128,
+      "floor": 3,
+      "type": "elevator"
+    },
+    "nmwbrevx1f5": {
+      "lat": 14.084901774150168,
+      "lng": 100.60801716346128,
+      "floor": 4,
+      "type": "elevator"
+    },
+    "nmwbrevx1qx": {
+      "lat": 14.084901774150168,
+      "lng": 100.60801716346128,
+      "floor": 5,
+      "type": "elevator"
+    },
+    "nmwbrevx17b": {
+      "lat": 14.084901774150168,
+      "lng": 100.60801716346128,
+      "floor": 6,
+      "type": "elevator"
+    },
+    "nmwbrevx2xf": {
+      "lat": 14.084931632134687,
+      "lng": 100.60801726234149,
+      "floor": 1,
+      "type": "corridor"
+    },
+    "nmwbrfakqys": {
+      "lat": 14.08485987971271,
+      "lng": 100.60851691152607,
+      "floor": 1,
+      "type": "stairs"
+    },
+    "nmwbrfakqj1": {
+      "lat": 14.08485987971271,
+      "lng": 100.60851691152607,
+      "floor": 2,
+      "type": "stairs"
+    },
+    "nmwbrfakqo9": {
+      "lat": 14.08485987971271,
+      "lng": 100.60851691152607,
+      "floor": 3,
+      "type": "stairs"
+    },
+    "nmwbrfakq9d": {
+      "lat": 14.08485987971271,
+      "lng": 100.60851691152607,
+      "floor": 4,
+      "type": "stairs"
+    },
+    "nmwbrfakq4l": {
+      "lat": 14.08485987971271,
+      "lng": 100.60851691152607,
+      "floor": 5,
+      "type": "stairs"
+    },
+    "nmwbrfakqqp": {
+      "lat": 14.08485987971271,
+      "lng": 100.60851691152607,
+      "floor": 6,
+      "type": "stairs"
+    },
+    "nmwbrffpzdu": {
+      "lat": 14.08487562990345,
+      "lng": 100.60801804401126,
+      "floor": 1,
+      "type": "stairs"
+    },
+    "nmwbrffpz8p": {
+      "lat": 14.08487562990345,
+      "lng": 100.60801804401126,
+      "floor": 2,
+      "type": "stairs"
+    },
+    "nmwbrffpzsd": {
+      "lat": 14.08487562990345,
+      "lng": 100.60801804401126,
+      "floor": 3,
+      "type": "stairs"
+    },
+    "nmwbrffpzat": {
+      "lat": 14.08487562990345,
+      "lng": 100.60801804401126,
+      "floor": 4,
+      "type": "stairs"
+    },
+    "nmwbrffpzhu": {
+      "lat": 14.08487562990345,
+      "lng": 100.60801804401126,
+      "floor": 5,
+      "type": "stairs"
+    },
+    "nmwbrffpztd": {
+      "lat": 14.08487562990345,
+      "lng": 100.60801804401126,
+      "floor": 6,
+      "type": "stairs"
+    },
+    "nmwbrhs431i": {
+      "lat": 14.08508335795436,
+      "lng": 100.60754395271579,
+      "floor": 1,
+      "type": "door",
+      "name": "ห้องสมุดเฉลิมพระเกียรติกาญจนาภิเษก",
+      "placeId": "place_1794372972955"
     }
   },
   "edges": [
     {
-      "from": "nmwa682lk8h",
-      "to": "nmwa682lkxw"
-    },
-    {
       "from": "nmwa682lkxw",
       "to": "nmwa68si0xc"
-    },
-    {
-      "from": "nmwa68si0xc",
-      "to": "nmwa68si01n"
     },
     {
       "from": "nmwa68si0zx",
@@ -1216,10 +2348,6 @@
       "to": "nmwa6e3c8uv"
     },
     {
-      "from": "nmwa6edrkrs",
-      "to": "nmwa6edrkak"
-    },
-    {
       "from": "nmwa6evcg6l",
       "to": "nmwa6dsj4pa"
     },
@@ -1242,18 +2370,6 @@
     {
       "from": "nmwa6fr7cs5",
       "to": "nmwa6fg3c98"
-    },
-    {
-      "from": "nmwa6fr7cs5",
-      "to": "nmwa6fr7cib"
-    },
-    {
-      "from": "nmwa6fr7cib",
-      "to": "nmwa6fr7c1"
-    },
-    {
-      "from": "nmwa6g46w5r",
-      "to": "nmwa6fr7cs5"
     },
     {
       "from": "nmwa6c47kxq",
@@ -1376,10 +2492,6 @@
       "to": "nmwa6kr2obe"
     },
     {
-      "from": "nmwa6carkzg",
-      "to": "nmwa6kuy839"
-    },
-    {
       "from": "nmwa6kuy839",
       "to": "nmwa6c47k37"
     },
@@ -1402,10 +2514,6 @@
     {
       "from": "nmwa6l6bkyk",
       "to": "nmwa6l6bktc"
-    },
-    {
-      "from": "nmwa6cmmon9",
-      "to": "nmwa6lcjtyq"
     },
     {
       "from": "nmwa6n5gpaa",
@@ -1628,10 +2736,6 @@
       "to": "nmwa73dw7s9"
     },
     {
-      "from": "nmwa74oy05i",
-      "to": "nmwa6carkv5"
-    },
-    {
       "from": "nmwa6khq1pe",
       "to": "nmwa74oy0zo"
     },
@@ -1660,20 +2764,12 @@
       "to": "nmwa7544ne3"
     },
     {
-      "from": "nmwa7544ne3",
-      "to": "nmwa74oy05i"
-    },
-    {
       "from": "nmwa6l6bktc",
       "to": "nmwa7544n8n"
     },
     {
       "from": "nmwa7544n8n",
       "to": "nmwa6kr2oqm"
-    },
-    {
-      "from": "nmwa7544ne3",
-      "to": "nmwa7544n8n"
     },
     {
       "from": "nmwa69n897o",
@@ -1692,23 +2788,11 @@
       "to": "nmwa6c47kd0"
     },
     {
-      "from": "nmwa6npsoc6",
-      "to": "nmwa8mim89x"
-    },
-    {
       "from": "nmwa8mim89x",
       "to": "nmwa68si03m"
     },
     {
       "from": "nmwa6npso8x",
-      "to": "nmwa8z5kghy"
-    },
-    {
-      "from": "nmwa8z5kghy",
-      "to": "nmwa6npsoc6"
-    },
-    {
-      "from": "nmwa8z5kgby",
       "to": "nmwa8z5kghy"
     },
     {
@@ -1736,32 +2820,12 @@
       "to": "pin:pin_1785735126018"
     },
     {
-      "from": "nmwa9xx75eb",
-      "to": "stair:pin:pin_1785735483877:F1"
-    },
-    {
-      "from": "nmwa9xz7v22",
-      "to": "nmwa9xx75eb"
-    },
-    {
-      "from": "nmwa9y0x81w",
-      "to": "nmwa9xz7v22"
-    },
-    {
       "from": "nmwa9y3rmc3",
       "to": "stair:pin:pin_1785735473956:F1"
     },
     {
-      "from": "nmwa9y6xct2",
-      "to": "nmwa9y5dhm8"
-    },
-    {
       "from": "nmwa69n89p2",
       "to": "nmwa9zb7swb"
-    },
-    {
-      "from": "nmwa9zb7swb",
-      "to": "nmwa682lkxw"
     },
     {
       "from": "nmwa6n5gpaa",
@@ -1778,10 +2842,6 @@
     {
       "from": "nmwa9zz9zrc",
       "to": "nmwa69bm8s7"
-    },
-    {
-      "from": "nmwa9zz9yw1",
-      "to": "nmwa9zz9zrc"
     },
     {
       "from": "nmwa9zz9zrc",
@@ -1804,14 +2864,6 @@
       "to": "nmwaa26bgqe"
     },
     {
-      "from": "nmwa9y1sgmr",
-      "to": "nmwaa26bg6w"
-    },
-    {
-      "from": "nmwaa26bg6w",
-      "to": "pin:pin_1785735179654"
-    },
-    {
       "from": "nmwaa26bgqe",
       "to": "nmwaa26bg6w"
     },
@@ -1822,14 +2874,6 @@
     {
       "from": "nmwaa2xsept",
       "to": "nmwa6n5gp3f"
-    },
-    {
-      "from": "nmwaa1h2y52",
-      "to": "nmwaa2xsfla"
-    },
-    {
-      "from": "nmwaa2xsfla",
-      "to": "nmwa6nishmi"
     },
     {
       "from": "nmwaa2xsept",
@@ -1844,16 +2888,8 @@
       "to": "nmwa6kr2obe"
     },
     {
-      "from": "nmwa6jis7vb",
-      "to": "nmwad9x5tm5"
-    },
-    {
       "from": "nmwad9x5tm5",
       "to": "nmwa682lkzg"
-    },
-    {
-      "from": "nmwad9x5sup",
-      "to": "nmwad9x5tm5"
     },
     {
       "from": "nmwa69n89p2",
@@ -1864,22 +2900,769 @@
       "to": "nmwaddi92td"
     },
     {
-      "from": "nmwaddi92td",
-      "to": "nmwaddostv7"
+      "from": "nmwauc5njrf",
+      "to": "nmwa6l6bkcu"
     },
     {
-      "from": "nmwaddostv7",
+      "from": "nmwauc6yxmj",
+      "to": "nmwauc5njrf"
+    },
+    {
+      "from": "nmwauc9yyih",
+      "to": "nmwauc6yxmj"
+    },
+    {
+      "from": "nmwaucb6rsb",
+      "to": "nmwa6kuy839"
+    },
+    {
+      "from": "nmwaucb6qd4",
+      "to": "nmwaucb6rsb"
+    },
+    {
+      "from": "nmwaucd0dfy",
+      "to": "nmwaucb6rsb"
+    },
+    {
+      "from": "nmwaucd0c64",
+      "to": "nmwaucd0dfy"
+    },
+    {
+      "from": "nmwaucelwvu",
+      "to": "nmwaucd0dfy"
+    },
+    {
+      "from": "nmwaucelv1b",
+      "to": "nmwaucelwvu"
+    },
+    {
+      "from": "nmwaucfkfl6",
+      "to": "nmwaucelwvu"
+    },
+    {
+      "from": "nmwaucfkfd8",
+      "to": "nmwaucfkfl6"
+    },
+    {
+      "from": "nmwauch45ag",
+      "to": "nmwaucfkfd8"
+    },
+    {
+      "from": "nmwaucitkcc",
+      "to": "nmwaucitlzc"
+    },
+    {
+      "from": "nmwa6carkzg",
+      "to": "nmwauckmq34"
+    },
+    {
+      "from": "nmwauckmq34",
+      "to": "nmwaucitlzc"
+    },
+    {
+      "from": "nmwauckmqm4",
+      "to": "nmwauckmq34"
+    },
+    {
+      "from": "nmwaucitlzc",
+      "to": "nmwaucmtbue"
+    },
+    {
+      "from": "nmwaucmtbue",
+      "to": "nmwaucfkfl6"
+    },
+    {
+      "from": "nmwaucmtb1a",
+      "to": "nmwaucmtbue"
+    },
+    {
+      "from": "nmwauctk5we",
+      "to": "nmwauckmqm4"
+    },
+    {
+      "from": "nmwa6cmmon9",
+      "to": "nmwaucz99hh"
+    },
+    {
+      "from": "nmwaucz99hh",
+      "to": "nmwa6lcjtyq"
+    },
+    {
+      "from": "nmwaucz98tg",
+      "to": "nmwaucz99hh"
+    },
+    {
+      "from": "nmwaud3u3zb",
+      "to": "nmwaucz98tg"
+    },
+    {
+      "from": "nmwaud6r9i8",
+      "to": "nmwa6l6bkcu"
+    },
+    {
+      "from": "nmwaud7xvkw",
+      "to": "nmwaud6r9i8"
+    },
+    {
+      "from": "nmwaudaolzx",
+      "to": "nmwaud7xvkw"
+    },
+    {
+      "from": "nmwaudc85f3",
+      "to": "nmwaudaolzx"
+    },
+    {
+      "from": "nmwaudlqd80",
+      "to": "nmwaucz98tg"
+    },
+    {
+      "from": "nmwbmy4eao8",
+      "to": "nmwa6qbk36j"
+    },
+    {
+      "from": "nmwa7544ne3",
+      "to": "nmwbmyuczls"
+    },
+    {
+      "from": "nmwbmyucy9t",
+      "to": "nmwbmyuczls"
+    },
+    {
+      "from": "nmwbmyxkzku",
+      "to": "nmwbmyucy9t"
+    },
+    {
+      "from": "nmwa7544ne3",
+      "to": "nmwbmyzg8u7"
+    },
+    {
+      "from": "nmwbmyzg8u7",
+      "to": "nmwa74oy05i"
+    },
+    {
+      "from": "nmwbmyzg8js",
+      "to": "nmwbmyzg8u7"
+    },
+    {
+      "from": "nmwbmyuczls",
+      "to": "nmwbmz1j5lh"
+    },
+    {
+      "from": "nmwbmz1j5cg",
+      "to": "nmwbmz1j5lh"
+    },
+    {
+      "from": "nmwbmz1j5lh",
+      "to": "nmwbmz2uj7s"
+    },
+    {
+      "from": "nmwbmz2uirm",
+      "to": "nmwbmz2uj7s"
+    },
+    {
+      "from": "nmwbmz2uj7s",
+      "to": "nmwbmz4c2fa"
+    },
+    {
+      "from": "nmwbmz4c2ur",
+      "to": "nmwbmz4c2fa"
+    },
+    {
+      "from": "nmwbmz4c2fa",
+      "to": "nmwbmz5gbnr"
+    },
+    {
+      "from": "nmwbmz5gas3",
+      "to": "nmwbmz5gbnr"
+    },
+    {
+      "from": "nmwbmz5gbnr",
+      "to": "nmwbmz6j6ql"
+    },
+    {
+      "from": "nmwbmz6j6nw",
+      "to": "nmwbmz6j6ql"
+    },
+    {
+      "from": "nmwbmz6j6ql",
+      "to": "nmwbmz8pm4u"
+    },
+    {
+      "from": "nmwbmz8pm6g",
+      "to": "nmwbmz8pm4u"
+    },
+    {
+      "from": "nmwbmz8pm4u",
+      "to": "nmwbmza9jj6"
+    },
+    {
+      "from": "nmwbmza9jsm",
+      "to": "nmwbmza9jj6"
+    },
+    {
+      "from": "nmwbmza9jj6",
+      "to": "nmwbmzbuy6r"
+    },
+    {
+      "from": "nmwbmzbuy6r",
+      "to": "nmwa7544n8n"
+    },
+    {
+      "from": "nmwbmzbuysv",
+      "to": "nmwbmzbuy6r"
+    },
+    {
+      "from": "nmwbmzd47ld",
+      "to": "nmwbmzbuysv"
+    },
+    {
+      "from": "nmwbmzeo0t0",
+      "to": "nmwbmzd47ld"
+    },
+    {
+      "from": "nmwad9x5sup",
+      "to": "nmwbmzvh77x"
+    },
+    {
+      "from": "nmwbmzvh6zb",
+      "to": "nmwbmzvh77x"
+    },
+    {
+      "from": "nmwa74oy05i",
+      "to": "nmwbn00m8of"
+    },
+    {
+      "from": "nmwbn00m8of",
+      "to": "nmwa6carkv5"
+    },
+    {
+      "from": "nmwbn00m8jg",
+      "to": "nmwbn00m8of"
+    },
+    {
+      "from": "nmwbn01zm9a",
+      "to": "nmwbn00m8jg"
+    },
+    {
+      "from": "nmwbn033s2s",
+      "to": "nmwbn01zm9a"
+    },
+    {
+      "from": "nmwbn044x8h",
+      "to": "nmwbn033s2s"
+    },
+    {
+      "from": "nmwbn058xlv",
+      "to": "nmwbn044x8h"
+    },
+    {
+      "from": "nmwbn06d4h1",
+      "to": "nmwbn058xlv"
+    },
+    {
+      "from": "nmwbn07yhc3",
+      "to": "nmwbn06d4h1"
+    },
+    {
+      "from": "nmwbn09vtqp",
+      "to": "nmwbn07yhc3"
+    },
+    {
+      "from": "nmwbn0c1tx9",
+      "to": "nmwbn09vtqp"
+    },
+    {
+      "from": "nmwbn0dc4b7",
+      "to": "nmwbn0c1tx9"
+    },
+    {
+      "from": "nmwbn0eo26u",
+      "to": "nmwbn0dc4b7"
+    },
+    {
+      "from": "nmwbn0frurm",
+      "to": "nmwbn0eo26u"
+    },
+    {
+      "from": "nmwa6jis7vb",
+      "to": "nmwbn0he3yd"
+    },
+    {
+      "from": "nmwbn0he3yd",
+      "to": "nmwad9x5tm5"
+    },
+    {
+      "from": "nmwbn0he2sy",
+      "to": "nmwbn0he3yd"
+    },
+    {
+      "from": "nmwbmzvh77x",
+      "to": "nmwbn0koid7"
+    },
+    {
+      "from": "nmwbn0koid7",
+      "to": "nmwad9x5tm5"
+    },
+    {
+      "from": "nmwbn0kohve",
+      "to": "nmwbn0koid7"
+    },
+    {
+      "from": "nmwa6fr7cs5",
+      "to": "nmwbn3td5lq"
+    },
+    {
+      "from": "nmwbn3td5lq",
+      "to": "nmwa6fr7cib"
+    },
+    {
+      "from": "nmwbn3td4l9",
+      "to": "nmwbn3td5lq"
+    },
+    {
+      "from": "nmwbn3wxmyc",
+      "to": "nmwa6fr7cs5"
+    },
+    {
+      "from": "nmwbn3wxlfr",
+      "to": "nmwbn3wxmyc"
+    },
+    {
+      "from": "nmwa6g46w5r",
+      "to": "nmwbn3ybl1e"
+    },
+    {
+      "from": "nmwbn3ybl4g",
+      "to": "nmwbn3ybl1e"
+    },
+    {
+      "from": "nmwbn3zogru",
+      "to": "nmwbn3ybl4g"
+    },
+    {
+      "from": "nmwbn40rsds",
+      "to": "nmwa6g46w5r"
+    },
+    {
+      "from": "nmwbn4200je",
+      "to": "nmwbn40rsds"
+    },
+    {
+      "from": "nmwbn3ybl1e",
+      "to": "nmwbn43oh7e"
+    },
+    {
+      "from": "nmwbn43oh7e",
+      "to": "nmwbn3wxmyc"
+    },
+    {
+      "from": "nmwbn43ohqx",
+      "to": "nmwbn43oh7e"
+    },
+    {
+      "from": "nmwa6fr7cib",
+      "to": "nmwbn48yihc"
+    },
+    {
+      "from": "nmwbn48yihc",
+      "to": "nmwa6fr7c1"
+    },
+    {
+      "from": "nmwbn48yiux",
+      "to": "nmwbn48yihc"
+    },
+    {
+      "from": "nmwbowklubn",
+      "to": "nmwa9zz9zrc"
+    },
+    {
+      "from": "nmwbowklqxc",
+      "to": "pin:pin_1785735461446"
+    },
+    {
+      "from": "nmwa6edrkrs",
+      "to": "nmwbp2f4ffw"
+    },
+    {
+      "from": "nmwbp2f4ffw",
+      "to": "nmwa6edrkak"
+    },
+    {
+      "from": "nmwbp2f4dvv",
+      "to": "nmwbp2f4ffw"
+    },
+    {
+      "from": "nmwbqcma94f",
       "to": "nmwa69n897o"
     },
     {
-      "from": "nmwaddosrg0",
+      "from": "nmwbqcma84l",
+      "to": "nmwbqcma94f"
+    },
+    {
+      "from": "nmwa682lk8h",
+      "to": "nmwbqegmd19"
+    },
+    {
+      "from": "nmwbqegm9xs",
+      "to": "nmwbqegmd19"
+    },
+    {
+      "from": "nmwbqf5g8dc",
+      "to": "nmwbqegm9xs"
+    },
+    {
+      "from": "nmwbqf5g8hz",
+      "to": "nmwaddosrtq"
+    },
+    {
+      "from": "nmwbqf5g8tz",
+      "to": "nmwaddosrbu"
+    },
+    {
+      "from": "nmwbqf5g86d",
+      "to": "nmwaddosr8o"
+    },
+    {
+      "from": "nmwbqg8jq3u",
       "to": "nmwaddostv7"
+    },
+    {
+      "from": "nmwbqg8jquh",
+      "to": "nmwbqg8jq3u"
+    },
+    {
+      "from": "nmwbqegmd19",
+      "to": "nmwbqhwr8qo"
+    },
+    {
+      "from": "nmwbqhwr8qo",
+      "to": "nmwa682lkxw"
+    },
+    {
+      "from": "nmwbqhwr8bw",
+      "to": "nmwbqhwr8qo"
+    },
+    {
+      "from": "nmwbqicjvbl",
+      "to": "nmwbqhwr8bw"
+    },
+    {
+      "from": "nmwbqicjvkv",
+      "to": "nmwaddi8x9c"
+    },
+    {
+      "from": "nmwbqicjvgu",
+      "to": "nmwaddi8xjz"
+    },
+    {
+      "from": "nmwbqicjvvq",
+      "to": "nmwaddi8xpt"
+    },
+    {
+      "from": "nmwbqouwd5v",
+      "to": "nmwa6n5gpaa"
+    },
+    {
+      "from": "nmwa68si0xc",
+      "to": "nmwbqoxrfqv"
+    },
+    {
+      "from": "nmwbqoxrf8q",
+      "to": "nmwbqoxrfqv"
+    },
+    {
+      "from": "nmwbqoxrfqv",
+      "to": "nmwbqozwlqp"
+    },
+    {
+      "from": "nmwbqozwlqp",
+      "to": "nmwa68si01n"
+    },
+    {
+      "from": "nmwbqozwl9m",
+      "to": "nmwbqozwlqp"
+    },
+    {
+      "from": "nmwbqp1tzqm",
+      "to": "nmwbqoxrf8q"
+    },
+    {
+      "from": "nmwa9zb7swb",
+      "to": "nmwbqp4k5if"
+    },
+    {
+      "from": "nmwbqp4k5if",
+      "to": "nmwa682lkxw"
+    },
+    {
+      "from": "nmwbqp4k3wb",
+      "to": "nmwbqp4k5if"
+    },
+    {
+      "from": "nmwbqq2zvrp",
+      "to": "nmwbqozwl9m"
+    },
+    {
+      "from": "nmwbqux4yz5",
+      "to": "stair:pin:pin_1785735483877:F1"
+    },
+    {
+      "from": "nmwa9zz9yw1",
+      "to": "nmwbqvk0ssd"
+    },
+    {
+      "from": "nmwbqvk0rms",
+      "to": "nmwbqvk0ssd"
+    },
+    {
+      "from": "nmwbqvk0rjv",
+      "to": "pin:pin_1785735483877"
+    },
+    {
+      "from": "nmwbqvk0ssd",
+      "to": "nmwbqwguawn"
+    },
+    {
+      "from": "nmwbqwguawn",
+      "to": "nmwbowklubn"
+    },
+    {
+      "from": "nmwbqwguaoo",
+      "to": "nmwbqwguawn"
+    },
+    {
+      "from": "nmwaa26bg6w",
+      "to": "nmwbqxfvexi"
+    },
+    {
+      "from": "nmwbqxfvexi",
+      "to": "pin:pin_1785735179654"
+    },
+    {
+      "from": "nmwbqxfvdqe",
+      "to": "nmwbqxfvexi"
+    },
+    {
+      "from": "nmwbqy1hxun",
+      "to": "pin:pin_1785735189160"
+    },
+    {
+      "from": "nmwbqylo2d8",
+      "to": "nmwbowklqg7"
+    },
+    {
+      "from": "nmwbqylo2tr",
+      "to": "nmwbowklqxc"
+    },
+    {
+      "from": "nmwbqz17ezr",
+      "to": "nmwa9y3rmc3"
+    },
+    {
+      "from": "nmwbqz17e8s",
+      "to": "nmwbqylo2d8"
+    },
+    {
+      "from": "nmwbqz17emq",
+      "to": "nmwbqylo2tr"
+    },
+    {
+      "from": "nmwbqz17e4w",
+      "to": "nmwbqylo2mh"
+    },
+    {
+      "from": "nmwbqzjieqc",
+      "to": "nmwbqz17ezr"
+    },
+    {
+      "from": "nmwbr3pjbal",
+      "to": "nmwa8z5kghy"
+    },
+    {
+      "from": "nmwa8mim89x",
+      "to": "nmwbr3pjbal"
+    },
+    {
+      "from": "nmwbr4k1u24",
+      "to": "nmwa8z5kghy"
+    },
+    {
+      "from": "nmwbr6789o9",
+      "to": "nmwa6nishmi"
+    },
+    {
+      "from": "nmwbr6785sb",
+      "to": "nmwbr6789o9"
+    },
+    {
+      "from": "nmwbr6rgdq7",
+      "to": "nmwbr6789o9"
+    },
+    {
+      "from": "nmwaa2xsfla",
+      "to": "nmwbr73upp"
+    },
+    {
+      "from": "nmwbr73upp",
+      "to": "nmwbr6rgdq7"
+    },
+    {
+      "from": "nmwbr73uo8s",
+      "to": "nmwbr73upp"
+    },
+    {
+      "from": "nmwa6n5gp3f",
+      "to": "nmwbr8sumi1"
+    },
+    {
+      "from": "nmwbr8sumi1",
+      "to": "nmwbr8krilw"
+    },
+    {
+      "from": "nmwbr9awcbr",
+      "to": "nmwbr8sumi1"
+    },
+    {
+      "from": "nmwbr9wl7l3",
+      "to": "nmwbr8krilw"
+    },
+    {
+      "from": "nmwbraj9fqm",
+      "to": "nmwaa26bgqe"
+    },
+    {
+      "from": "nmwaa1h2y52",
+      "to": "nmwbrau7uuv"
+    },
+    {
+      "from": "nmwbrau7uuv",
+      "to": "nmwaa2xsfla"
+    },
+    {
+      "from": "nmwbrau7unv",
+      "to": "nmwbrau7uuv"
+    },
+    {
+      "from": "nmwaddi92td",
+      "to": "nmwbrdlupmj"
+    },
+    {
+      "from": "nmwbrdlupmj",
+      "to": "nmwbqg8jq3u"
+    },
+    {
+      "from": "nmwbrdlupyv",
+      "to": "nmwbrdlupmj"
+    },
+    {
+      "from": "nmwbrdlupb7",
+      "to": "nmwaddi8x9c"
+    },
+    {
+      "from": "nmwbrdlupl3",
+      "to": "nmwaddi8xjz"
+    },
+    {
+      "from": "nmwbrdlupdh",
+      "to": "nmwaddi8xpt"
+    },
+    {
+      "from": "nmwbrdlup0",
+      "to": "nmwaddi8x2s"
+    },
+    {
+      "from": "nmwbrdlup9q",
+      "to": "nmwaddi8xim"
+    },
+    {
+      "from": "nmwaddostv7",
+      "to": "nmwbrevx2xf"
+    },
+    {
+      "from": "nmwbrevx2xf",
+      "to": "nmwbqcma94f"
+    },
+    {
+      "from": "nmwbrevx182",
+      "to": "nmwbrevx2xf"
+    },
+    {
+      "from": "nmwbrevx1ct",
+      "to": "nmwaddosrtq"
+    },
+    {
+      "from": "nmwbrevx1vj",
+      "to": "nmwaddosrbu"
+    },
+    {
+      "from": "nmwbrevx1f5",
+      "to": "nmwaddosr8o"
+    },
+    {
+      "from": "nmwbrevx1qx",
+      "to": "nmwaddosruc"
+    },
+    {
+      "from": "nmwbrevx17b",
+      "to": "nmwaddosrlw"
+    },
+    {
+      "from": "nmwbrfakqys",
+      "to": "nmwbrdlupyv"
+    },
+    {
+      "from": "nmwbrfakqj1",
+      "to": "nmwbrdlupb7"
+    },
+    {
+      "from": "nmwbrfakqo9",
+      "to": "nmwbrdlupl3"
+    },
+    {
+      "from": "nmwbrfakq9d",
+      "to": "nmwbrdlupdh"
+    },
+    {
+      "from": "nmwbrfakq4l",
+      "to": "nmwbrdlup0"
+    },
+    {
+      "from": "nmwbrfakqqp",
+      "to": "nmwbrdlup9q"
+    },
+    {
+      "from": "nmwbrffpzdu",
+      "to": "nmwbrevx182"
+    },
+    {
+      "from": "nmwbrffpz8p",
+      "to": "nmwbrevx1ct"
+    },
+    {
+      "from": "nmwbrffpzsd",
+      "to": "nmwbrevx1vj"
+    },
+    {
+      "from": "nmwbrffpzat",
+      "to": "nmwbrevx1f5"
+    },
+    {
+      "from": "nmwbrffpzhu",
+      "to": "nmwbrevx1qx"
+    },
+    {
+      "from": "nmwbrffpztd",
+      "to": "nmwbrevx17b"
+    },
+    {
+      "from": "nmwbrhs431i",
+      "to": "nmwa791eocz"
     }
   ],
   "transitions": [
     {
       "id": "t_nmwaddi8x53",
-      "type": "elevator",
       "nodes": [
         "nmwaddi8xd6",
         "nmwaddi8x9c",
@@ -1887,18 +3670,122 @@
         "nmwaddi8xpt",
         "nmwaddi8x2s",
         "nmwaddi8xim"
-      ]
+      ],
+      "type": "elevator"
     },
     {
       "id": "t_nmwaddosrn8",
-      "type": "elevator",
       "nodes": [
-        "nmwaddosrg0",
         "nmwaddosrtq",
         "nmwaddosrbu",
         "nmwaddosr8o",
         "nmwaddosruc",
         "nmwaddosrlw"
+      ],
+      "type": "elevator"
+    },
+    {
+      "id": "t_nmwbowklqz1",
+      "nodes": [
+        "nmwbowklqg7",
+        "nmwbowklqxc"
+      ],
+      "type": "staircase"
+    },
+    {
+      "id": "t_nmwbqf5g8kv",
+      "nodes": [
+        "nmwbqf5g8dc",
+        "nmwbqf5g8hz",
+        "nmwbqf5g8tz",
+        "nmwbqf5g86d"
+      ],
+      "type": "staircase"
+    },
+    {
+      "id": "t_nmwbqicjvv4",
+      "nodes": [
+        "nmwbqicjvbl",
+        "nmwbqicjvkv",
+        "nmwbqicjvgu",
+        "nmwbqicjvvq"
+      ],
+      "type": "staircase"
+    },
+    {
+      "id": "t_nmwbqvk0rpz",
+      "type": "staircase",
+      "nodes": [
+        "nmwbqvk0rms",
+        "nmwbqvk0rxl",
+        "nmwbqvk0rjv"
+      ]
+    },
+    {
+      "id": "t_nmwbqylo2y7",
+      "type": "staircase",
+      "nodes": [
+        "nmwbqylo2d8",
+        "nmwbqylo2tr",
+        "nmwbqylo2mh"
+      ]
+    },
+    {
+      "id": "t_nmwbqz17eg3",
+      "type": "staircase",
+      "nodes": [
+        "nmwbqz17ezr",
+        "nmwbqz17e8s",
+        "nmwbqz17emq",
+        "nmwbqz17e4w"
+      ]
+    },
+    {
+      "id": "t_nmwbrdluprb",
+      "type": "elevator",
+      "nodes": [
+        "nmwbrdlupyv",
+        "nmwbrdlupb7",
+        "nmwbrdlupl3",
+        "nmwbrdlupdh",
+        "nmwbrdlup0",
+        "nmwbrdlup9q"
+      ]
+    },
+    {
+      "id": "t_nmwbrevx1q2",
+      "type": "elevator",
+      "nodes": [
+        "nmwbrevx182",
+        "nmwbrevx1ct",
+        "nmwbrevx1vj",
+        "nmwbrevx1f5",
+        "nmwbrevx1qx",
+        "nmwbrevx17b"
+      ]
+    },
+    {
+      "id": "t_nmwbrfakq3u",
+      "type": "staircase",
+      "nodes": [
+        "nmwbrfakqys",
+        "nmwbrfakqj1",
+        "nmwbrfakqo9",
+        "nmwbrfakq9d",
+        "nmwbrfakq4l",
+        "nmwbrfakqqp"
+      ]
+    },
+    {
+      "id": "t_nmwbrffpzs",
+      "type": "staircase",
+      "nodes": [
+        "nmwbrffpzdu",
+        "nmwbrffpz8p",
+        "nmwbrffpzsd",
+        "nmwbrffpzat",
+        "nmwbrffpzhu",
+        "nmwbrffpztd"
       ]
     }
   ]
